@@ -218,3 +218,56 @@ if (require.main === module) {
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`)
     })
 }
+
+// Ajoutez cette route dans api/server.js pour tester directement
+
+// Route de test ULTRA-RAPIDE pour les arrondissements
+app.get('/api/test-arrondissements-fast', async (req, res) => {
+    const timeoutId = setTimeout(() => {
+        if (!res.headersSent) {
+            res.status(504).json({
+                success: false,
+                error: 'Timeout test arrondissements'
+            })
+        }
+    }, 8000)
+
+    try {
+        console.log('🔧 Test arrondissements rapide...')
+        
+        const { supabase } = require('./supabase-config')
+        
+        // Test DIRECT sur la table
+        const { data, error } = await supabase
+            .from('arrondissements')
+            .select('id_arrondissement, nom_arrondissement')
+            .limit(5)
+
+        clearTimeout(timeoutId)
+
+        if (error) {
+            console.error('❌ Erreur test arrondissements:', error)
+            throw error
+        }
+
+        console.log('✅ Test arrondissements réussi')
+        if (!res.headersSent) {
+            res.json({ 
+                success: true, 
+                message: 'Test arrondissements OK',
+                count: data?.length || 0,
+                sample: data || [],
+                note: 'Version rapide sans géométrie'
+            })
+        }
+    } catch (error) {
+        clearTimeout(timeoutId)
+        console.error('❌ Erreur test arrondissements:', error)
+        if (!res.headersSent) {
+            res.status(500).json({ 
+                success: false, 
+                error: error.message
+            })
+        }
+    }
+})
