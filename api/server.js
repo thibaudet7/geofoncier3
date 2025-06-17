@@ -1,4 +1,4 @@
-// api/server.js - Version optimisée pour Node.js sur Vercel
+// api/server.js - Version CORRIGÉE avec gestion timeout
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
@@ -37,13 +37,76 @@ app.get('/api/health', (req, res) => {
     })
 })
 
-// Route de debug Node.js (ajoutez le code de l'artifact précédent ici)
+// Route de debug Node.js COMPLÈTE
 app.get('/api/debug-nodejs', (req, res) => {
-    // ... code de debug de l'artifact précédent
+    try {
+        const debug = {
+            // Version Node.js
+            nodeVersion: process.version,
+            platform: process.platform,
+            arch: process.arch,
+            
+            // Variables d'environnement
+            env: {
+                NODE_ENV: process.env.NODE_ENV,
+                hasSupabaseUrl: !!process.env.SUPABASE_URL,
+                hasSupabaseAnon: !!process.env.SUPABASE_ANON_KEY,
+                hasSupabaseService: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+                supabaseUrlPreview: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 25) + '...' : 'NOT_FOUND'
+            },
+            
+            // Modules disponibles
+            modules: {
+                hasSupabaseJs: checkModule('@supabase/supabase-js'),
+                hasExpress: checkModule('express'),
+                hasCors: checkModule('cors'),
+                hasDotenv: checkModule('dotenv')
+            },
+            
+            // Chemins et structure
+            paths: {
+                currentDir: process.cwd(),
+                __dirname: __dirname,
+                supabaseConfigExists: checkFile('./supabase-config.js'),
+                spatialServiceExists: checkFile('./services/SpatialService.js')
+            },
+            
+            // Mémoire et limites
+            memory: {
+                used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+                total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+            },
+            
+            timestamp: new Date().toISOString()
+        }
+        
+        res.json({
+            success: true,
+            nodejs_debug: debug,
+            message: 'Diagnostic Node.js complet'
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            stack: error.stack
+        })
+    }
 })
 
-// Test Supabase avec gestion d'erreur améliorée
+// Test Supabase avec TIMEOUT PROTECTION
 app.get('/api/test-db', async (req, res) => {
+    // Protection timeout - répondre en max 8 secondes
+    const timeoutId = setTimeout(() => {
+        if (!res.headersSent) {
+            res.status(504).json({
+                success: false,
+                error: 'Timeout - Requête trop lente',
+                timeout: '8 secondes dépassées'
+            })
+        }
+    }, 8000)
+
     try {
         console.log('🔧 Test connexion Supabase...')
         
@@ -53,6 +116,7 @@ app.get('/api/test-db', async (req, res) => {
             const supabaseConfig = require('./supabase-config')
             supabase = supabaseConfig.supabase
         } catch (requireError) {
+            clearTimeout(timeoutId)
             console.error('❌ Erreur require supabase-config:', requireError)
             return res.status(500).json({
                 success: false,
@@ -61,11 +125,14 @@ app.get('/api/test-db', async (req, res) => {
             })
         }
         
-        // Test de connexion
+        // Test de connexion avec timeout court
         const { data, error } = await supabase
             .from('regions')
             .select('nom_region')
             .limit(1)
+            .abortSignal(AbortSignal.timeout(5000)) // 5 secondes max
+
+        clearTimeout(timeoutId)
 
         if (error) {
             console.error('❌ Erreur requête Supabase:', error)
@@ -73,19 +140,24 @@ app.get('/api/test-db', async (req, res) => {
         }
 
         console.log('✅ Test Supabase réussi')
-        res.json({ 
-            success: true, 
-            message: 'Connexion Supabase OK',
-            sample: data[0] || null,
-            node_version: process.version
-        })
+        if (!res.headersSent) {
+            res.json({ 
+                success: true, 
+                message: 'Connexion Supabase OK',
+                sample: data[0] || null,
+                node_version: process.version
+            })
+        }
     } catch (error) {
+        clearTimeout(timeoutId)
         console.error('❌ Erreur test-db:', error)
-        res.status(500).json({ 
-            success: false, 
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        })
+        if (!res.headersSent) {
+            res.status(500).json({ 
+                success: false, 
+                error: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            })
+        }
     }
 })
 
@@ -105,12 +177,34 @@ try {
 // Gestionnaire d'erreurs global
 app.use((error, req, res, next) => {
     console.error('❌ Erreur serveur:', error)
-    res.status(500).json({ 
-        error: 'Erreur interne du serveur',
-        message: process.env.NODE_ENV === 'development' ? error.message : 'Erreur serveur',
-        node_version: process.version
-    })
+    if (!res.headersSent) {
+        res.status(500).json({ 
+            error: 'Erreur interne du serveur',
+            message: process.env.NODE_ENV === 'development' ? error.message : 'Erreur serveur',
+            node_version: process.version
+        })
+    }
 })
+
+// Fonctions utilitaires pour debug
+function checkModule(moduleName) {
+    try {
+        require.resolve(moduleName)
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+function checkFile(filePath) {
+    try {
+        const fs = require('fs')
+        const path = require('path')
+        return fs.existsSync(path.join(__dirname, filePath))
+    } catch (e) {
+        return false
+    }
+}
 
 // Export pour Vercel
 module.exports = app
