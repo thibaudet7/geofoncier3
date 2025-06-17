@@ -89,3 +89,31 @@ if (process.env.NODE_ENV === 'production') {
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`)
     })
 }
+
+
+// À ajouter temporairement dans api/server.js - APRÈS les autres routes
+
+// Route de debug pour vérifier les variables d'environnement
+app.get('/api/debug-env', (req, res) => {
+    try {
+        const envCheck = {
+            hasSupabaseUrl: !!process.env.SUPABASE_URL,
+            hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
+            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            nodeEnv: process.env.NODE_ENV,
+            supabaseUrlStart: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 20) + '...' : 'NOT FOUND',
+            timestamp: new Date().toISOString()
+        }
+        
+        res.json({
+            success: true,
+            environment: envCheck,
+            message: 'Variables d\'environnement vérifiées'
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        })
+    }
+})
