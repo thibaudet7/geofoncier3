@@ -19,13 +19,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "functions": {
-    "api/server.js": {
-      "maxDuration": 10
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
