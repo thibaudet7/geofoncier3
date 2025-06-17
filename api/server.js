@@ -1,199 +1,218 @@
-// api/server.js - Version avec route arrondissements DIRECTE
+// api/server.js - VERSION DEBUG ULTIME pour identifier le problème
 const express = require('express')
 const cors = require('cors')
-const path = require('path')
-const multer = require('multer')
 
-// Configuration dotenv pour Vercel
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config()
-}
+console.log('🚀 DÉMARRAGE DEBUG ULTIME')
 
 const app = express()
 
-// Configuration multer pour Vercel (mémoire uniquement)
-const upload = multer({ 
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 }
-})
+// Middleware basique
+app.use(cors({ origin: '*' }))
+app.use(express.json())
 
-// Middleware avec gestion d'erreurs
-app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    credentials: true
-}))
+// ============================================
+// ROUTES DE DEBUG PROGRESSIF
+// ============================================
 
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-
-// Test de santé
-app.get('/api/health', (req, res) => {
+// Test 1: Route ultra-simple
+app.get('/api/test-simple', (req, res) => {
+    console.log('✅ Route test-simple appelée')
     res.json({ 
-        status: 'OK', 
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        environment: process.env.NODE_ENV || 'development',
-        node_version: process.version
+        success: true, 
+        message: 'Route simple fonctionne',
+        timestamp: new Date().toISOString()
     })
 })
 
-// Test Supabase
-app.get('/api/test-db', async (req, res) => {
-    const timeoutId = setTimeout(() => {
-        if (!res.headersSent) {
-            res.status(504).json({
-                success: false,
-                error: 'Timeout - Requête trop lente'
-            })
-        }
-    }, 8000)
-
+// Test 2: Test de require supabase-config
+app.get('/api/test-supabase-require', (req, res) => {
+    console.log('🔧 Test require supabase-config...')
     try {
-        console.log('🔧 Test connexion Supabase...')
-        
+        const supabaseConfig = require('./supabase-config')
+        console.log('✅ supabase-config chargé')
+        res.json({
+            success: true,
+            message: 'supabase-config require OK',
+            hasSupabase: !!supabaseConfig.supabase
+        })
+    } catch (error) {
+        console.error('❌ Erreur require supabase-config:', error)
+        res.status(500).json({
+            success: false,
+            error: 'Erreur require supabase-config',
+            details: error.message,
+            stack: error.stack
+        })
+    }
+})
+
+// Test 3: Test connexion Supabase basique
+app.get('/api/test-supabase-connect', async (req, res) => {
+    console.log('🔧 Test connexion Supabase...')
+    try {
         const { supabase } = require('./supabase-config')
+        console.log('✅ Module supabase chargé')
         
-        const { data, error } = await supabase
+        // Test de connexion très simple
+        const { data, error, status } = await supabase
             .from('regions')
             .select('nom_region')
             .limit(1)
+            .single()
 
-        clearTimeout(timeoutId)
-
-        if (error) throw error
-
-        console.log('✅ Test Supabase réussi')
-        if (!res.headersSent) {
-            res.json({ 
-                success: true, 
-                message: 'Connexion Supabase OK',
-                sample: data[0] || null,
-                node_version: process.version
-            })
-        }
-    } catch (error) {
-        clearTimeout(timeoutId)
-        console.error('❌ Erreur test-db:', error)
-        if (!res.headersSent) {
-            res.status(500).json({ 
-                success: false, 
-                error: error.message
-            })
-        }
-    }
-})
-
-// ============================================
-// ROUTE ARRONDISSEMENTS DIRECTE (SOLUTION)
-// ============================================
-app.get('/api/spatial/arrondissements', async (req, res) => {
-    const timeoutId = setTimeout(() => {
-        if (!res.headersSent) {
-            res.status(504).json({
-                success: false,
-                error: 'Timeout arrondissements',
-                arrondissements: []
-            })
-        }
-    }, 25000) // 25 secondes max
-
-    try {
-        console.log('🔄 Route arrondissements DIRECTE')
-        
-        const { supabase } = require('./supabase-config')
-        
-        // Requête SIMPLE et RAPIDE
-        const { data, error } = await supabase
-            .from('arrondissements')
-            .select(`
-                id_arrondissement,
-                nom_arrondissement,
-                geom,
-                id_departement
-            `)
-            .order('nom_arrondissement')
-            .limit(30) // Limite raisonnable
+        console.log('📊 Réponse Supabase:', { data, error, status })
 
         if (error) {
-            console.error('❌ Erreur Supabase arrondissements:', error)
-            throw error
-        }
-
-        console.log(`✅ ${data?.length || 0} arrondissements récupérés`)
-
-        // Transformation simple
-        const processedData = (data || []).map(item => {
-            let coordinates = []
-            
-            // Parsing géométrique simple
-            if (item.geom) {
-                try {
-                    const coords = item.geom.match(/[\d\.-]+/g)
-                    if (coords && coords.length >= 6) {
-                        for (let i = 0; i < Math.min(coords.length - 1, 40); i += 2) {
-                            const lng = parseFloat(coords[i])
-                            const lat = parseFloat(coords[i + 1])
-                            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                                coordinates.push([lat, lng])
-                            }
-                        }
-                    }
-                } catch (parseError) {
-                    console.warn('⚠️ Erreur parsing géométrie:', parseError)
-                }
-            }
-
-            return {
-                id_arrondissement: item.id_arrondissement,
-                nom_arrondissement: item.nom_arrondissement,
-                geom_wkt: item.geom,
-                geom: item.geom,
-                coordinates: coordinates,
-                // Données minimales pour compatibilité
-                id_departement: item.id_departement || 1,
-                nom_departement: 'Département Test',
-                id_region: 1,
-                nom_region: 'Région Test',
-                departements: {
-                    id_departement: item.id_departement || 1,
-                    nom_departement: 'Département Test',
-                    regions: {
-                        id_region: 1,
-                        nom_region: 'Région Test'
-                    }
-                }
-            }
-        }).filter(item => item.coordinates && item.coordinates.length >= 3)
-
-        clearTimeout(timeoutId)
-
-        console.log(`📊 ${processedData.length} arrondissements avec géométries valides`)
-
-        if (!res.headersSent) {
-            res.json({ 
-                success: true, 
-                arrondissements: processedData,
-                count: processedData.length,
-                message: 'Arrondissements chargés depuis route directe'
+            console.error('❌ Erreur Supabase:', error)
+            return res.status(500).json({
+                success: false,
+                error: 'Erreur requête Supabase',
+                supabaseError: error,
+                status: status
             })
         }
 
+        console.log('✅ Connexion Supabase OK')
+        res.json({
+            success: true,
+            message: 'Connexion Supabase réussie',
+            data: data,
+            status: status
+        })
     } catch (error) {
-        clearTimeout(timeoutId)
-        console.error('❌ Erreur route arrondissements:', error)
-        if (!res.headersSent) {
-            res.status(500).json({ 
-                success: false, 
-                error: error.message,
-                arrondissements: []
-            })
-        }
+        console.error('❌ Erreur test connexion:', error)
+        res.status(500).json({
+            success: false,
+            error: 'Exception test connexion',
+            details: error.message,
+            stack: error.stack
+        })
     }
 })
 
-// Route de test simple
-app.get('/api/test-arrondissements-fast', async (req, res) => {
+// Test 4: Test table arrondissements existence
+app.get('/api/test-arrondissements-table', async (req, res) => {
+    console.log('🔧 Test existence table arrondissements...')
     try {
+        const { supabase } = require('./supabase-config')
+        
+        // Test 1: Compter les lignes
+        const { count, error: countError } = await supabase
+            .from('arrondissements')
+            .select('*', { count: 'exact', head: true })
+
+        if (countError) {
+            console.error('❌ Erreur count arrondissements:', countError)
+            return res.status(500).json({
+                success: false,
+                error: 'Erreur count arrondissements',
+                details: countError
+            })
+        }
+
+        console.log(`📊 Nombre d'arrondissements: ${count}`)
+
+        // Test 2: Récupérer 1 ligne
+        const { data, error } = await supabase
+            .from('arrondissements')
+            .select('id_arrondissement, nom_arrondissement')
+            .limit(1)
+            .single()
+
+        if (error) {
+            console.error('❌ Erreur select arrondissements:', error)
+            return res.status(500).json({
+                success: false,
+                error: 'Erreur select arrondissements',
+                details: error
+            })
+        }
+
+        console.log('✅ Table arrondissements accessible')
+        res.json({
+            success: true,
+            message: 'Table arrondissements OK',
+            count: count,
+            sample: data
+        })
+    } catch (error) {
+        console.error('❌ Exception test table:', error)
+        res.status(500).json({
+            success: false,
+            error: 'Exception test table',
+            details: error.message
+        })
+    }
+})
+
+// Test 5: Route arrondissements MINIMALE
+app.get('/api/test-arrondissements-minimal', async (req, res) => {
+    console.log('🔧 Test arrondissements minimal...')
+    
+    // Timeout de sécurité
+    const timeoutId = setTimeout(() => {
+        if (!res.headersSent) {
+            console.log('⏰ TIMEOUT arrondissements minimal')
+            res.status(504).json({
+                success: false,
+                error: 'Timeout arrondissements minimal'
+            })
+        }
+    }, 20000)
+
+    try {
+        const { supabase } = require('./supabase-config')
+        
+        console.log('📡 Requête arrondissements...')
+        const startTime = Date.now()
+        
+        const { data, error } = await supabase
+            .from('arrondissements')
+            .select('id_arrondissement, nom_arrondissement')
+            .order('nom_arrondissement')
+            .limit(3)
+
+        const duration = Date.now() - startTime
+        console.log(`⏱️ Durée requête: ${duration}ms`)
+
+        clearTimeout(timeoutId)
+
+        if (error) {
+            console.error('❌ Erreur requête:', error)
+            return res.status(500).json({
+                success: false,
+                error: 'Erreur requête arrondissements',
+                details: error,
+                duration: duration
+            })
+        }
+
+        console.log(`✅ ${data.length} arrondissements récupérés en ${duration}ms`)
+        res.json({
+            success: true,
+            message: 'Arrondissements minimal OK',
+            count: data.length,
+            data: data,
+            duration: duration
+        })
+
+    } catch (error) {
+        clearTimeout(timeoutId)
+        console.error('❌ Exception arrondissements minimal:', error)
+        res.status(500).json({
+            success: false,
+            error: 'Exception arrondissements minimal',
+            details: error.message
+        })
+    }
+})
+
+// Test 6: Route arrondissements finale (comme dans l'interface)
+app.get('/api/spatial/arrondissements', async (req, res) => {
+    console.log('🎯 ROUTE FINALE: /api/spatial/arrondissements')
+    
+    try {
+        // Rediriger vers le test minimal pour commencer
         const { supabase } = require('./supabase-config')
         
         const { data, error } = await supabase
@@ -203,48 +222,45 @@ app.get('/api/test-arrondissements-fast', async (req, res) => {
 
         if (error) throw error
 
-        res.json({ 
-            success: true, 
-            message: 'Test arrondissements OK',
-            count: data?.length || 0,
-            sample: data || []
+        // Format attendu par le frontend
+        const arrondissements = data.map(item => ({
+            id_arrondissement: item.id_arrondissement,
+            nom_arrondissement: item.nom_arrondissement,
+            // Données minimales pour test
+            coordinates: [[4.05, 9.77], [4.06, 9.77], [4.06, 9.78], [4.05, 9.78], [4.05, 9.77]],
+            geom_wkt: 'POLYGON((9.77 4.05, 9.77 4.06, 9.78 4.06, 9.78 4.05, 9.77 4.05))',
+            departements: {
+                nom_departement: 'Test Dept',
+                regions: { nom_region: 'Test Region' }
+            }
+        }))
+
+        console.log(`✅ Route finale: ${arrondissements.length} arrondissements`)
+        res.json({
+            success: true,
+            arrondissements: arrondissements
         })
+
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message
+        console.error('❌ Erreur route finale:', error)
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            arrondissements: []
         })
     }
 })
 
-// Routes API avec gestion d'erreur (OPTIONNELLES maintenant)
-try {
-    app.use('/api/auth', require('./routes/auth'))
-    app.use('/api/parcelles', require('./routes/parcelles'))
-    // Note: /api/spatial est maintenant géré directement ci-dessus
-} catch (routeError) {
-    console.error('⚠️ Certaines routes optionnelles non chargées:', routeError.message)
-}
-
-// Gestionnaire d'erreurs global
+// Gestionnaire d'erreurs
 app.use((error, req, res, next) => {
-    console.error('❌ Erreur serveur:', error)
-    if (!res.headersSent) {
-        res.status(500).json({ 
-            error: 'Erreur interne du serveur',
-            message: process.env.NODE_ENV === 'development' ? error.message : 'Erreur serveur'
-        })
-    }
+    console.error('💥 ERREUR GLOBALE:', error)
+    res.status(500).json({
+        error: 'Erreur serveur globale',
+        details: error.message
+    })
 })
 
 // Export pour Vercel
 module.exports = app
 
-// Démarrage local uniquement
-if (require.main === module) {
-    const PORT = process.env.PORT || 3000
-    app.listen(PORT, () => {
-        console.log(`🚀 Serveur GéoFoncier démarré sur le port ${PORT}`)
-        console.log(`📍 Node.js version: ${process.version}`)
-    })
-}
+console.log('🏁 Configuration serveur DEBUG terminée')
