@@ -1,119 +1,126 @@
-// api/server.js - Version optimisée pour Vercel
+// api/server.js - Version optimisée pour Node.js sur Vercel
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const multer = require('multer')
-require('dotenv').config()
+
+// Configuration dotenv pour Vercel
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
 
 const app = express()
 
-// Configuration multer pour upload de fichiers (en mémoire pour Vercel)
+// Configuration multer pour Vercel (mémoire uniquement)
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+    limits: { fileSize: 10 * 1024 * 1024 }
 })
 
-// Middleware
+// Middleware avec gestion d'erreurs
 app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true
 }))
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Servir les fichiers statiques (pour développement local uniquement)
-if (process.env.NODE_ENV !== 'production') {
-    app.use(express.static(path.join(__dirname, '../')))
-}
-
-// Routes API
-app.use('/api/auth', require('./routes/auth'))
-app.use('/api/parcelles', require('./routes/parcelles'))
-app.use('/api/payment', require('./routes/payment'))
-app.use('/api/contact', require('./routes/contact'))
-app.use('/api/spatial', require('./routes/spatial'))
-app.use('/api/csv', require('./routes/csv'))
-app.use('/api/admin', require('./routes/admin'))
-
-// Route de santé
+// Test de santé AVANT les routes complexes
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'OK', 
         timestamp: new Date().toISOString(),
         version: '1.0.0',
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        node_version: process.version
     })
 })
 
-// Route de test pour vérifier la connexion Supabase
+// Route de debug Node.js (ajoutez le code de l'artifact précédent ici)
+app.get('/api/debug-nodejs', (req, res) => {
+    // ... code de debug de l'artifact précédent
+})
+
+// Test Supabase avec gestion d'erreur améliorée
 app.get('/api/test-db', async (req, res) => {
     try {
-        const { supabase } = require('./supabase-config')
+        console.log('🔧 Test connexion Supabase...')
+        
+        // Vérifier que le module existe
+        let supabase
+        try {
+            const supabaseConfig = require('./supabase-config')
+            supabase = supabaseConfig.supabase
+        } catch (requireError) {
+            console.error('❌ Erreur require supabase-config:', requireError)
+            return res.status(500).json({
+                success: false,
+                error: 'Impossible de charger supabase-config.js',
+                details: requireError.message
+            })
+        }
+        
+        // Test de connexion
         const { data, error } = await supabase
             .from('regions')
             .select('nom_region')
             .limit(1)
 
-        if (error) throw error
+        if (error) {
+            console.error('❌ Erreur requête Supabase:', error)
+            throw error
+        }
 
+        console.log('✅ Test Supabase réussi')
         res.json({ 
             success: true, 
             message: 'Connexion Supabase OK',
-            sample: data[0] || null
+            sample: data[0] || null,
+            node_version: process.version
         })
     } catch (error) {
+        console.error('❌ Erreur test-db:', error)
         res.status(500).json({ 
             success: false, 
-            error: error.message 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         })
     }
 })
+
+// Routes API avec gestion d'erreur
+try {
+    app.use('/api/auth', require('./routes/auth'))
+    app.use('/api/parcelles', require('./routes/parcelles'))
+    app.use('/api/payment', require('./routes/payment'))
+    app.use('/api/contact', require('./routes/contact'))
+    app.use('/api/spatial', require('./routes/spatial'))
+    app.use('/api/csv', require('./routes/csv'))
+    app.use('/api/admin', require('./routes/admin'))
+} catch (routeError) {
+    console.error('❌ Erreur chargement routes:', routeError)
+}
 
 // Gestionnaire d'erreurs global
 app.use((error, req, res, next) => {
-    console.error('Erreur serveur:', error)
+    console.error('❌ Erreur serveur:', error)
     res.status(500).json({ 
         error: 'Erreur interne du serveur',
-        message: process.env.NODE_ENV === 'development' ? error.message : undefined
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Erreur serveur',
+        node_version: process.version
     })
 })
 
-// Pour Vercel, exporter l'app au lieu de démarrer un serveur
-if (process.env.NODE_ENV === 'production') {
-    module.exports = app
-} else {
+// Export pour Vercel
+module.exports = app
+
+// Démarrage local uniquement
+if (require.main === module) {
     const PORT = process.env.PORT || 3000
     app.listen(PORT, () => {
         console.log(`🚀 Serveur GéoFoncier démarré sur le port ${PORT}`)
-        console.log(`📍 URL: http://localhost:${PORT}`)
+        console.log(`📍 Node.js version: ${process.version}`)
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`)
     })
 }
-
-
-// À ajouter temporairement dans api/server.js - APRÈS les autres routes
-
-// Route de debug pour vérifier les variables d'environnement
-app.get('/api/debug-env', (req, res) => {
-    try {
-        const envCheck = {
-            hasSupabaseUrl: !!process.env.SUPABASE_URL,
-            hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
-            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-            nodeEnv: process.env.NODE_ENV,
-            supabaseUrlStart: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 20) + '...' : 'NOT FOUND',
-            timestamp: new Date().toISOString()
-        }
-        
-        res.json({
-            success: true,
-            environment: envCheck,
-            message: 'Variables d\'environnement vérifiées'
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        })
-    }
-})
