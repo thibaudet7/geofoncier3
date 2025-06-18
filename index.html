@@ -1352,100 +1352,108 @@
         ];
 
         // Initialisation de la carte avec options responsives
-        function initMap() {
-            // Options de configuration responsive
-            const mapOptions = {
-                zoomControl: !isMobile, // Désactiver les contrôles de zoom par défaut sur mobile
-                scrollWheelZoom: !isMobile,
-                doubleClickZoom: true,
-                touchZoom: true,
-                tap: isMobile,
-                tapTolerance: isMobile ? 30 : 15
-            };
-
-            map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
-
-            // Ajouter les contrôles de zoom personnalisés pour mobile
+       // Initialisation de la carte avec options responsives
+function initMap() {
+    // Options de configuration responsive
+    const mapOptions = {
+        zoomControl: !isMobile, // Désactiver les contrôles de zoom par défaut sur mobile
+        scrollWheelZoom: !isMobile,
+        doubleClickZoom: true,
+        touchZoom: true,
+        tap: isMobile,
+        tapTolerance: isMobile ? 30 : 15
+    };
+ 
+    map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
+ 
+    // Ajouter les contrôles de zoom personnalisés pour mobile
+    if (isMobile) {
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+    }
+ 
+    // Couches de base
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    });
+ 
+    const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: '© Google Maps',
+        maxZoom: 20
+    });
+ 
+    const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenTopoMap contributors',
+        maxZoom: 17
+    });
+ 
+    const baseLayers = {
+        "OpenStreetMap": osmLayer,
+        "Satellite": satelliteLayer,
+        "Topographique": topoLayer
+    };
+ 
+    osmLayer.addTo(map);
+    
+    // Contrôle des couches avec position adaptée au mobile
+    const layerControl = L.control.layers(baseLayers, null, {
+        position: 'topright', // Toujours en haut à droite
+        collapsed: true
+    }).addTo(map);
+ 
+    // Créer des panes personnalisés avec z-index explicites
+    map.createPane('arrondissementPane');
+    map.getPane('arrondissementPane').style.zIndex = 200;
+    map.getPane('arrondissementPane').style.pointerEvents = 'auto';
+ 
+    map.createPane('parcellePane');
+    map.getPane('parcellePane').style.zIndex = 400;
+    map.getPane('parcellePane').style.pointerEvents = 'auto';
+ 
+    map.createPane('overlapPane');
+    map.getPane('overlapPane').style.zIndex = 500;
+    map.getPane('overlapPane').style.pointerEvents = 'auto';
+ 
+    // Initialiser les couches
+    initArrondissementLayer();
+    initParcelleLayer();
+    initOverlapLayer();
+ 
+    // Charger les données
+    loadArrondissements();
+    loadParcelles();
+    
+    // ✅ CORRECTION : Détecter les chevauchements après chargement des parcelles
+    setTimeout(() => {
+        console.log('🔍 Lancement détection des chevauchements...');
+        detectOverlaps();
+    }, 1500); // Délai un peu plus long pour être sûr que les parcelles sont chargées
+ 
+    // Configuration responsive des popups
+    configureResponsivePopups();
+    
+    // Ajuster la position via CSS après création
+    setTimeout(() => {
+        const layerControlElement = document.querySelector('.leaflet-control-layers');
+        if (layerControlElement) {
             if (isMobile) {
-                L.control.zoom({
-                    position: 'bottomright'
-                }).addTo(map);
-            }
-
-            // Couches de base
-            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            });
-
-            const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-                attribution: '© Google Maps',
-                maxZoom: 20
-            });
-
-            const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenTopoMap contributors',
-                maxZoom: 17
-            });
-
-            const baseLayers = {
-                "OpenStreetMap": osmLayer,
-                "Satellite": satelliteLayer,
-                "Topographique": topoLayer
-            };
-
-            osmLayer.addTo(map);
-            
-            // Contrôle des couches avec position adaptée au mobile
-            const layerControl = L.control.layers(baseLayers, null, {
-                position: 'topright', // Toujours en haut à droite
-                collapsed: true
-            }).addTo(map);
-
-            // Créer des panes personnalisés avec z-index explicites
-            map.createPane('arrondissementPane');
-            map.getPane('arrondissementPane').style.zIndex = 200;
-            map.getPane('arrondissementPane').style.pointerEvents = 'auto';
-
-            map.createPane('parcellePane');
-            map.getPane('parcellePane').style.zIndex = 400;
-            map.getPane('parcellePane').style.pointerEvents = 'auto';
-
-            map.createPane('overlapPane');
-            map.getPane('overlapPane').style.zIndex = 500;
-            map.getPane('overlapPane').style.pointerEvents = 'auto';
-
-            // Initialiser les couches
-            initArrondissementLayer();
-            initParcelleLayer();
-            initOverlapLayer();
-
-            // Charger les données
-            loadArrondissements();
-            loadParcelles();
-            
-            // Détecter les chevauchements après chargement des parcelles
-            setTimeout(() => {
-                const layerControlElement = document.querySelector('.leaflet-control-layers');
-                if (layerControlElement) {
-                    if (isMobile) {
-                        if (isSmallMobile) {
-                            layerControlElement.style.top = '85px';
-                            layerControlElement.style.right = '3px';
-                        } else {
-                            layerControlElement.style.top = '100px';
-                            layerControlElement.style.right = '5px';
-                        }
-                    } else {
-                        layerControlElement.style.top = '120px';
-                        layerControlElement.style.right = '10px';
-                    }
-                    layerControlElement.style.zIndex = '999';
+                if (isSmallMobile) {
+                    layerControlElement.style.top = '85px';
+                    layerControlElement.style.right = '3px';
+                } else {
+                    layerControlElement.style.top = '100px';
+                    layerControlElement.style.right = '5px';
                 }
-            }, 100);
-            // Configuration responsive des popups
-            configureResponsivePopups();
+            } else {
+                layerControlElement.style.top = '120px';
+                layerControlElement.style.right = '10px';
+            }
+            layerControlElement.style.zIndex = '999';
         }
+    }, 100);
+ }
 
         // Configuration des popups responsives
         function configureResponsivePopups() {
