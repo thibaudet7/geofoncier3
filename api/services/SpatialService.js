@@ -183,22 +183,15 @@ class SpatialService {
 
 // Dans SpatialService.js, remplacer la fonction getArrondissements par :
 
-// Dans api/services/SpatialService.js
-// Remplacez COMPLÈTEMENT la fonction getArrondissements par cette version RAPIDE :
-
 static async getArrondissements(regionId = null, departementId = null) {
     try {
-        console.log('🔄 getArrondissements - VERSION RAPIDE SANS FONCTION');
+        console.log('🔄 getArrondissements appelé avec:', { regionId, departementId });
         
-        // REQUÊTE DIRECTE ULTRA-RAPIDE (pas de fonction personnalisée)
-        const { data, error } = await supabase
-            .from('arrondissements')
-            .select('id_arrondissement, nom_arrondissement, geom')
-            .order('nom_arrondissement')
-            .limit(20); // LIMITE TRÈS BASSE pour test
+        // Appel de la fonction qui marche parfaitement selon nos tests SQL
+        const { data, error } = await supabase.rpc('get_all_arrondissements_with_geom', {});
 
         if (error) {
-            console.error('❌ Erreur Supabase:', error);
+            console.error('❌ Erreur RPC:', error);
             throw error;
         }
 
@@ -207,41 +200,61 @@ static async getArrondissements(regionId = null, departementId = null) {
             return { success: true, arrondissements: [] };
         }
 
-        console.log(`✅ ${data.length} arrondissements bruts récupérés`);
+        console.log(`✅ RPC réussi: ${data.length} arrondissements reçus`);
         
-        // Transformation MINIMALE des données
+        // Examiner les données reçues en détail
+        console.log('🔍 PREMIER ÉLÉMENT REÇU:', JSON.stringify(data[0], null, 2));
+        
+        // Traitement ULTRA-SIMPLE - copie directe sans modification
         const processedData = data.map(item => {
-            // Parser la géométrie de façon simple
-            let coordinates = [];
-            if (item.geom) {
-                coordinates = this.parsePostGISGeometrySimple(item.geom);
-            }
-            
+            // Juste copier EXACTEMENT ce qui vient de la base
             return {
-                id_arrondissement: item.id_arrondissement,
-                nom_arrondissement: item.nom_arrondissement,
-                geom_wkt: item.geom,
-                geom: item.geom,
-                coordinates: coordinates,
-                // Données minimales pour test
-                id_departement: 1,
-                nom_departement: 'Test',
-                id_region: 1,
-                nom_region: 'Test',
+                ...item,
+                // S'assurer de la compatibilité avec le frontend
+                geom: item.geom_wkt || item.geom,
                 departements: {
-                    id_departement: 1,
-                    nom_departement: 'Test',
+                    id_departement: item.id_departement,
+                    nom_departement: item.nom_departement,
+                    id_region: item.id_region,
                     regions: {
-                        id_region: 1,
-                        nom_region: 'Test'
+                        id_region: item.id_region,
+                        nom_region: item.nom_region
                     }
                 }
             };
-        }).filter(item => item.coordinates && item.coordinates.length > 0);
+        });
 
-        console.log(`📊 ${processedData.length} arrondissements avec géométries valides`);
+        // Appliquer les filtres côté JavaScript si nécessaire
+        let filteredData = processedData;
+        
+        if (departementId) {
+            filteredData = processedData.filter(item => 
+                item.id_departement === parseInt(departementId)
+            );
+        } else if (regionId) {
+            filteredData = processedData.filter(item => 
+                item.id_region === parseInt(regionId)
+            );
+        }
 
-        return { success: true, arrondissements: processedData };
+        // Statistiques finales
+        const avecDept = filteredData.filter(a => a.nom_departement && a.nom_departement.trim() !== '').length;
+        const avecRegion = filteredData.filter(a => a.nom_region && a.nom_region.trim() !== '').length;
+        
+        console.log('📊 STATISTIQUES FINALES:');
+        console.log(`   - Total traité: ${filteredData.length}`);
+        console.log(`   - Avec département: ${avecDept}`);
+        console.log(`   - Avec région: ${avecRegion}`);
+        
+        // Afficher les 3 premiers pour vérification
+        const echantillon = filteredData.slice(0, 3).map(a => ({
+            nom: a.nom_arrondissement,
+            dept: a.nom_departement,
+            region: a.nom_region
+        }));
+        console.log('📝 ÉCHANTILLON FINAL:', echantillon);
+
+        return { success: true, arrondissements: filteredData };
         
     } catch (error) {
         console.error('❌ Erreur getArrondissements:', error);
@@ -250,52 +263,6 @@ static async getArrondissements(regionId = null, departementId = null) {
             error: error.message,
             arrondissements: [] 
         };
-    }
-}
-
-// Ajoutez aussi cette fonction de parsing SIMPLIFIÉE :
-static parsePostGISGeometrySimple(geomString) {
-    if (!geomString) return [];
-    
-    try {
-        // Version ultra-simple pour MULTIPOLYGON
-        if (geomString.includes('MULTIPOLYGON')) {
-            // Extraire juste les premières coordonnées
-            const coords = geomString.match(/[\d\.-]+/g);
-            if (coords && coords.length >= 6) {
-                const result = [];
-                for (let i = 0; i < Math.min(coords.length - 1, 20); i += 2) {
-                    const lng = parseFloat(coords[i]);
-                    const lat = parseFloat(coords[i + 1]);
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        result.push([lat, lng]);
-                    }
-                }
-                return result;
-            }
-        }
-        
-        // Version simple pour POLYGON
-        if (geomString.includes('POLYGON')) {
-            const coords = geomString.match(/[\d\.-]+/g);
-            if (coords && coords.length >= 6) {
-                const result = [];
-                for (let i = 0; i < Math.min(coords.length - 1, 20); i += 2) {
-                    const lng = parseFloat(coords[i]);
-                    const lat = parseFloat(coords[i + 1]);
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        result.push([lat, lng]);
-                    }
-                }
-                return result;
-            }
-        }
-        
-        return [];
-        
-    } catch (error) {
-        console.error('❌ Erreur parsing simple:', error);
-        return [];
     }
 }
     // ================================
