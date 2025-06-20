@@ -30,6 +30,8 @@
             color: white;
             padding: 0.75rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2000;
         }
 
         .header-content {
@@ -48,6 +50,25 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+
+        /* Bouton Search & Filter pour mobile */
+        .mobile-search-btn {
+            display: none;
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .mobile-search-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .auth-buttons {
@@ -115,6 +136,7 @@
             position: relative;
         }
 
+        /* SIDEBAR - Version Desktop */
         .sidebar {
             width: 350px;
             background: white;
@@ -123,10 +145,50 @@
             flex-direction: column;
             transition: all 0.3s ease;
             z-index: 1000;
+            position: relative;
         }
 
         .sidebar.collapsed {
             width: 50px;
+        }
+
+        /* SIDEBAR - Version Mobile (Overlay) */
+        .sidebar-mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-mobile-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-mobile {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 85%;
+            max-width: 320px;
+            height: 100%;
+            background: white;
+            z-index: 3000;
+            transition: all 0.3s ease-out;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+        }
+
+        .sidebar-mobile.active {
+            left: 0;
         }
 
         .sidebar-header {
@@ -136,6 +198,8 @@
             justify-content: space-between;
             align-items: center;
             min-height: 50px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
         }
 
         .sidebar-header h3 {
@@ -148,7 +212,7 @@
             border: none;
             font-size: 1.1rem;
             cursor: pointer;
-            color: #666;
+            color: white;
             padding: 0.25rem;
             border-radius: 3px;
             transition: all 0.3s ease;
@@ -156,7 +220,7 @@
         }
 
         .sidebar-toggle:hover {
-            background-color: #e9ecef;
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
         .sidebar-content {
@@ -243,19 +307,17 @@
         }
 
         .leaflet-control-layers {
-            top: 220px !important; /* 10px sous le dernier bouton du groupe (hauteur 2 groupes + gaps = ~110px) */
+            top: 220px !important;
             right: 10px !important;
             z-index: 999 !important;
         }
 
-        /* Positionnement du contrôleur de zoom pour grands écrans */
         .leaflet-control-zoom {
             top: 10px !important;
             left: 10px !important;
             z-index: 1001 !important;
         }
 
-        /* Ajuster la position des map-controls pour éviter le conflit */
         .map-controls {
             position: absolute;
             top: 8px;
@@ -265,7 +327,6 @@
             flex-direction: column;
             gap: 0.3rem;
         }
-
 
         .loading-spinner {
             display: inline-block;
@@ -291,16 +352,6 @@
         #map {
             width: 100%;
             height: 100%;
-        }
-
-        .map-controls {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
         }
 
         .control-group {
@@ -591,20 +642,23 @@
            RESPONSIVE DESIGN - MOBILES FIRST
         ========================================== */
         
-        /* Tablettes */
+        /* Tablettes et petits écrans */
         @media (max-width: 768px) {
             .header {
                 padding: 0.5rem;
             }
 
             .header-content {
-                flex-direction: column;
-                gap: 0.75rem;
-                text-align: center;
+                justify-content: space-between;
+                text-align: left;
             }
 
             .logo {
                 font-size: 1.2rem;
+            }
+
+            .mobile-search-btn {
+                display: flex;
             }
 
             .btn {
@@ -612,33 +666,27 @@
                 font-size: 0.8rem;
             }
 
+            /* Masquer la sidebar desktop et afficher la version mobile */
+            .sidebar {
+                display: none;
+            }
+
+            .sidebar-mobile-overlay {
+                display: block;
+            }
+
+            .sidebar-mobile {
+                display: flex;
+            }
+
             .main-container {
                 flex-direction: column;
-                height: calc(100vh - 90px);
-            }
-
-            .sidebar {
-                width: 100%;
-                height: auto;
-                max-height: 45vh;
-                order: 2;
-                border-top: 2px solid #ddd;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            }
-
-            .sidebar.collapsed {
-                height: 50px;
-                width: 100%;
-                max-height: 50px;
-            }
-
-            .sidebar-content {
-                max-height: calc(45vh - 50px);
+                height: calc(100vh - 80px);
             }
 
             .map-container {
-                order: 1;
-                height: 55vh;
+                height: 100%;
+                width: 100%;
             }
 
             .map-controls {
@@ -687,18 +735,21 @@
                 font-size: 0.8rem;
             }
 
-
             .leaflet-control-layers {
-                top: 160px !important;
+                top: 185px !important;
                 right: 2px !important;
             }
             
             .leaflet-control-zoom {
                 top: 5px !important;
-                left: 5px !important; /* Déplacer vers la gauche sur tablette */
+                left: 5px !important;
                 right: auto !important;
             }
 
+            /* POPUP ARRONDISSEMENT - Ajustement largeur pour tablettes */
+            .leaflet-popup-content-wrapper {
+                max-width: calc(100vw - 60px) !important;
+            }
         }
 
         /* Mobiles */
@@ -719,25 +770,19 @@
 
             .auth-buttons {
                 gap: 0.2rem;
-                width: 100%;
-                justify-content: center;
             }
 
             .main-container {
-                height: calc(100vh - 80px);
+                height: calc(100vh - 70px);
             }
 
-            .sidebar {
-                max-height: 40vh;
-            }
-
-            .map-container {
-                height: 60vh;
+            .sidebar-mobile {
+                width: 90%;
+                max-width: 300px;
             }
 
             .sidebar-content {
                 padding: 0.5rem;
-                max-height: calc(40vh - 45px);
             }
 
             .search-box, .filter-select, .form-input {
@@ -809,7 +854,7 @@
                 padding: 0.5rem 0.75rem;
             }
 
-            /* Optimisation des popups pour mobile */
+            /* POPUP ARRONDISSEMENT - Réduction largeur pour mobiles */
             .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 40px) !important;
                 border-radius: 6px !important;
@@ -827,28 +872,19 @@
             }
 
             .leaflet-control-layers {
-                top: 85px !important; /* 5px sous le dernier bouton (hauteur réduite mobile) */
+                top: 175px !important;
                 right: 3px !important;
             }
             
-            /* Contrôleur de zoom dans le coin supérieur gauche pour mobile */
             .leaflet-control-zoom {
                 top: 5px !important;
                 left: 5px !important;
                 right: auto !important;
                 bottom: auto !important;
             }
-            
-            /* Ajuster les map-controls pour mobile */
-            .map-controls {
-                top: 3px;
-                right: 3px;
-            }
-
-
         }
 
-        /* Très petits écrans */
+        /* Très petits écrans (inférieur à 360px) */
         @media (max-width: 360px) {
             .logo {
                 font-size: 1rem;
@@ -859,12 +895,9 @@
                 font-size: 0.7rem;
             }
 
-            .sidebar {
-                max-height: 35vh;
-            }
-
-            .map-container {
-                height: 65vh;
+            .sidebar-mobile {
+                width: 95%;
+                max-width: 280px;
             }
 
             .control-btn {
@@ -883,7 +916,7 @@
             }
 
             .leaflet-control-layers {
-                top: 80px !important;
+                top: 160px !important;
                 right: 3px !important;
             }
             
@@ -891,39 +924,29 @@
                 top: 3px !important;
                 left: 3px !important;
             }
+
+            /* POPUP ARRONDISSEMENT - Largeur maximale 65% pour très petits écrans */
+            .leaflet-popup-content-wrapper {
+                max-width: 80% !important;
+                min-width: 200px !important;
+            }
+
+            .leaflet-popup-content {
+                margin: 6px 8px !important;
+                font-size: 0.75rem !important;
+                line-height: 1.2 !important;
+            }
         }
 
         /* Mode paysage sur mobile */
         @media (max-height: 500px) and (orientation: landscape) {
-
             .main-container {
-                flex-direction: row;
                 height: calc(100vh - 60px);
             }
 
-            .sidebar {
-                width: 280px;
-                height: 100%;
-                max-height: none;
-                order: 1;
-                border-top: none;
-                border-right: 2px solid #ddd;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            }
-
-            .sidebar.collapsed {
-                width: 45px;
-                height: 100%;
-            }
-
-            .map-container {
-                order: 2;
-                height: 100%;
-                flex: 1;
-            }
-
-            .sidebar-content {
-                max-height: calc(100vh - 110px);
+            .sidebar-mobile {
+                width: 60%;
+                max-width: 280px;
             }
 
             .leaflet-control-zoom {
@@ -933,11 +956,9 @@
             }
             
             .leaflet-control-layers {
-                top: 100px !important;
+                top: 160px !important;
                 right: 5px !important;
             }
-
-
         }
 
         /* Amélioration des interactions tactiles */
@@ -967,6 +988,12 @@
     <!-- Header -->
     <header class="header">
         <div class="header-content">
+            <!-- Bouton mobile pour ouvrir la sidebar -->
+            <button class="mobile-search-btn" onclick="toggleMobileSidebar()" id="mobileSearchBtn">
+                <i class="fas fa-search"></i>
+                <span>Search & Filter</span>
+            </button>
+            
             <div class="logo">
                 <i class="fas fa-map-marked-alt"></i>
                 GéoFoncier
@@ -982,9 +1009,12 @@
         </div>
     </header>
 
+    <!-- Overlay pour la sidebar mobile -->
+    <div class="sidebar-mobile-overlay" id="sidebarMobileOverlay" onclick="closeMobileSidebar()"></div>
+
     <!-- Main Container -->
     <div class="main-container">
-        <!-- Sidebar -->
+        <!-- Sidebar Desktop -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h3>Recherche & Filtres</h3>
@@ -1076,6 +1106,102 @@
 
                 <!-- Results Section -->
                 <div id="searchResults">
+                    <!-- Les résultats de recherche apparaîtront ici -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Mobile -->
+        <div class="sidebar-mobile" id="sidebarMobile">
+            <div class="sidebar-header">
+                <h3>Search & Filter</h3>
+                <button class="sidebar-toggle" onclick="closeMobileSidebar()" aria-label="Fermer le panneau">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="sidebar-content">
+                <!-- Search Section Mobile -->
+                <div class="search-section">
+                    <input type="text" class="search-box" id="searchMatriculeMobile" 
+                           placeholder="Rechercher par matricule...">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelleMobile()">
+                        <i class="fas fa-search"></i> Rechercher
+                    </button>
+                </div>
+
+                <!-- Layer Control Section Mobile -->
+                <div class="layer-section">
+                    <div class="filter-title">Couches cartographiques</div>
+                    
+                    <div class="layer-toggle active" onclick="toggleArrondissementLayerMobile()">
+                        <input type="checkbox" id="arrondissementLayerToggleMobile" checked>
+                        <label for="arrondissementLayerToggleMobile">
+                            <i class="fas fa-map-marker-alt"></i> Arrondissements
+                        </label>
+                    </div>
+                    
+                    <div class="layer-toggle active" onclick="toggleParcelleLayerMobile()">
+                        <input type="checkbox" id="parcelleLayerToggleMobile" checked>
+                        <label for="parcelleLayerToggleMobile">
+                            <i class="fas fa-square"></i> Parcelles
+                        </label>
+                    </div>
+                    
+                    <div class="layer-toggle active" onclick="toggleOverlapLayerMobile()">
+                        <input type="checkbox" id="overlapLayerToggleMobile" checked>
+                        <label for="overlapLayerToggleMobile">
+                            <i class="fas fa-exclamation-triangle"></i> Chevauchements
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Filters Section Mobile -->
+                <div class="filter-section">
+                    <div class="filter-title">Filtres</div>
+                    
+                    <div class="filter-group">
+                        <label class="form-label">Arrondissement</label>
+                        <select class="filter-select" id="filterArrondissementMobile" onchange="applyFiltersMobile()">
+                            <option value="">Tous les arrondissements</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="form-label">Quartier/Village</label>
+                        <input type="text" class="search-box" id="filterQuartierMobile" 
+                               placeholder="Rechercher un quartier/village..." 
+                               onkeyup="applyFiltersMobile()" 
+                               style="margin-bottom: 0.5rem;">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="form-label">Type d'activité</label>
+                        <select class="filter-select" id="filterActiviteMobile" onchange="applyFiltersMobile()">
+                            <option value="">Toutes les activités</option>
+                            <option value="propriete_privee">Propriété privée</option>
+                            <option value="vente_terrain">Vente de terrain</option>
+                            <option value="location_construction">Location pour construction</option>
+                            <option value="location_agriculture">Location pour agriculture</option>
+                            <option value="autres">Autres activités</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="form-label">Statut du terrain</label>
+                        <select class="filter-select" id="filterStatutMobile" onchange="applyFiltersMobile()">
+                            <option value="">Tous les statuts</option>
+                            <option value="titre">Terrain titré</option>
+                            <option value="non_titre">Terrain non titré</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-warning" style="width: 100%; margin-top: 1rem;" onclick="clearFiltersMobile()">
+                        <i class="fas fa-times"></i> Effacer les filtres
+                    </button>
+                </div>
+
+                <!-- Results Section Mobile -->
+                <div id="searchResultsMobile">
                     <!-- Les résultats de recherche apparaîtront ici -->
                 </div>
             </div>
@@ -1302,6 +1428,9 @@
         const isMobile = window.innerWidth <= 768;
         const isSmallMobile = window.innerWidth <= 480;
 
+        // État de la sidebar mobile
+        let mobileSidebarOpen = false;
+
         // Données de démonstration avec chevauchement réaliste
         const sampleParcelles = [
             {
@@ -1351,109 +1480,187 @@
             }
         ];
 
-        // Initialisation de la carte avec options responsives
-       // Initialisation de la carte avec options responsives
-function initMap() {
-    // Options de configuration responsive
-    const mapOptions = {
-        zoomControl: !isMobile, // Désactiver les contrôles de zoom par défaut sur mobile
-        scrollWheelZoom: !isMobile,
-        doubleClickZoom: true,
-        touchZoom: true,
-        tap: isMobile,
-        tapTolerance: isMobile ? 30 : 15
-    };
- 
-    map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
- 
-    // Ajouter les contrôles de zoom personnalisés pour mobile
-    if (isMobile) {
-        L.control.zoom({
-            position: 'bottomright'
-        }).addTo(map);
-    }
- 
-    // Couches de base
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-    });
- 
-    const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        attribution: '© Google Maps',
-        maxZoom: 20
-    });
- 
-    const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenTopoMap contributors',
-        maxZoom: 17
-    });
- 
-    const baseLayers = {
-        "OpenStreetMap": osmLayer,
-        "Satellite": satelliteLayer,
-        "Topographique": topoLayer
-    };
- 
-    osmLayer.addTo(map);
-    
-    // Contrôle des couches avec position adaptée au mobile
-    const layerControl = L.control.layers(baseLayers, null, {
-        position: 'topright', // Toujours en haut à droite
-        collapsed: true
-    }).addTo(map);
- 
-    // Créer des panes personnalisés avec z-index explicites
-    map.createPane('arrondissementPane');
-    map.getPane('arrondissementPane').style.zIndex = 200;
-    map.getPane('arrondissementPane').style.pointerEvents = 'auto';
- 
-    map.createPane('parcellePane');
-    map.getPane('parcellePane').style.zIndex = 400;
-    map.getPane('parcellePane').style.pointerEvents = 'auto';
- 
-    map.createPane('overlapPane');
-    map.getPane('overlapPane').style.zIndex = 500;
-    map.getPane('overlapPane').style.pointerEvents = 'auto';
- 
-    // Initialiser les couches
-    initArrondissementLayer();
-    initParcelleLayer();
-    initOverlapLayer();
- 
-    // Charger les données
-    loadArrondissements();
-    loadParcelles();
-    
-    // ✅ CORRECTION : Détecter les chevauchements après chargement des parcelles
-    setTimeout(() => {
-        console.log('🔍 Lancement détection des chevauchements...');
-        detectOverlaps();
-    }, 1500); // Délai un peu plus long pour être sûr que les parcelles sont chargées
- 
-    // Configuration responsive des popups
-    configureResponsivePopups();
-    
-    // Ajuster la position via CSS après création
-    setTimeout(() => {
-        const layerControlElement = document.querySelector('.leaflet-control-layers');
-        if (layerControlElement) {
-            if (isMobile) {
-                if (isSmallMobile) {
-                    layerControlElement.style.top = '85px';
-                    layerControlElement.style.right = '3px';
-                } else {
-                    layerControlElement.style.top = '100px';
-                    layerControlElement.style.right = '5px';
-                }
+        // Fonctions de gestion de la sidebar mobile
+        function toggleMobileSidebar() {
+            if (mobileSidebarOpen) {
+                closeMobileSidebar();
             } else {
-                layerControlElement.style.top = '120px';
-                layerControlElement.style.right = '10px';
+                openMobileSidebar();
             }
-            layerControlElement.style.zIndex = '999';
         }
-    }, 100);
- }
+
+        function openMobileSidebar() {
+            const overlay = document.getElementById('sidebarMobileOverlay');
+            const sidebar = document.getElementById('sidebarMobile');
+            
+            overlay.classList.add('active');
+            sidebar.classList.add('active');
+            mobileSidebarOpen = true;
+            
+            // Prévenir le scroll du body
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileSidebar() {
+            const overlay = document.getElementById('sidebarMobileOverlay');
+            const sidebar = document.getElementById('sidebarMobile');
+            
+            overlay.classList.remove('active');
+            sidebar.classList.remove('active');
+            mobileSidebarOpen = false;
+            
+            // Restaurer le scroll du body
+            document.body.style.overflow = '';
+        }
+
+        // Fonctions mobile pour synchroniser avec desktop
+        function searchParcelleMobile() {
+            const matricule = document.getElementById('searchMatriculeMobile').value.trim();
+            document.getElementById('searchMatricule').value = matricule;
+            searchParcelle();
+            closeMobileSidebar();
+        }
+
+        function toggleArrondissementLayerMobile() {
+            const checkbox = document.getElementById('arrondissementLayerToggleMobile');
+            document.getElementById('arrondissementLayerToggle').checked = checkbox.checked;
+            toggleArrondissementLayer();
+        }
+
+        function toggleParcelleLayerMobile() {
+            const checkbox = document.getElementById('parcelleLayerToggleMobile');
+            document.getElementById('parcelleLayerToggle').checked = checkbox.checked;
+            toggleParcelleLayer();
+        }
+
+        function toggleOverlapLayerMobile() {
+            const checkbox = document.getElementById('overlapLayerToggleMobile');
+            document.getElementById('overlapLayerToggle').checked = checkbox.checked;
+            toggleOverlapLayer();
+        }
+
+        function applyFiltersMobile() {
+            // Synchroniser les filtres mobiles avec desktop
+            document.getElementById('filterArrondissement').value = document.getElementById('filterArrondissementMobile').value;
+            document.getElementById('filterQuartier').value = document.getElementById('filterQuartierMobile').value;
+            document.getElementById('filterActivite').value = document.getElementById('filterActiviteMobile').value;
+            document.getElementById('filterStatut').value = document.getElementById('filterStatutMobile').value;
+            
+            applyFilters();
+        }
+
+        function clearFiltersMobile() {
+            document.getElementById('filterArrondissementMobile').value = '';
+            document.getElementById('filterQuartierMobile').value = '';
+            document.getElementById('filterActiviteMobile').value = '';
+            document.getElementById('filterStatutMobile').value = '';
+            document.getElementById('searchMatriculeMobile').value = '';
+            
+            clearFilters();
+        }
+
+        // Initialisation de la carte avec options responsives
+        function initMap() {
+            // Options de configuration responsive
+            const mapOptions = {
+                zoomControl: !isMobile,
+                scrollWheelZoom: !isMobile,
+                doubleClickZoom: true,
+                touchZoom: true,
+                tap: isMobile,
+                tapTolerance: isMobile ? 30 : 15
+            };
+ 
+            map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
+ 
+            // Ajouter les contrôles de zoom personnalisés pour mobile
+            if (isMobile) {
+                L.control.zoom({
+                    position: 'bottomright'
+                }).addTo(map);
+            }
+ 
+            // Couches de base
+            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            });
+ 
+            const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                attribution: '© Google Maps',
+                maxZoom: 20
+            });
+ 
+            const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenTopoMap contributors',
+                maxZoom: 17
+            });
+ 
+            const baseLayers = {
+                "OpenStreetMap": osmLayer,
+                "Satellite": satelliteLayer,
+                "Topographique": topoLayer
+            };
+ 
+            osmLayer.addTo(map);
+            
+            // Contrôle des couches avec position adaptée au mobile
+            const layerControl = L.control.layers(baseLayers, null, {
+                position: 'topright',
+                collapsed: true
+            }).addTo(map);
+ 
+            // Créer des panes personnalisés avec z-index explicites
+            map.createPane('arrondissementPane');
+            map.getPane('arrondissementPane').style.zIndex = 200;
+            map.getPane('arrondissementPane').style.pointerEvents = 'auto';
+ 
+            map.createPane('parcellePane');
+            map.getPane('parcellePane').style.zIndex = 400;
+            map.getPane('parcellePane').style.pointerEvents = 'auto';
+ 
+            map.createPane('overlapPane');
+            map.getPane('overlapPane').style.zIndex = 500;
+            map.getPane('overlapPane').style.pointerEvents = 'auto';
+ 
+            // Initialiser les couches
+            initArrondissementLayer();
+            initParcelleLayer();
+            initOverlapLayer();
+ 
+            // Charger les données
+            loadArrondissements();
+            loadParcelles();
+            
+            // Détecter les chevauchements après chargement des parcelles
+            setTimeout(() => {
+                console.log('🔍 Lancement détection des chevauchements...');
+                detectOverlaps();
+            }, 1500);
+ 
+            // Configuration responsive des popups
+            configureResponsivePopups();
+            
+            // Ajuster la position via CSS après création
+            setTimeout(() => {
+                const layerControlElement = document.querySelector('.leaflet-control-layers');
+                if (layerControlElement) {
+                    if (isMobile) {
+                        if (isSmallMobile) {
+                            layerControlElement.style.top = '85px';
+                            layerControlElement.style.right = '3px';
+                        } else {
+                            layerControlElement.style.top = '100px';
+                            layerControlElement.style.right = '5px';
+                        }
+                    } else {
+                        layerControlElement.style.top = '120px';
+                        layerControlElement.style.right = '10px';
+                    }
+                    layerControlElement.style.zIndex = '999';
+                }
+            }, 100);
+        }
 
         // Configuration des popups responsives
         function configureResponsivePopups() {
@@ -1496,6 +1703,7 @@ function initMap() {
         async function loadArrondissements() {
             const loadingSpinner = document.getElementById('arrondissementLoading');
             const filterSelect = document.getElementById('filterArrondissement');
+            const filterSelectMobile = document.getElementById('filterArrondissementMobile');
             
             try {
                 loadingSpinner.style.display = 'inline-block';
@@ -1514,8 +1722,9 @@ function initMap() {
                 // Nettoyer la couche existante
                 arrondissementLayer.clearLayers();
                 
-                // Populer le select des filtres
+                // Populer les selects des filtres (desktop et mobile)
                 filterSelect.innerHTML = '<option value="">Tous les arrondissements</option>';
+                filterSelectMobile.innerHTML = '<option value="">Tous les arrondissements</option>';
                 
                 let polygonsCreated = 0;
                 
@@ -1523,11 +1732,16 @@ function initMap() {
                 arrondissementsData.forEach((arrondissement, index) => {
                     console.log(`📍 Traitement ${index + 1}/${arrondissementsData.length}: ${arrondissement.nom_arrondissement}`);
                     
-                    // Ajouter au select
+                    // Ajouter aux selects
                     const option = document.createElement('option');
                     option.value = arrondissement.nom_arrondissement;
                     option.textContent = arrondissement.nom_arrondissement;
                     filterSelect.appendChild(option);
+                    
+                    const optionMobile = document.createElement('option');
+                    optionMobile.value = arrondissement.nom_arrondissement;
+                    optionMobile.textContent = arrondissement.nom_arrondissement;
+                    filterSelectMobile.appendChild(optionMobile);
                     
                     // Traiter la géométrie
                     let coordinates = [];
@@ -1578,10 +1792,36 @@ function initMap() {
                                     areaKm2
                                 );
                                 
-                                polygon.bindPopup(popupContent, {
-                                    maxWidth: isMobile ? Math.min(280, window.innerWidth - 40) : 350,
-                                    className: isMobile ? 'mobile-popup' : 'desktop-popup'
-                                });
+                                // Options de popup adaptées selon la taille d'écran
+                                let popupOptions = {
+                                    className: isMobile ? 'mobile-popup' : 'desktop-popup',
+                                    autoPan: true,
+                                    autoPanPadding: isMobile ? [5, 5] : [10, 10],
+                                    closeButton: true,
+                                    autoClose: false,
+                                    keepInView: true
+                                };
+
+                                if (window.innerWidth <= 360) {
+                                    // Très petits écrans
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 15, 250);
+                                    popupOptions.minWidth = 180;
+                                    popupOptions.autoPanPadding = [3, 3];
+                                } else if (window.innerWidth <= 480) {
+                                    // Mobiles
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 30, 320);
+                                    popupOptions.minWidth = 250;
+                                } else if (window.innerWidth <= 768) {
+                                    // Tablettes
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 60, 400);
+                                    popupOptions.minWidth = 300;
+                                } else {
+                                    // Desktop
+                                    popupOptions.maxWidth = 450;
+                                    popupOptions.minWidth = 350;
+                                }
+                                
+                                polygon.bindPopup(popupContent, popupOptions);
                                 
                                 // Événements tactiles améliorés
                                 polygon.on('mouseover touchstart', function(e) {
@@ -1655,54 +1895,84 @@ function initMap() {
         // Créer un popup responsive pour les arrondissements
         function createResponsiveArrondissementPopup(nom, departement, region, superficie) {
             const isMobileView = window.innerWidth <= 480;
+            const isVerySmallScreen = window.innerWidth <= 360;
             
-            if (isMobileView) {
-                // Version mobile ultra-compacte
+            if (isVerySmallScreen) {
+                // Version très petits écrans (≤360px) - Ultra-compacte avec texte court
                 return `
-                    <div style="text-align: center; font-size: 0.85rem; line-height: 1.3;">
-                        <h4 style="margin: 0 0 0.5rem 0; color: #2c3e50; font-size: 0.95rem; border-bottom: 1px solid #3498db; padding-bottom: 0.3rem;">
+                    <div style="text-align: center; font-size: 0.7rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box;">
+                        <h4 style="margin: 0 0 0.2rem 0; color: #2c3e50; font-size: 0.75rem; border-bottom: 1px solid #3498db; padding-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.65rem;"></i> ${nom.length > 12 ? nom.substring(0, 12) + '...' : nom}
+                        </h4>
+                        <div style="text-align: left; overflow: hidden; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.2rem; border-radius: 2px; margin-bottom: 0.1rem; box-sizing: border-box;">
+                                <div style="margin-bottom: 0.05rem;">
+                                    <strong style="font-size: 0.65rem;">🏛️ Dép:</strong><br>
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.6rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${departement.length > 12 ? departement.substring(0, 12) + '...' : departement}
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 0.05rem;">
+                                    <strong style="font-size: 0.65rem;">🌍 Rég:</strong><br>
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.6rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${region.length > 12 ? region.substring(0, 12) + '...' : region}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="font-size: 0.65rem;">📏 Sup:</strong><br>
+                                    <span style="color: #8e44ad; font-size: 0.6rem;">${superficie} km²</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (isMobileView) {
+                // Version mobile standard (≤480px) - Compacte mais lisible
+                return `
+                    <div style="text-align: center; font-size: 0.82rem; line-height: 1.3; max-width: 100%; overflow: hidden;">
+                        <h4 style="margin: 0 0 0.4rem 0; color: #2c3e50; font-size: 0.9rem; border-bottom: 1px solid #3498db; padding-bottom: 0.3rem; word-wrap: break-word; overflow-wrap: break-word;">
                             <i class="fas fa-map-marker-alt" style="font-size: 0.8rem;"></i> ${nom}
                         </h4>
-                        <div style="text-align: left;">
-                            <div style="background: #f8f9fa; padding: 0.4rem; border-radius: 4px; margin-bottom: 0.3rem;">
-                                <div style="margin-bottom: 0.2rem;">
-                                    <strong>🏛️ Département:</strong><br>
-                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.8rem;">
+                        <div style="text-align: left; overflow: hidden;">
+                            <div style="background: #f8f9fa; padding: 0.3rem; border-radius: 4px; margin-bottom: 0.3rem;">
+                                <div style="margin-bottom: 0.15rem;">
+                                    <strong style="font-size: 0.75rem;">🏛️ Département:</strong><br>
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.72rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
                                         ${departement}
                                     </span>
                                 </div>
-                                <div style="margin-bottom: 0.2rem;">
-                                    <strong>🌍 Région:</strong><br>
-                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.8rem;">
+                                <div style="margin-bottom: 0.15rem;">
+                                    <strong style="font-size: 0.75rem;">🌍 Région:</strong><br>
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.72rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
                                         ${region}
                                     </span>
                                 </div>
                                 <div>
-                                    <strong>📏 Superficie:</strong><br>
-                                    <span style="color: #8e44ad; font-size: 0.8rem;">${superficie} km²</span>
+                                    <strong style="font-size: 0.75rem;">📏 Superficie:</strong><br>
+                                    <span style="color: #8e44ad; font-size: 0.72rem;">${superficie} km²</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
             } else {
-                // Version desktop/tablette
+                // Version desktop/tablette - Complète
                 return `
-                    <div style="text-align: center; min-width: 280px;">
-                        <h4 style="margin-bottom: 0.75rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem;">
+                    <div style="text-align: center; min-width: 280px; max-width: 350px;">
+                        <h4 style="margin-bottom: 0.75rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word;">
                             <i class="fas fa-map-marker-alt"></i> ${nom}
                         </h4>
                         <div style="text-align: left; font-size: 0.9rem;">
                             <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #3498db;">
                                 <div style="margin-bottom: 0.5rem;">
                                     <strong style="color: #2c3e50;">🏛️ Département:</strong> 
-                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-weight: 500;">
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-weight: 500; word-wrap: break-word; overflow-wrap: break-word;">
                                         ${departement}
                                     </span>
                                 </div>
                                 <div style="margin-bottom: 0.5rem;">
                                     <strong style="color: #2c3e50;">🌍 Région:</strong> 
-                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-weight: 500;">
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-weight: 500; word-wrap: break-word; overflow-wrap: break-word;">
                                         ${region}
                                     </span>
                                 </div>
@@ -1714,7 +1984,7 @@ function initMap() {
                             
                             ${(departement === 'Non renseigné' || region === 'Non renseignée') ? `
                                 <div style="background: #fff3cd; padding: 0.75rem; border-radius: 5px; border-left: 4px solid #f39c12;">
-                                    <p style="margin: 0; color: #856404; font-size: 0.85rem;">
+                                    <p style="margin: 0; color: #856404; font-size: 0.85rem; word-wrap: break-word; overflow-wrap: break-word;">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>Attention:</strong> 
                                         Certaines données administratives sont incomplètes.
                                     </p>
@@ -2433,17 +2703,28 @@ function initMap() {
             document.getElementById('filterStatut').value = '';
             document.getElementById('searchMatricule').value = '';
             
+            // Synchroniser avec mobile
+            document.getElementById('filterArrondissementMobile').value = '';
+            document.getElementById('filterQuartierMobile').value = '';
+            document.getElementById('filterActiviteMobile').value = '';
+            document.getElementById('filterStatutMobile').value = '';
+            document.getElementById('searchMatriculeMobile').value = '';
+            
             loadParcelles();
             document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('searchResultsMobile').innerHTML = '';
             showNotification('Filtres effacés', 'info');
         }
 
         // Afficher les résultats de recherche
         function displaySearchResults(parcelles) {
             const resultsDiv = document.getElementById('searchResults');
+            const resultsMobileDiv = document.getElementById('searchResultsMobile');
             
             if (parcelles.length === 0) {
-                resultsDiv.innerHTML = '<p style="text-align: center; color: #666;">Aucun résultat</p>';
+                const noResultsHtml = '<p style="text-align: center; color: #666;">Aucun résultat</p>';
+                resultsDiv.innerHTML = noResultsHtml;
+                resultsMobileDiv.innerHTML = noResultsHtml;
                 return;
             }
 
@@ -2455,7 +2736,7 @@ function initMap() {
                 'autres': 'Autres activités'
             };
 
-            resultsDiv.innerHTML = `
+            const resultsHtml = `
                 <div class="filter-title" style="margin-bottom: 1rem;">
                     Résultats (${parcelles.length})
                 </div>
@@ -2477,6 +2758,9 @@ function initMap() {
                     `;
                 }).join('')}
             `;
+            
+            resultsDiv.innerHTML = resultsHtml;
+            resultsMobileDiv.innerHTML = resultsHtml;
         }
 
         // Centrer sur une parcelle
@@ -2486,6 +2770,11 @@ function initMap() {
                 const center = L.polygon(parcelle.coordinates).getBounds().getCenter();
                 map.setView(center, isMobile ? 15 : 16);
                 showParcelleDetails(parcelle);
+                
+                // Fermer la sidebar mobile si ouverte
+                if (mobileSidebarOpen) {
+                    closeMobileSidebar();
+                }
             }
         }
 
@@ -2703,7 +2992,7 @@ function initMap() {
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // Basculer la sidebar
+        // Basculer la sidebar desktop
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.querySelector('.sidebar-toggle i');
@@ -2858,6 +3147,12 @@ function initMap() {
             document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchParcelle();
+                }
+            });
+
+            document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchParcelleMobile();
                 }
             });
 
