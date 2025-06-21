@@ -938,7 +938,7 @@
             }
         }
 
-        /* CORRECTION: Très petits écrans (inférieur à 360px) - Améliorations majeures */
+        /* CORRECTION: Très petits écrans (inférieur à 360px) - Corrections drastiques */
         @media (max-width: 360px) {
             .logo {
                 font-size: 1rem;
@@ -954,20 +954,31 @@
                 max-width: 280px;
             }
 
-            /* CORRECTION: Amélioration majeure du scroll sur très petits écrans */
+            /* CORRECTION: Scroll sidebar forcé avec dimensions spécifiques */
             .sidebar-content {
-                padding: 0.4rem;
-                height: calc(100vh - 90px);
-                max-height: calc(100vh - 90px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                -webkit-overflow-scrolling: touch;
-                scroll-behavior: smooth;
-                /* Force le scroll sur très petits écrans */
-                position: relative;
-                /* CORRECTION: Styles additionnels pour forcer le scroll */
-                touch-action: pan-y;
-                overscroll-behavior: contain;
+                padding: 0.3rem;
+                /* CORRECTION: Hauteur absolue pour forcer le scroll */
+                height: 400px !important;
+                max-height: 400px !important;
+                min-height: 400px !important;
+                overflow-y: scroll !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
+                scroll-behavior: smooth !important;
+                /* CORRECTION: Propriétés additionnelles pour forcer le scroll */
+                touch-action: pan-y !important;
+                overscroll-behavior: contain !important;
+                position: relative !important;
+                /* CORRECTION: Styles pour créer un contexte de défilement */
+                will-change: scroll-position !important;
+                transform: translateZ(0) !important;
+                backface-visibility: hidden !important;
+            }
+
+            /* CORRECTION: S'assurer que le contenu dépasse la hauteur */
+            .sidebar-content > * {
+                flex-shrink: 0 !important;
+                min-height: auto !important;
             }
 
             .control-btn {
@@ -976,14 +987,15 @@
                 font-size: 0.7rem;
             }
 
-            /* CORRECTION: Légende repositionnée pour éviter les conflits */
+            /* CORRECTION: Légende repositionnée spécifiquement */
             .legend {
-                bottom: 35px;
-                left: 3px;
-                min-width: 100px;
-                font-size: 0.65rem;
-                padding: 0.3rem;
-                max-width: calc(100vw - 80px);
+                bottom: 35px !important;
+                left: 3px !important;
+                min-width: 100px !important;
+                font-size: 0.65rem !important;
+                padding: 0.3rem !important;
+                max-width: calc(100vw - 80px) !important;
+                z-index: 1000 !important;
             }
 
             .modal-content {
@@ -991,12 +1003,14 @@
                 margin: 1% 0;
             }
 
-            /* CORRECTION: Contrôle de zoom repositionné pour très petits écrans */
+            /* CORRECTION: Contrôle de zoom avec position absolue */
             .leaflet-control-zoom {
                 bottom: 30px !important;
                 right: 3px !important;
                 top: auto !important;
                 left: auto !important;
+                position: absolute !important;
+                z-index: 1000 !important;
             }
 
             .leaflet-control-layers {
@@ -1031,6 +1045,28 @@
                 font-size: 0.7rem !important;
                 line-height: 1.1 !important;
                 box-sizing: border-box !important;
+            }
+
+            /* CORRECTION: Forcer la hauteur du main-container */
+            .main-container {
+                height: calc(100vh - 60px) !important;
+                min-height: calc(100vh - 60px) !important;
+            }
+
+            /* CORRECTION: Header fixe pour très petits écrans */
+            .header {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 3000 !important;
+                height: 60px !important;
+                min-height: 60px !important;
+            }
+
+            /* CORRECTION: Ajuster le body pour le header fixe */
+            body {
+                padding-top: 60px !important;
             }
         }
 
@@ -1784,8 +1820,11 @@
             }
 
             if (zoomControlElement) {
-                // CORRECTION: Positionnement uniforme à 30px du bottom
+                // CORRECTION: Positionnement uniforme à 30px du bottom avec force
                 zoomControlElement.style.bottom = '30px';
+                zoomControlElement.style.position = 'absolute';
+                zoomControlElement.style.zIndex = '1000';
+                
                 if (isVerySmallMobile) {
                     zoomControlElement.style.right = '3px';
                 } else if (isMobile) {
@@ -1795,6 +1834,12 @@
                 }
                 zoomControlElement.style.top = 'auto';
                 zoomControlElement.style.left = 'auto';
+                
+                console.log('🎯 Contrôle zoom repositionné:', {
+                    bottom: zoomControlElement.style.bottom,
+                    right: zoomControlElement.style.right,
+                    isVerySmall: isVerySmallMobile
+                });
             }
         }
 
@@ -3276,28 +3321,67 @@
             }, 250);
         });
 
-        // CORRECTION: Amélioration du scroll sur très petits écrans
+        // CORRECTION: Amélioration drastique du scroll pour très petits écrans
         function fixMobileScrolling() {
             const sidebarContents = document.querySelectorAll('.sidebar-content');
             sidebarContents.forEach(sidebarContent => {
                 if (sidebarContent) {
-                    // CORRECTION: Configuration avancée du scroll
-                    sidebarContent.style.height = isVerySmallMobile ? 'calc(100vh - 90px)' : 'calc(100vh - 100px)';
-                    sidebarContent.style.maxHeight = isVerySmallMobile ? 'calc(100vh - 90px)' : 'calc(100vh - 100px)';
-                    sidebarContent.style.overflowY = 'auto';
-                    sidebarContent.style.overflowX = 'hidden';
-                    sidebarContent.style.webkitOverflowScrolling = 'touch';
-                    sidebarContent.style.position = 'relative';
-                    sidebarContent.style.touchAction = 'pan-y';
-                    sidebarContent.style.overscrollBehavior = 'contain';
-                    
-                    // CORRECTION: Forcer la création d'un contexte de scroll
-                    sidebarContent.style.willChange = 'scroll-position';
-                    
-                    console.log('🔧 Scroll forcé pour sidebar:', {
-                        height: sidebarContent.style.height,
-                        overflow: sidebarContent.style.overflowY
-                    });
+                    if (isVerySmallMobile) {
+                        // CORRECTION: Configuration drastique pour écrans ≤360px
+                        console.log('🔧 Application du scroll forcé pour écran ≤360px');
+                        
+                        // Hauteur absolue fixe
+                        sidebarContent.style.height = '400px';
+                        sidebarContent.style.maxHeight = '400px';
+                        sidebarContent.style.minHeight = '400px';
+                        
+                        // Propriétés de scroll forcées
+                        sidebarContent.style.overflowY = 'scroll';
+                        sidebarContent.style.overflowX = 'hidden';
+                        sidebarContent.style.webkitOverflowScrolling = 'touch';
+                        sidebarContent.style.touchAction = 'pan-y';
+                        sidebarContent.style.overscrollBehavior = 'contain';
+                        
+                        // Optimisations de performance
+                        sidebarContent.style.willChange = 'scroll-position';
+                        sidebarContent.style.transform = 'translateZ(0)';
+                        sidebarContent.style.backfaceVisibility = 'hidden';
+                        
+                        // Forcer la création d'un contexte de scroll
+                        sidebarContent.style.position = 'relative';
+                        sidebarContent.style.zIndex = '10';
+                        
+                        // CORRECTION: S'assurer que le contenu dépasse la hauteur
+                        const totalContentHeight = Array.from(sidebarContent.children)
+                            .reduce((total, child) => total + child.offsetHeight, 0);
+                        
+                        console.log('📏 Dimensions sidebar:', {
+                            containerHeight: '400px',
+                            contentHeight: totalContentHeight + 'px',
+                            scrollable: totalContentHeight > 400
+                        });
+                        
+                        // Ajouter du contenu invisible si nécessaire pour forcer le scroll
+                        if (totalContentHeight <= 400) {
+                            const spacer = document.createElement('div');
+                            spacer.style.height = '200px';
+                            spacer.style.visibility = 'hidden';
+                            spacer.setAttribute('data-spacer', 'true');
+                            sidebarContent.appendChild(spacer);
+                            console.log('➕ Spacer ajouté pour forcer le scroll');
+                        }
+                        
+                    } else {
+                        // Configuration normale pour autres écrans
+                        sidebarContent.style.height = 'calc(100vh - 100px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 100px)';
+                        sidebarContent.style.overflowY = 'auto';
+                        sidebarContent.style.overflowX = 'hidden';
+                        sidebarContent.style.webkitOverflowScrolling = 'touch';
+                        sidebarContent.style.touchAction = 'pan-y';
+                        sidebarContent.style.overscrollBehavior = 'contain';
+                        sidebarContent.style.willChange = 'scroll-position';
+                    }
                 }
             });
         }
@@ -3309,9 +3393,29 @@
             // Initialiser la carte
             initMap();
             
-            // CORRECTION: Corriger le scroll mobile après l'initialisation
+            // CORRECTION: Corriger le scroll mobile après l'initialisation avec retry
             setTimeout(() => {
                 fixMobileScrolling();
+                
+                // CORRECTION: Double vérification pour très petits écrans
+                if (isVerySmallMobile) {
+                    setTimeout(() => {
+                        console.log('🔄 Seconde tentative de correction du scroll');
+                        fixMobileScrolling();
+                        
+                        // CORRECTION: Test final du scroll
+                        const sidebarContent = document.querySelector('.sidebar-content');
+                        if (sidebarContent) {
+                            console.log('📋 État final de la sidebar:', {
+                                height: sidebarContent.style.height,
+                                overflow: sidebarContent.style.overflowY,
+                                scrollHeight: sidebarContent.scrollHeight,
+                                clientHeight: sidebarContent.clientHeight,
+                                isScrollable: sidebarContent.scrollHeight > sidebarContent.clientHeight
+                            });
+                        }
+                    }, 1000);
+                }
             }, 500);
             
             // Gestionnaires d'événements
@@ -3372,4 +3476,4 @@
 
     </script>
 </body>
-</html>
+</html>; i
