@@ -227,6 +227,9 @@
             flex: 1;
             overflow-y: auto;
             padding: 0.75rem;
+            /* CORRECTION: Amélioration du défilement sur très petits écrans */
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
         }
 
         .sidebar.collapsed .sidebar-content {
@@ -312,6 +315,7 @@
             z-index: 999 !important;
         }
 
+        /* CORRECTION: Positionnement du contrôle de zoom amélioré */
         .leaflet-control-zoom {
             top: 10px !important;
             left: 10px !important;
@@ -390,9 +394,10 @@
             color: white;
         }
 
+        /* CORRECTION: Positionnement de la légende amélioré */
         .legend {
             position: absolute;
-            bottom: 15px;
+            bottom: 20px;
             left: 15px;
             background: white;
             padding: 0.75rem;
@@ -638,6 +643,32 @@
             50% { transform: translateY(-5px); }
         }
 
+        /* CORRECTION: Popup de chevauchement améliorée pour éviter le débordement */
+        .mobile-popup .leaflet-popup-content-wrapper {
+            max-width: calc(100vw - 30px) !important;
+            box-sizing: border-box !important;
+        }
+
+        .mobile-popup .leaflet-popup-content {
+            margin: 6px 8px !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+
+        .overlap-popup {
+            max-width: calc(100vw - 40px) !important;
+        }
+
+        .overlap-popup .leaflet-popup-content {
+            padding: 0.4rem !important;
+            margin: 0.3rem !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
         /* ==========================================
            RESPONSIVE DESIGN - MOBILES FIRST
         ========================================== */
@@ -702,8 +733,9 @@
                 min-height: 36px;
             }
 
+            /* CORRECTION: Positionnement légende amélioré sur tablettes */
             .legend {
-                bottom: 8px;
+                bottom: 25px;
                 left: 8px;
                 font-size: 0.75rem;
                 padding: 0.5rem;
@@ -740,13 +772,15 @@
                 right: 2px !important;
             }
             
+            /* CORRECTION: Contrôle de zoom repositionné */
             .leaflet-control-zoom {
-                top: 5px !important;
-                left: 5px !important;
-                right: auto !important;
+                bottom: 25px !important;
+                right: 5px !important;
+                top: auto !important;
+                left: auto !important;
             }
 
-            /* POPUP ARRONDISSEMENT - Ajustement largeur pour tablettes */
+            /* CORRECTION: Popup arrondissement ajustée pour tablettes */
             .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 60px) !important;
             }
@@ -783,6 +817,10 @@
 
             .sidebar-content {
                 padding: 0.5rem;
+                /* CORRECTION: Amélioration du scroll sur mobiles */
+                height: calc(100vh - 120px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .search-box, .filter-select, .form-input {
@@ -811,8 +849,9 @@
                 min-height: 32px;
             }
 
+            /* CORRECTION: Légend positionnée plus haut sur mobiles */
             .legend {
-                bottom: 5px;
+                bottom: 30px;
                 left: 5px;
                 padding: 0.4rem;
                 font-size: 0.7rem;
@@ -854,7 +893,7 @@
                 padding: 0.5rem 0.75rem;
             }
 
-            /* POPUP ARRONDISSEMENT - Réduction largeur pour mobiles */
+            /* CORRECTION: Popup arrondissement réduite pour mobiles */
             .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 40px) !important;
                 border-radius: 6px !important;
@@ -864,6 +903,7 @@
                 margin: 8px 10px !important;
                 font-size: 0.8rem !important;
                 line-height: 1.3 !important;
+                padding: 0 !important;
             }
 
             .leaflet-popup-close-button {
@@ -876,15 +916,16 @@
                 right: 3px !important;
             }
             
+            /* CORRECTION: Contrôle de zoom repositionné pour mobiles */
             .leaflet-control-zoom {
-                top: 5px !important;
-                left: 5px !important;
-                right: auto !important;
-                bottom: auto !important;
+                bottom: 30px !important;
+                right: 5px !important;
+                top: auto !important;
+                left: auto !important;
             }
         }
 
-        /* Très petits écrans (inférieur à 360px) */
+        /* CORRECTION: Très petits écrans (inférieur à 360px) - Améliorations majeures */
         @media (max-width: 360px) {
             .logo {
                 font-size: 1rem;
@@ -900,44 +941,80 @@
                 max-width: 280px;
             }
 
+            /* CORRECTION: Amélioration majeure du scroll sur très petits écrans */
+            .sidebar-content {
+                padding: 0.4rem;
+                height: calc(100vh - 110px);
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+                /* Force le scroll sur très petits écrans */
+                max-height: calc(100vh - 110px);
+                position: relative;
+            }
+
             .control-btn {
                 min-width: 28px;
                 min-height: 28px;
                 font-size: 0.7rem;
-                top: 20px;
-                right: 3px;
             }
 
+            /* CORRECTION: Légende repositionnée pour éviter les conflits */
             .legend {
+                bottom: 35px;
+                left: 3px;
                 min-width: 100px;
                 font-size: 0.65rem;
-                bottom:20px ;
+                padding: 0.3rem;
+                max-width: calc(100vw - 80px);
             }
 
             .modal-content {
                 padding: 0.5rem;
+                margin: 1% 0;
+            }
+
+            /* CORRECTION: Contrôle de zoom repositionné pour très petits écrans */
+            .leaflet-control-zoom {
+                bottom: 35px !important;
+                right: 3px !important;
+                top: auto !important;
+                left: auto !important;
             }
 
             .leaflet-control-layers {
-                top: 200px !important;
-                right: 3px !important;
-            }
-            
-            .leaflet-control-zoom {
-                bottom: 20px !important;
+                top: 160px !important;
                 right: 3px !important;
             }
 
-            /* POPUP ARRONDISSEMENT - Largeur maximale 65% pour très petits écrans */
+            /* CORRECTION: Popup arrondissement optimisée pour très petits écrans */
             .leaflet-popup-content-wrapper {
-                max-width: 80% !important;
-                min-width: 200px !important;
+                max-width: calc(100vw - 20px) !important;
+                min-width: 180px !important;
             }
 
             .leaflet-popup-content {
-                margin: 6px 8px !important;
+                margin: 6px 6px !important;
                 font-size: 0.75rem !important;
                 line-height: 1.2 !important;
+                padding: 0.2rem !important;
+                overflow: hidden !important;
+                word-wrap: break-word !important;
+            }
+
+            /* CORRECTION: Popup de chevauchement spécialement optimisée */
+            .overlap-popup .leaflet-popup-content-wrapper {
+                max-width: calc(100vw - 15px) !important;
+                min-width: 160px !important;
+            }
+
+            .overlap-popup .leaflet-popup-content {
+                margin: 4px 4px !important;
+                padding: 0.3rem !important;
+                font-size: 0.7rem !important;
+                line-height: 1.1 !important;
+                box-sizing: border-box !important;
             }
         }
 
@@ -952,15 +1029,22 @@
                 max-width: 280px;
             }
 
+            /* CORRECTION: Positionnement en mode paysage */
             .leaflet-control-zoom {
-                top: 5px !important;
-                left: 5px !important;
-                right: auto !important;
+                bottom: 15px !important;
+                right: 5px !important;
+                top: auto !important;
+                left: auto !important;
             }
             
             .leaflet-control-layers {
-                top: 160px !important;
+                top: 140px !important;
                 right: 5px !important;
+            }
+
+            .legend {
+                bottom: 15px;
+                left: 5px;
             }
         }
 
@@ -984,6 +1068,21 @@
             .close:active {
                 transform: scale(0.95);
             }
+        }
+
+        /* CORRECTION: Style pour empêcher le débordement du contenu des popups */
+        .leaflet-popup-content * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+
+        /* CORRECTION: Forcer le conteneur des popups à respecter les limites */
+        .leaflet-popup-content > div {
+            max-width: 100% !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
         }
     </style>
 </head>
@@ -1430,6 +1529,7 @@
         // Détection du type d'appareil
         const isMobile = window.innerWidth <= 768;
         const isSmallMobile = window.innerWidth <= 480;
+        const isVerySmallMobile = window.innerWidth <= 360;
 
         // État de la sidebar mobile
         let mobileSidebarOpen = false;
@@ -1566,7 +1666,7 @@
         function initMap() {
             // Options de configuration responsive
             const mapOptions = {
-                zoomControl: !isMobile,
+                zoomControl: false, // CORRECTION: Désactiver le contrôle par défaut
                 scrollWheelZoom: !isMobile,
                 doubleClickZoom: true,
                 touchZoom: true,
@@ -1576,12 +1676,10 @@
  
             map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
  
-            // Ajouter les contrôles de zoom personnalisés pour mobile
-            if (isMobile) {
-                L.control.zoom({
-                    position: 'bottomright'
-                }).addTo(map);
-            }
+            // CORRECTION: Ajouter les contrôles de zoom avec positionnement corrigé
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
  
             // Couches de base
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1644,25 +1742,45 @@
             // Configuration responsive des popups
             configureResponsivePopups();
             
-            // Ajuster la position via CSS après création
+            // CORRECTION: Ajuster la position des contrôles avec CSS amélioré
             setTimeout(() => {
-                const layerControlElement = document.querySelector('.leaflet-control-layers');
-                if (layerControlElement) {
-                    if (isMobile) {
-                        if (isSmallMobile) {
-                            layerControlElement.style.top = '85px';
-                            layerControlElement.style.right = '3px';
-                        } else {
-                            layerControlElement.style.top = '100px';
-                            layerControlElement.style.right = '5px';
-                        }
-                    } else {
-                        layerControlElement.style.top = '120px';
-                        layerControlElement.style.right = '10px';
-                    }
-                    layerControlElement.style.zIndex = '999';
-                }
+                adjustControlPositions();
             }, 100);
+        }
+
+        // CORRECTION: Fonction pour ajuster les positions des contrôles
+        function adjustControlPositions() {
+            const layerControlElement = document.querySelector('.leaflet-control-layers');
+            const zoomControlElement = document.querySelector('.leaflet-control-zoom');
+            
+            if (layerControlElement) {
+                if (isVerySmallMobile) {
+                    layerControlElement.style.top = '160px';
+                    layerControlElement.style.right = '3px';
+                } else if (isMobile) {
+                    layerControlElement.style.top = '175px';
+                    layerControlElement.style.right = '5px';
+                } else {
+                    layerControlElement.style.top = '120px';
+                    layerControlElement.style.right = '10px';
+                }
+                layerControlElement.style.zIndex = '999';
+            }
+
+            if (zoomControlElement) {
+                if (isVerySmallMobile) {
+                    zoomControlElement.style.bottom = '35px';
+                    zoomControlElement.style.right = '3px';
+                } else if (isMobile) {
+                    zoomControlElement.style.bottom = '30px';
+                    zoomControlElement.style.right = '5px';
+                } else {
+                    zoomControlElement.style.bottom = '25px';
+                    zoomControlElement.style.right = '10px';
+                }
+                zoomControlElement.style.top = 'auto';
+                zoomControlElement.style.left = 'auto';
+            }
         }
 
         // Configuration des popups responsives
@@ -1795,7 +1913,7 @@
                                     areaKm2
                                 );
                                 
-                                // Options de popup adaptées selon la taille d'écran
+                                // CORRECTION: Options de popup améliorées pour éviter le débordement
                                 let popupOptions = {
                                     className: isMobile ? 'mobile-popup' : 'desktop-popup',
                                     autoPan: true,
@@ -1805,23 +1923,19 @@
                                     keepInView: true
                                 };
 
-                                if (window.innerWidth <= 360) {
+                                if (isVerySmallMobile) {
                                     // Très petits écrans
-                                    popupOptions.maxWidth = Math.min(window.innerWidth - 15, 250);
-                                    popupOptions.minWidth = 180;
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 15, 200);
+                                    popupOptions.minWidth = 150;
                                     popupOptions.autoPanPadding = [3, 3];
-                                } else if (window.innerWidth <= 480) {
+                                } else if (isMobile) {
                                     // Mobiles
-                                    popupOptions.maxWidth = Math.min(window.innerWidth - 30, 320);
-                                    popupOptions.minWidth = 250;
-                                } else if (window.innerWidth <= 768) {
-                                    // Tablettes
-                                    popupOptions.maxWidth = Math.min(window.innerWidth - 60, 400);
-                                    popupOptions.minWidth = 300;
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 30, 280);
+                                    popupOptions.minWidth = 200;
                                 } else {
                                     // Desktop
-                                    popupOptions.maxWidth = 450;
-                                    popupOptions.minWidth = 350;
+                                    popupOptions.maxWidth = 400;
+                                    popupOptions.minWidth = 300;
                                 }
                                 
                                 polygon.bindPopup(popupContent, popupOptions);
@@ -1901,72 +2015,72 @@
             const isVerySmallScreen = window.innerWidth <= 360;
             
             if (isVerySmallScreen) {
-                // Version très petits écrans (≤360px) - Ultra-compacte avec texte court
+                // CORRECTION: Version très petits écrans optimisée
                 return `
-                    <div style="text-align: center; font-size: 0.7rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box;">
-                        <h4 style="margin: 0 0 0.2rem 0; color: #2c3e50; font-size: 0.75rem; border-bottom: 1px solid #3498db; padding-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            <i class="fas fa-map-marker-alt" style="font-size: 0.65rem;"></i> ${nom.length > 12 ? nom.substring(0, 12) + '...' : nom}
+                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.2rem;">
+                        <h4 style="margin: 0 0 0.2rem 0; color: #2c3e50; font-size: 0.7rem; border-bottom: 1px solid #3498db; padding-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.6rem;"></i> ${nom.length > 10 ? nom.substring(0, 10) + '...' : nom}
                         </h4>
                         <div style="text-align: left; overflow: hidden; box-sizing: border-box;">
-                            <div style="background: #f8f9fa; padding: 0.2rem; border-radius: 2px; margin-bottom: 0.1rem; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.15rem; border-radius: 2px; margin-bottom: 0.1rem; box-sizing: border-box;">
                                 <div style="margin-bottom: 0.05rem;">
-                                    <strong style="font-size: 0.65rem;">🏛️ Dép:</strong><br>
-                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.6rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
-                                        ${departement.length > 12 ? departement.substring(0, 12) + '...' : departement}
+                                    <strong style="font-size: 0.6rem;">🏛️ Dép:</strong><br>
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.55rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${departement.length > 10 ? departement.substring(0, 10) + '...' : departement}
                                     </span>
                                 </div>
                                 <div style="margin-bottom: 0.05rem;">
-                                    <strong style="font-size: 0.65rem;">🌍 Rég:</strong><br>
-                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.6rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
-                                        ${region.length > 12 ? region.substring(0, 12) + '...' : region}
+                                    <strong style="font-size: 0.6rem;">🌍 Rég:</strong><br>
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.55rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${region.length > 10 ? region.substring(0, 10) + '...' : region}
                                     </span>
                                 </div>
                                 <div>
-                                    <strong style="font-size: 0.65rem;">📏 Sup:</strong><br>
-                                    <span style="color: #8e44ad; font-size: 0.6rem;">${superficie} km²</span>
+                                    <strong style="font-size: 0.6rem;">📏 Sup:</strong><br>
+                                    <span style="color: #8e44ad; font-size: 0.55rem;">${superficie} km²</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
             } else if (isMobileView) {
-                // Version mobile standard (≤480px) - Compacte mais lisible
+                // Version mobile standard
                 return `
-                    <div style="text-align: center; font-size: 0.82rem; line-height: 1.3; max-width: 100%; overflow: hidden;">
-                        <h4 style="margin: 0 0 0.4rem 0; color: #2c3e50; font-size: 0.9rem; border-bottom: 1px solid #3498db; padding-bottom: 0.3rem; word-wrap: break-word; overflow-wrap: break-word;">
-                            <i class="fas fa-map-marker-alt" style="font-size: 0.8rem;"></i> ${nom}
+                    <div style="text-align: center; font-size: 0.75rem; line-height: 1.2; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.3rem;">
+                        <h4 style="margin: 0 0 0.3rem 0; color: #2c3e50; font-size: 0.8rem; border-bottom: 1px solid #3498db; padding-bottom: 0.2rem; word-wrap: break-word; overflow-wrap: break-word;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.75rem;"></i> ${nom}
                         </h4>
-                        <div style="text-align: left; overflow: hidden;">
-                            <div style="background: #f8f9fa; padding: 0.3rem; border-radius: 4px; margin-bottom: 0.3rem;">
-                                <div style="margin-bottom: 0.15rem;">
-                                    <strong style="font-size: 0.75rem;">🏛️ Département:</strong><br>
-                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.72rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                        <div style="text-align: left; overflow: hidden; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.25rem; border-radius: 3px; margin-bottom: 0.2rem; box-sizing: border-box;">
+                                <div style="margin-bottom: 0.1rem;">
+                                    <strong style="font-size: 0.7rem;">🏛️ Département:</strong><br>
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.65rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
                                         ${departement}
                                     </span>
                                 </div>
-                                <div style="margin-bottom: 0.15rem;">
-                                    <strong style="font-size: 0.75rem;">🌍 Région:</strong><br>
-                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.72rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                <div style="margin-bottom: 0.1rem;">
+                                    <strong style="font-size: 0.7rem;">🌍 Région:</strong><br>
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.65rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
                                         ${region}
                                     </span>
                                 </div>
                                 <div>
-                                    <strong style="font-size: 0.75rem;">📏 Superficie:</strong><br>
-                                    <span style="color: #8e44ad; font-size: 0.72rem;">${superficie} km²</span>
+                                    <strong style="font-size: 0.7rem;">📏 Superficie:</strong><br>
+                                    <span style="color: #8e44ad; font-size: 0.65rem;">${superficie} km²</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
             } else {
-                // Version desktop/tablette - Complète
+                // Version desktop/tablette
                 return `
-                    <div style="text-align: center; min-width: 280px; max-width: 350px;">
+                    <div style="text-align: center; min-width: 280px; max-width: 350px; box-sizing: border-box; padding: 0.5rem;">
                         <h4 style="margin-bottom: 0.75rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word;">
                             <i class="fas fa-map-marker-alt"></i> ${nom}
                         </h4>
                         <div style="text-align: left; font-size: 0.9rem;">
-                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #3498db;">
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #3498db; box-sizing: border-box;">
                                 <div style="margin-bottom: 0.5rem;">
                                     <strong style="color: #2c3e50;">🏛️ Département:</strong> 
                                     <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-weight: 500; word-wrap: break-word; overflow-wrap: break-word;">
@@ -1984,21 +2098,6 @@
                                     <span style="color: #8e44ad; font-weight: 500;">${superficie} km²</span>
                                 </div>
                             </div>
-                            
-                            ${(departement === 'Non renseigné' || region === 'Non renseignée') ? `
-                                <div style="background: #fff3cd; padding: 0.75rem; border-radius: 5px; border-left: 4px solid #f39c12;">
-                                    <p style="margin: 0; color: #856404; font-size: 0.85rem; word-wrap: break-word; overflow-wrap: break-word;">
-                                        <i class="fas fa-exclamation-triangle"></i> <strong>Attention:</strong> 
-                                        Certaines données administratives sont incomplètes.
-                                    </p>
-                                </div>
-                            ` : `
-                                <div style="background: #d4edda; padding: 0.5rem; border-radius: 5px; border-left: 4px solid #27ae60;">
-                                    <p style="margin: 0; color: #155724; font-size: 0.85rem;">
-                                        <i class="fas fa-check-circle"></i> Données administratives complètes
-                                    </p>
-                                </div>
-                            `}
                         </div>
                     </div>
                 `;
@@ -2340,11 +2439,31 @@
             
             const popupContent = createOverlapPopup(parcelle1, parcelle2, areaM2, areaPercent1, areaPercent2);
             
+            // CORRECTION: Options de popup spécialement optimisées pour les chevauchements
+            let popupOptions = {
+                className: isMobile ? 'mobile-popup overlap-popup' : 'desktop-popup overlap-popup',
+                autoPan: true,
+                closeButton: true,
+                autoClose: false,
+                keepInView: true
+            };
+
+            if (isVerySmallMobile) {
+                popupOptions.maxWidth = Math.min(window.innerWidth - 15, 180);
+                popupOptions.minWidth = 140;
+                popupOptions.autoPanPadding = [2, 2];
+            } else if (isMobile) {
+                popupOptions.maxWidth = Math.min(window.innerWidth - 30, 250);
+                popupOptions.minWidth = 180;
+                popupOptions.autoPanPadding = [5, 5];
+            } else {
+                popupOptions.maxWidth = 320;
+                popupOptions.minWidth = 250;
+                popupOptions.autoPanPadding = [10, 10];
+            }
+            
             // Attacher le popup au polygone
-            intersectionPolygon.bindPopup(popupContent, {
-                maxWidth: isMobile ? Math.min(280, window.innerWidth - 40) : 350,
-                className: isMobile ? 'mobile-popup overlap-popup' : 'desktop-popup overlap-popup'
-            });
+            intersectionPolygon.bindPopup(popupContent, popupOptions);
 
             // Effets visuels tactiles
             intersectionPolygon.on('mouseover touchstart', function() {
@@ -2369,25 +2488,47 @@
             console.log('✅ Zone de chevauchement ajoutée - Rectangle rouge uniquement');
         }
 
-        // Créer un popup responsive pour les chevauchements
+        // CORRECTION: Créer un popup responsive pour les chevauchements avec padding contrôlé
         function createOverlapPopup(parcelle1, parcelle2, areaM2, areaPercent1, areaPercent2) {
             const isMobileView = window.innerWidth <= 480;
+            const isVerySmallScreen = window.innerWidth <= 360;
             
-            if (isMobileView) {
+            if (isVerySmallScreen) {
+                // CORRECTION: Version très petits écrans ultra-compacte avec padding réduit
+                return `
+                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.2rem; margin: 0;">
+                        <h4 style="color: #dc3545; margin: 0 0 0.2rem 0; font-size: 0.7rem; padding: 0;">
+                            ⚠️ Conflit
+                        </h4>
+                        <div style="text-align: left; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.15rem; border-radius: 2px; margin-bottom: 0.1rem; font-size: 0.6rem; box-sizing: border-box;">
+                                <strong>Zone:</strong> ${areaM2} m²<br>
+                                <strong>Impact ${parcelle1.matricule.substring(0, 8)}:</strong> ${areaPercent1}%<br>
+                                <strong>Impact ${parcelle2.matricule.substring(0, 8)}:</strong> ${areaPercent2}%
+                            </div>
+                            <div style="background: #ffe6e6; padding: 0.1rem; border-radius: 2px; box-sizing: border-box;">
+                                <p style="color: #dc3545; font-size: 0.55rem; margin: 0; padding: 0;">
+                                    <i class="fas fa-exclamation-triangle"></i> Conflit foncier
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (isMobileView) {
                 // Version mobile compacte
                 return `
-                    <div style="text-align: center; font-size: 0.8rem; line-height: 1.2;">
-                        <h4 style="color: #dc3545; margin: 0 0 0.4rem 0; font-size: 0.9rem;">
+                    <div style="text-align: center; font-size: 0.75rem; line-height: 1.2; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.3rem; margin: 0;">
+                        <h4 style="color: #dc3545; margin: 0 0 0.3rem 0; font-size: 0.8rem; padding: 0;">
                             ⚠️ Chevauchement
                         </h4>
-                        <div style="text-align: left;">
-                            <div style="background: #f8f9fa; padding: 0.3rem; border-radius: 4px; margin-bottom: 0.3rem; font-size: 0.75rem;">
+                        <div style="text-align: left; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.25rem; border-radius: 3px; margin-bottom: 0.2rem; font-size: 0.7rem; box-sizing: border-box;">
                                 <strong>Zone:</strong> ${areaM2} m²<br>
                                 <strong>Impact ${parcelle1.matricule}:</strong> ${areaPercent1}%<br>
                                 <strong>Impact ${parcelle2.matricule}:</strong> ${areaPercent2}%
                             </div>
-                            <div style="background: #ffe6e6; padding: 0.3rem; border-radius: 4px;">
-                                <p style="color: #dc3545; font-size: 0.7rem; margin: 0;">
+                            <div style="background: #ffe6e6; padding: 0.2rem; border-radius: 3px; box-sizing: border-box;">
+                                <p style="color: #dc3545; font-size: 0.65rem; margin: 0; padding: 0;">
                                     <i class="fas fa-exclamation-triangle"></i> Conflit foncier détecté
                                 </p>
                             </div>
@@ -2397,30 +2538,28 @@
             } else {
                 // Version desktop complète
                 return `
-                    <div style="text-align: center; min-width: 280px;">
-                        <h4 style="color: #dc3545; margin-bottom: 0.5rem;">
+                    <div style="text-align: center; min-width: 240px; max-width: 300px; box-sizing: border-box; padding: 0.5rem; margin: 0;">
+                        <h4 style="color: #dc3545; margin-bottom: 0.4rem; font-size: 0.9rem; padding: 0;">
                             ⚠️ Chevauchement Détecté
                         </h4>
-                        <div style="text-align: left; font-size: 0.9rem;">
-                            <div style="background: #f8f9fa; padding: 0.5rem; border-radius: 5px; margin-bottom: 0.5rem;">
+                        <div style="text-align: left; font-size: 0.85rem; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.4rem; border-radius: 4px; margin-bottom: 0.4rem; box-sizing: border-box;">
                                 <strong>Zone d'intersection:</strong><br>
                                 📐 Superficie: ${areaM2} m²<br>
                                 📊 Impact sur ${parcelle1.matricule}: ${areaPercent1}%<br>
                                 📊 Impact sur ${parcelle2.matricule}: ${areaPercent2}%
                             </div>
                             
-                            <p><strong>Parcelle 1:</strong> ${parcelle1.matricule}<br>
-                            <em>Propriétaire: ${parcelle1.proprietaire}</em><br>
-                            <em>Quartier: ${parcelle1.quartier}</em></p>
+                            <p style="margin: 0.2rem 0; font-size: 0.8rem;"><strong>Parcelle 1:</strong> ${parcelle1.matricule}<br>
+                            <em>Propriétaire: ${parcelle1.proprietaire}</em></p>
                             
-                            <p><strong>Parcelle 2:</strong> ${parcelle2.matricule}<br>
-                            <em>Propriétaire: ${parcelle2.proprietaire}</em><br>
-                            <em>Quartier: ${parcelle2.quartier}</em></p>
+                            <p style="margin: 0.2rem 0; font-size: 0.8rem;"><strong>Parcelle 2:</strong> ${parcelle2.matricule}<br>
+                            <em>Propriétaire: ${parcelle2.proprietaire}</em></p>
                         </div>
                         
-                        <div style="background: #ffe6e6; padding: 0.5rem; border-radius: 5px; margin-top: 1rem;">
-                            <p style="color: #dc3545; font-size: 0.85rem; margin: 0;">
-                                <i class="fas fa-exclamation-triangle"></i> Conflit foncier critique détecté.
+                        <div style="background: #ffe6e6; padding: 0.3rem; border-radius: 4px; margin-top: 0.5rem; box-sizing: border-box;">
+                            <p style="color: #dc3545; font-size: 0.75rem; margin: 0; padding: 0;">
+                                <i class="fas fa-exclamation-triangle"></i> Conflit foncier critique
                             </p>
                         </div>
                     </div>
@@ -2536,15 +2675,15 @@
             if (isMobileView) {
                 // Version mobile compacte
                 return `
-                    <div class="parcelle-popup" style="font-size: 0.8rem;">
-                        <h4 style="margin: 0 0 0.3rem 0; font-size: 0.9rem;">${parcelle.matricule}</h4>
+                    <div class="parcelle-popup" style="font-size: 0.8rem; max-width: 100%; box-sizing: border-box; padding: 0.3rem; margin: 0;">
+                        <h4 style="margin: 0 0 0.3rem 0; font-size: 0.9rem; padding: 0;">${parcelle.matricule}</h4>
                         <span class="status-indicator ${statusClass}" style="font-size: 0.7rem;">${statusText}</span>
                         <div style="margin-top: 0.4rem; font-size: 0.75rem;">
-                            <p style="margin: 0.2rem 0;"><strong>Quartier:</strong> ${parcelle.quartier}</p>
-                            <p style="margin: 0.2rem 0;"><strong>Superficie:</strong> ${parcelle.superficie} m²</p>
-                            ${parcelle.prix_m2 ? `<p style="margin: 0.2rem 0;"><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</p>` : ''}
+                            <p style="margin: 0.2rem 0; padding: 0;"><strong>Quartier:</strong> ${parcelle.quartier}</p>
+                            <p style="margin: 0.2rem 0; padding: 0;"><strong>Superficie:</strong> ${parcelle.superficie} m²</p>
+                            ${parcelle.prix_m2 ? `<p style="margin: 0.2rem 0; padding: 0;"><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</p>` : ''}
                         </div>
-                        <button onclick="showParcelleDetails(${JSON.stringify(parcelle).replace(/"/g, '&quot;')})" class="btn btn-primary" style="margin-top: 0.4rem; padding: 0.3rem 0.6rem; font-size: 0.75rem; width: 100%;">
+                        <button onclick="showParcelleDetails(${JSON.stringify(parcelle).replace(/"/g, '&quot;')})" class="btn btn-primary" style="margin-top: 0.4rem; padding: 0.3rem 0.6rem; font-size: 0.75rem; width: 100%; box-sizing: border-box;">
                             <i class="fas fa-info-circle"></i> Détails
                         </button>
                     </div>
@@ -2552,13 +2691,13 @@
             } else {
                 // Version desktop normale
                 return `
-                    <div class="parcelle-popup">
-                        <h4>${parcelle.matricule}</h4>
+                    <div class="parcelle-popup" style="max-width: 100%; box-sizing: border-box; padding: 0.5rem; margin: 0;">
+                        <h4 style="margin: 0 0 0.5rem 0; padding: 0;">${parcelle.matricule}</h4>
                         <span class="status-indicator ${statusClass}">${statusText}</span>
-                        <p><strong>Quartier:</strong> ${parcelle.quartier}</p>
-                        <p><strong>Superficie:</strong> ${parcelle.superficie} m²</p>
-                        ${parcelle.prix_m2 ? `<p><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</p>` : ''}
-                        <button onclick="showParcelleDetails(${JSON.stringify(parcelle).replace(/"/g, '&quot;')})" class="btn btn-primary" style="margin-top: 0.5rem;">
+                        <p style="margin: 0.3rem 0; padding: 0;"><strong>Quartier:</strong> ${parcelle.quartier}</p>
+                        <p style="margin: 0.3rem 0; padding: 0;"><strong>Superficie:</strong> ${parcelle.superficie} m²</p>
+                        ${parcelle.prix_m2 ? `<p style="margin: 0.3rem 0; padding: 0;"><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</p>` : ''}
+                        <button onclick="showParcelleDetails(${JSON.stringify(parcelle).replace(/"/g, '&quot;')})" class="btn btn-primary" style="margin-top: 0.5rem; box-sizing: border-box;">
                             <i class="fas fa-info-circle"></i> Détails
                         </button>
                     </div>
@@ -3101,42 +3240,52 @@
             });
         }
 
-        // Gestion des événements de redimensionnement pour la responsivité
+        // CORRECTION: Gestion améliorée des événements de redimensionnement
+        let resizeTimeout;
         window.addEventListener('resize', function() {
-            // Mettre à jour les variables de détection mobile
-            const newIsMobile = window.innerWidth <= 768;
-            const newIsSmallMobile = window.innerWidth <= 480;
-            
-            if (newIsMobile !== isMobile || newIsSmallMobile !== isSmallMobile) {
+            // Éviter les appels répétés lors du redimensionnement
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Recalculer les variables de détection
+                const newIsMobile = window.innerWidth <= 768;
+                const newIsSmallMobile = window.innerWidth <= 480;
+                const newIsVerySmallMobile = window.innerWidth <= 360;
+                
+                // Réajuster les positions des contrôles
+                adjustControlPositions();
+                
                 // Reconfigurer les popups si nécessaire
                 configureResponsivePopups();
                 
-                // Réajuster les contrôles de zoom si passage mobile/desktop
-                if (map) {
-                    if (newIsMobile && !isMobile) {
-                        // Passage vers mobile : ajouter contrôles personnalisés
-                        map.removeControl(map.zoomControl);
-                        L.control.zoom({
-                            position: 'bottomright'
-                        }).addTo(map);
-                    } else if (!newIsMobile && isMobile) {
-                        // Passage vers desktop : utiliser contrôles par défaut
-                        const customZoom = document.querySelector('.leaflet-control-zoom');
-                        if (customZoom) {
-                            map.removeControl(customZoom);
-                        }
-                        map.addControl(L.control.zoom());
-                    }
+                console.log('🔄 Interface adaptée au redimensionnement');
+            }, 250);
+        });
+
+        // CORRECTION: Amélioration du scroll sur très petits écrans
+        function fixMobileScrolling() {
+            if (isVerySmallMobile) {
+                const sidebarContent = document.querySelector('.sidebar-content');
+                if (sidebarContent) {
+                    // Forcer le scroll sur très petits écrans
+                    sidebarContent.style.height = `calc(100vh - 110px)`;
+                    sidebarContent.style.overflowY = 'scroll';
+                    sidebarContent.style.webkitOverflowScrolling = 'touch';
+                    sidebarContent.style.position = 'relative';
                 }
             }
-        });
+        }
 
         // Initialisation au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initialisation de GéoFoncier');
+            console.log('🚀 Initialisation de GéoFoncier - Version Corrigée');
             
             // Initialiser la carte
             initMap();
+            
+            // CORRECTION: Corriger le scroll mobile après l'initialisation
+            setTimeout(() => {
+                fixMobileScrolling();
+            }, 500);
             
             // Gestionnaires d'événements
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
@@ -3168,7 +3317,16 @@
                 }
             });
 
-            // Prévenir le zoom par pincement sur iOS
+            // CORRECTION: Prévenir le zoom par pincement sur iOS avec gestion améliorée
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+
             document.addEventListener('touchmove', function(event) {
                 if (event.scale !== 1) {
                     event.preventDefault();
@@ -3180,7 +3338,9 @@
                 document.body.classList.add('touch-device');
             }
 
-            console.log('✅ GéoFoncier initialisé avec succès');
+            console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
+            console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
+            console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
         });
 
     </script>
