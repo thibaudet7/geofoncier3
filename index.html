@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GéoFoncier - Gestion des Parcelles Foncières</title>
     
     <!-- Leaflet CSS -->
@@ -26,19 +26,17 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
-            padding: 0.75rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 2000;
-            /* CORRECTION: Empêcher le header de passer sous la barre d'état */
-            top: 0;
-            left: 0;
-            right: 0;
-            min-height: 60px;
-            padding-top: env(safe-area-inset-top);
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 3000 !important;
+            padding-top: max(12px, env(safe-area-inset-top)) !important;
+            min-height: calc(60px + env(safe-area-inset-top)) !important;
+            backdrop-filter: blur(10px) !important;
+            background: rgba(44, 62, 80, 0.95) !important;
         }
+        
 
         .header-content {
             display: flex;
@@ -137,11 +135,8 @@
         }
 
         .main-container {
-            display: flex;
-            height: calc(100vh - 60px - env(safe-area-inset-top));
-            position: relative;
-            padding-top: env(safe-area-inset-top);
-
+            margin-top: calc(60px + env(safe-area-inset-top)) !important;
+            height: calc(100vh - 60px - env(safe-area-inset-top)) !important;
         }
 
         /* SIDEBAR - Version Desktop */
@@ -232,22 +227,25 @@
         }
 
         .sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 0.75rem;
-            /* CORRECTION: Forcer le scroll sur tous les mobiles */
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            /* CORRECTION: Hauteur fixe pour assurer le scroll */
-            height: calc(100vh - 120px);
-            max-height: calc(100vh - 120px);
-            touch-action: pan-y;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior: contain !important;
+            scrollbar-width: none !important;
+            touch-action: pan-y !important;
+            transform: translateZ(0) !important;
+            height: calc(100vh - 120px) !important;
+            max-height: calc(100vh - 120px) !important;
+            position: relative !important;
+            will-change: transform !important;
         }
 
         .sidebar.collapsed .sidebar-content {
             display: none;
         }
+        .sidebar-content::-webkit-scrollbar {
+            display: none !important;
+        }
+        
 
         .search-section {
             margin-bottom: 1.5rem;
@@ -681,7 +679,21 @@
             max-width: 100% !important;
             box-sizing: border-box !important;
         }
+                        /* CORRECTIONS SPÉCIFIQUES POUR ANDROID */
+            body.mobile-fix {
+                overscroll-behavior: none !important;
+            }
 
+            body.mobile-fix .sidebar-content {
+                overflow-y: scroll !important;
+                scroll-snap-type: y mandatory !important;
+                scroll-padding: 10px !important;
+            }
+
+            body.mobile-fix .header {
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+                background: linear-gradient(135deg, #2c3e50, #34495e) !important;
+            }
         /* ==========================================
            RESPONSIVE DESIGN - MOBILES FIRST
         ========================================== */
@@ -831,8 +843,8 @@
             .sidebar-content {
                 padding: 0.5rem;
                 /* CORRECTION: Hauteur fixe pour assurer le scroll sur mobiles */
-                height: calc(100vh - 100px);
-                max-height: calc(100vh - 100px);
+                height: calc(100vh - 100px) !important;
+                max-height: calc(100vh - 100px) !important;
                 overflow-y: auto;
                 overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
@@ -3322,11 +3334,43 @@
             }
         }
         
+        function fixHeaderOnZoom() {
+            const header = document.querySelector('.header');
+            const mainContainer = document.querySelector('.main-container');
+            
+            // Détecter le niveau de zoom
+            const zoomLevel = window.innerWidth / window.outerWidth;
+            
+            if (zoomLevel > 1) {
+                // Mode zoom activé
+                header.style.position = 'absolute';
+                header.style.top = `${window.scrollY}px`;
+                mainContainer.style.marginTop = '0';
+            } else {
+                // Mode normal
+                header.style.position = 'fixed';
+                header.style.top = '0';
+                mainContainer.style.marginTop = '';
+            }
+        }
 
         // Initialisation au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Initialisation de GéoFoncier - Version Corrigée');
+
+            // Appliquer les correctifs
+        fixHeaderOnZoom();
+    
+            // Forcer le scroll sur les appareils problématiques
+        if (/Tecno|Redmi|Xiaomi/i.test(navigator.userAgent)) {
+            document.body.classList.add('mobile-fix');
+            console.log('🔧 Applying mobile-specific fixes');
             
+            // Ajouter un padding supplémentaire pour les barres système
+            const header = document.querySelector('.header');
+            header.style.paddingTop = 'calc(env(safe-area-inset-top) + 8px)';
+        }
+                
             // Initialiser la carte
             initMap();
             
@@ -3393,6 +3437,9 @@
 
 
         window.addEventListener('resize', applySafeAreaInsets); // Appel lors du redimensionnement
+        window.addEventListener('resize', fixHeaderOnZoom);
+        window.addEventListener('scroll', fixHeaderOnZoom);
+        window.addEventListener('orientationchange', fixHeaderOnZoom);
 
     </script>
 </body>
