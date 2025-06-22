@@ -375,6 +375,9 @@
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             overflow: hidden;
+            padding: absolute;
+
+    
         }
 
         .control-btn {
@@ -974,6 +977,19 @@
                 overscroll-behavior: contain;
             }
 
+            .control-group {
+                background: white;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                overflow: hidden;
+                padding: absolute;
+                position: relative;
+                top: 30px;
+                right: 3px;
+                
+        
+            }
+
             .control-btn {
                 min-width: 28px;
                 min-height: 28px;
@@ -1005,7 +1021,7 @@
             }
 
             .leaflet-control-layers {
-                top: 160px !important;
+                top: 180px !important;
                 right: 3px !important;
             }
 
@@ -1088,6 +1104,10 @@
             .sidebar-toggle:active,
             .close:active {
                 transform: scale(0.95);
+            }
+            .sidebar-content {
+                height: calc(100vh - 70px); /* Ajustement pour paysage */
+                max-height: calc(100vh - 70px);
             }
         }
 
@@ -3265,6 +3285,11 @@
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
+                // Mettre à jour les variables de taille
+                isMobile = window.innerWidth <= 768;
+                isSmallMobile = window.innerWidth <= 480;
+                isVerySmallMobile = window.innerWidth <= 360;
+                
                 fixMobileScrolling();
                 adjustControlPositions();
             }, 250);
@@ -3275,17 +3300,20 @@
             const sidebarContents = document.querySelectorAll('.sidebar-content');
             sidebarContents.forEach(sidebarContent => {
                 if (sidebarContent) {
-                    sidebarContent.style.height = isVerySmallMobile ? 
-                        'calc(100vh - 90px)' : 'calc(100vh - 100px)';
-                    sidebarContent.style.maxHeight = isVerySmallMobile ? 
-                        'calc(100vh - 90px)' : 'calc(100vh - 100px)';
+                    if (isVerySmallMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 90px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 90px)';
+                    } else if (isMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 100px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 100px)';
+                    }
                     sidebarContent.style.overflowY = 'auto';
                     sidebarContent.style.overflowX = 'hidden';
                     sidebarContent.style.webkitOverflowScrolling = 'touch';
                     sidebarContent.style.position = 'relative';
                     sidebarContent.style.touchAction = 'pan-y';
                     sidebarContent.style.overscrollBehavior = 'contain';
-                    sidebarContent.style.willChange = 'scroll-position';
+                    sidebarContent.style.willChange = 'scroll-position'; // Force la création d'un contexte de scroll
                 }
             });
         }
@@ -3342,7 +3370,7 @@
                     event.preventDefault();
                 }
                 lastTouchEnd = now;
-            }, false);
+            }, { passive: false });
 
             document.addEventListener('touchmove', function(event) {
                 if (event.scale !== 1) {
@@ -3354,6 +3382,13 @@
             if ('ontouchstart' in window) {
                 document.body.classList.add('touch-device');
             }
+            
+            window.addEventListener('orientationchange', function() {
+                setTimeout(() => {
+                    fixMobileScrolling();
+                    adjustControlPositions();
+                }, 300);
+            });
 
             console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
             console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
