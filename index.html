@@ -242,6 +242,8 @@
             max-height: calc(100vh - 120px);
             overscroll-behavior: contain; /* Empêche le défilement de l'élément parent */
             touch-action: pan-y; /* Meilleure reconnaissance du geste de défilement */
+            position: relative;
+            will-change: scroll-position; /* Optimisation performance */
         }
 
         .sidebar.collapsed .sidebar-content {
@@ -963,19 +965,20 @@
 
             /* CORRECTION: Amélioration majeure du scroll sur très petits écrans */
             .sidebar-content {
+                height: calc(100vh - 90px) !important;
+                max-height: calc(100vh - 90px) !important;
                 padding: 0.4rem;
-                height: calc(100vh - 90px);
-                max-height: calc(100vh - 90px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                -webkit-overflow-scrolling: touch;
-                scroll-behavior: smooth;
-                /* Force le scroll sur très petits écrans */
-                position: relative;
-                /* CORRECTION: Styles additionnels pour forcer le scroll */
-                touch-action: pan-y;
-                overscroll-behavior: contain;
+                overflow-y: scroll !important; /* Force le défilement */
+                -webkit-overflow-scrolling: touch !important;
             }
+
+             /* Contournement pour iOS */
+                @supports (-webkit-overflow-scrolling: touch) {
+                    .sidebar-content {
+                        height: auto !important;
+                        max-height: calc(100vh - 90px) !important;
+                    }
+                }
 
             .control-group {
                 background: white;
@@ -1082,6 +1085,11 @@
             .legend {
                 bottom: 45px;
                 left: 5px;
+            }
+
+            .sidebar-content {
+                height: calc(100vh - 70px) !important;
+                max-height: calc(100vh - 70px) !important;
             }
         }
 
@@ -3318,7 +3326,59 @@
             });
         }
     
-
+        function forceMobileScrolling() {
+            const sidebarContents = document.querySelectorAll('.sidebar-content');
+            
+            sidebarContents.forEach(sidebarContent => {
+                if (sidebarContent) {
+                    // Réinitialiser les propriétés de défilement
+                    sidebarContent.style.overflowY = 'auto';
+                    sidebarContent.style.overflowX = 'hidden';
+                    sidebarContent.style.webkitOverflowScrolling = 'touch';
+                    sidebarContent.style.touchAction = 'pan-y';
+                    sidebarContent.style.overscrollBehavior = 'contain';
+                    
+                    // Calculer la hauteur dynamiquement
+                    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+                    const isVerySmall = window.innerWidth <= 360;
+                    
+                    if (isVerySmall) {
+                        if (isLandscape) {
+                            sidebarContent.style.height = 'calc(100vh - 70px)';
+                            sidebarContent.style.maxHeight = 'calc(100vh - 70px)';
+                        } else {
+                            sidebarContent.style.height = 'calc(100vh - 90px)';
+                            sidebarContent.style.maxHeight = 'calc(100vh - 90px)';
+                        }
+                    } else {
+                        sidebarContent.style.height = 'calc(100vh - 100px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 100px)';
+                    }
+                    
+                    // Forcer le reflow pour activer le défilement
+                    void sidebarContent.offsetHeight;
+                }
+            });
+        }
+    
+        // CORRECTION: Vérifier périodiquement le scroll
+        function checkScroll() {
+            const sidebarContents = document.querySelectorAll('.sidebar-content');
+            
+            sidebarContents.forEach(sidebarContent => {
+                if (sidebarContent) {
+                    // Vérifier si le contenu dépasse
+                    const isOverflowing = sidebarContent.scrollHeight > sidebarContent.clientHeight;
+                    
+                    if (isOverflowing) {
+                        // Activer explicitement le défilement
+                        sidebarContent.style.overflowY = 'scroll';
+                    } else {
+                        sidebarContent.style.overflowY = 'auto';
+                    }
+                }
+            });
+        }
 
         // Initialisation au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
@@ -3326,12 +3386,24 @@
             
             // Initialiser la carte
             initMap();
+
+            forceMobileScrolling();
+        
+            // Vérifier périodiquement l'état du scroll
+            setInterval(checkScroll, 1000);
+            
+            // Reforcer après le rendu complet
+            setTimeout(forceMobileScrolling, 1000);
+
             
             // CORRECTION: Corriger le scroll mobile après l'initialisation
             setTimeout(() => {
                 fixMobileScrolling();
             }, 500);
             
+           
+
+
             // Gestionnaires d'événements
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('registerForm').addEventListener('submit', handleRegister);
@@ -3388,6 +3460,16 @@
                     fixMobileScrolling();
                     adjustControlPositions();
                 }, 300);
+            });
+
+
+            window.addEventListener('resize', function() {
+                forceMobileScrolling();
+            });
+        
+            // Gestion de la rotation
+            window.addEventListener('orientationchange', function() {
+                setTimeout(forceMobileScrolling, 300);
             });
 
             console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
