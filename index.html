@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>GéoFoncier - Scroll Mobile Corrigé</title>
+    <title>GéoFoncier - Gestion des Parcelles Foncières</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
@@ -24,10 +24,6 @@
             color: #333;
             overflow-x: hidden;
             padding-top: 60px;
-            /* CORRECTION: Prévenir le zoom et optimiser pour mobile */
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-            touch-action: manipulation;
         }
 
         .header {
@@ -73,7 +69,6 @@
             transition: all 0.3s ease;
             align-items: center;
             gap: 0.3rem;
-            touch-action: manipulation;
         }
 
         .mobile-search-btn:hover {
@@ -145,9 +140,7 @@
             position: relative;
         }
 
-        /* ================================
-           SIDEBAR DESKTOP
-        ================================ */
+        /* SIDEBAR - Version Desktop */
         .sidebar {
             width: 350px;
             background: white;
@@ -163,9 +156,7 @@
             width: 50px;
         }
 
-        /* ================================
-           SIDEBAR MOBILE - CORRECTIONS MAJEURES
-        ================================ */
+        /* SIDEBAR - Version Mobile (Overlay) */
         .sidebar-mobile-overlay {
             display: none;
             position: fixed;
@@ -198,8 +189,6 @@
             transition: all 0.3s ease-out;
             flex-direction: column;
             box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-            /* CORRECTION: Assurer que le sidebar mobile est scrollable */
-            overflow: hidden;
         }
 
         .sidebar-mobile.active {
@@ -215,8 +204,6 @@
             min-height: 50px;
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
-            /* CORRECTION: Empêcher le header de rétrécir */
-            flex-shrink: 0;
         }
 
         .sidebar-header h3 {
@@ -240,42 +227,52 @@
             background-color: rgba(255, 255, 255, 0.2);
         }
 
-        /* ================================
-           SIDEBAR CONTENT - CORRECTIONS CRITIQUES
-        ================================ */
+        /* CORRECTION MAJEURE : CSS optimisé pour le scroll mobile */
         .sidebar-content {
             flex: 1;
-            padding: 0.75rem;
-            /* CORRECTION CRITIQUE: Scroll natif optimisé pour tous les mobiles */
             overflow-y: auto;
             overflow-x: hidden;
-            height: calc(100vh - 120px);
-            max-height: calc(100vh - 120px);
-            
-            /* CORRECTION: Propriétés de scroll mobile améliorées */
-            -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
-            scroll-behavior: smooth;
-            overscroll-behavior: contain; /* Empêche le scroll de l'élément parent */
-            touch-action: pan-y; /* Permet uniquement le scroll vertical */
-            will-change: scroll-position; /* Optimisation GPU */
-            
-            /* CORRECTION: Forcer la création d'un contexte de scroll */
+            padding: 0.75rem;
             position: relative;
-            z-index: 1;
             
-            /* CORRECTION: Styles pour une meilleure reconnaissance tactile */
-            -webkit-transform: translateZ(0); /* Force GPU sur iOS */
-            transform: translateZ(0);
+            /* NOUVELLES PROPRIÉTÉS POUR FORCER LE SCROLL MOBILE */
+            height: 0; /* Force le flex-grow à calculer la hauteur */
+            min-height: 0; /* Permet au conteneur de rétrécir */
+            
+            /* Optimisations pour le scroll tactile */
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+            
+            /* Force la création d'un contexte de stacking pour le GPU */
+            will-change: scroll-position;
+            transform: translateZ(0); /* Hack pour activer l'accélération hardware */
         }
 
-        /* CORRECTION: Masquer le contenu quand la sidebar desktop est collapsed */
+        /* CORRECTION : Scroll forcé sur très petits écrans */
+        .sidebar-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 2px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
         .sidebar.collapsed .sidebar-content {
             display: none;
         }
 
-        /* ================================
-           CONTENU DU SIDEBAR
-        ================================ */
         .search-section {
             margin-bottom: 1.5rem;
         }
@@ -287,8 +284,6 @@
             border-radius: 6px;
             font-size: 0.9rem;
             margin-bottom: 0.75rem;
-            /* CORRECTION: Optimiser pour tactile */
-            touch-action: manipulation;
         }
 
         .search-box:focus {
@@ -317,8 +312,6 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 0.85rem;
-            /* CORRECTION: Optimiser pour tactile */
-            touch-action: manipulation;
         }
 
         .layer-section {
@@ -337,9 +330,6 @@
             border-radius: 4px;
             transition: background-color 0.3s ease;
             font-size: 0.85rem;
-            /* CORRECTION: Optimiser pour tactile */
-            touch-action: manipulation;
-            min-height: 44px; /* Taille tactile recommandée */
         }
 
         .layer-toggle:hover {
@@ -356,17 +346,16 @@
             color: #155724;
         }
 
-        /* ================================
-           CARTE ET CONTRÔLES
-        ================================ */
-        .map-container {
-            flex: 1;
-            position: relative;
+        .leaflet-control-layers {
+            top: 220px !important;
+            right: 10px !important;
+            z-index: 999 !important;
         }
 
-        #map {
-            width: 100%;
-            height: 100%;
+        .leaflet-control-zoom {
+            top: 10px !important;
+            left: 10px !important;
+            z-index: 1001 !important;
         }
 
         .map-controls {
@@ -377,6 +366,32 @@
             display: flex;
             flex-direction: column;
             gap: 0.3rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.4rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
         }
 
         .control-group {
@@ -415,9 +430,6 @@
             color: white;
         }
 
-        /* ================================
-           LÉGENDE
-        ================================ */
         .legend {
             position: absolute;
             bottom: 35px;
@@ -487,9 +499,6 @@
             flex-shrink: 0;
         }
 
-        /* ================================
-           MODALES
-        ================================ */
         .modal {
             display: none;
             position: fixed;
@@ -562,7 +571,6 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 0.9rem;
-            touch-action: manipulation;
         }
 
         .form-input:focus {
@@ -570,9 +578,54 @@
             border-color: #3498db;
         }
 
-        /* ================================
-           NOTIFICATIONS
-        ================================ */
+        .parcelle-info {
+            background: white;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .parcelle-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .parcelle-details {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .parcelle-details span {
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .contact-btn {
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .status-titled {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-untitled {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
         .notification {
             position: fixed;
             top: 70px;
@@ -599,9 +652,60 @@
             background-color: #3498db;
         }
 
-        /* ================================
-           RESPONSIVE DESIGN - CORRECTIONS CRITIQUES
-        ================================ */
+        /* Animations pour les chevauchements */
+        .overlap-zone {
+            animation: pulse-overlap 2s infinite;
+            stroke-dasharray: 5,5;
+            stroke-dashoffset: 0;
+            animation: dash 2s linear infinite, pulse-overlap 3s infinite;
+        }
+
+        @keyframes pulse-overlap {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: -10; }
+        }
+
+        .warning-marker {
+            animation: bounce-warning 2s infinite;
+        }
+
+        @keyframes bounce-warning {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .mobile-popup .leaflet-popup-content-wrapper {
+            max-width: calc(100vw - 30px) !important;
+            box-sizing: border-box !important;
+        }
+
+        .mobile-popup .leaflet-popup-content {
+            margin: 6px 8px !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+
+        .overlap-popup {
+            max-width: calc(100vw - 40px) !important;
+        }
+
+        .overlap-popup .leaflet-popup-content {
+            padding: 0.4rem !important;
+            margin: 0.3rem !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* ==========================================
+           RESPONSIVE DESIGN - MOBILES FIRST
+        ========================================== */
         
         /* Tablettes et petits écrans */
         @media (max-width: 768px) {
@@ -663,13 +767,6 @@
                 min-height: 36px;
             }
 
-            /* CORRECTION: Sidebar content responsive sur tablettes */
-            .sidebar-content {
-                height: calc(100vh - 100px);
-                max-height: calc(100vh - 100px);
-                padding: 0.5rem;
-            }
-
             .legend {
                 bottom: 25px;
                 left: 8px;
@@ -702,9 +799,26 @@
                 max-width: none;
                 font-size: 0.8rem;
             }
+
+            .leaflet-control-layers {
+                top: 185px !important;
+                right: 2px !important;
+            }
+            
+            .leaflet-control-zoom {
+                bottom: 30px !important;
+                right: 5px !important;
+                top: auto !important;
+                left: auto !important;
+                z-index: 1001 !important;
+            }
+
+            .leaflet-popup-content-wrapper {
+                max-width: calc(100vw - 60px) !important;
+            }
         }
 
-        /* Mobiles - CORRECTIONS CRITIQUES */
+        /* Mobiles */
         @media (max-width: 480px) {
             .header {
                 padding: 0.4rem;
@@ -733,34 +847,24 @@
                 max-width: 300px;
             }
 
-            /* CORRECTION CRITIQUE: Sidebar content optimisé pour mobiles */
+            /* CORRECTION MAJEURE : CSS spécifique pour très petits écrans */
             .sidebar-content {
                 padding: 0.5rem;
-                height: calc(100vh - 90px);
-                max-height: calc(100vh - 90px);
+                /* Force la hauteur et le scroll sur mobile */
+                height: calc(100vh - 120px) !important;
+                max-height: calc(100vh - 120px) !important;
+                overflow-y: scroll !important; /* Force le scroll */
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
                 
-                /* CORRECTION: Forcer le scroll natif sur mobile */
-                overflow-y: scroll; /* scroll au lieu de auto pour forcer */
-                -webkit-overflow-scrolling: touch;
-                scroll-behavior: smooth;
-                position: relative;
-                z-index: 1;
-                
-                /* CORRECTION: Propriétés tactiles améliorées */
-                touch-action: pan-y;
-                overscroll-behavior: contain;
-                -webkit-transform: translateZ(0);
-                transform: translateZ(0);
-                will-change: scroll-position;
-                
-                /* CORRECTION: Minimum height pour assurer le scroll */
-                min-height: calc(100vh - 90px);
+                /* Propriétés supplémentaires pour assurer le fonctionnement */
+                position: relative !important;
+                contain: layout style paint !important; /* Optimisation du rendu */
             }
 
             .search-box, .filter-select, .form-input {
                 padding: 0.5rem;
                 font-size: 0.85rem;
-                min-height: 44px; /* Taille tactile recommandée */
             }
 
             .filter-title {
@@ -770,7 +874,6 @@
             .layer-toggle {
                 padding: 0.3rem;
                 font-size: 0.8rem;
-                min-height: 44px; /* Taille tactile recommandée */
             }
 
             .map-controls {
@@ -827,9 +930,38 @@
                 font-size: 0.75rem;
                 padding: 0.5rem 0.75rem;
             }
+
+            .leaflet-popup-content-wrapper {
+                max-width: calc(100vw - 40px) !important;
+                border-radius: 6px !important;
+            }
+
+            .leaflet-popup-content {
+                margin: 8px 10px !important;
+                font-size: 0.8rem !important;
+                line-height: 1.3 !important;
+                padding: 0 !important;
+            }
+
+            .leaflet-popup-close-button {
+                padding: 2px 6px !important;
+                font-size: 14px !important;
+            }
+
+            .leaflet-control-layers {
+                top: 175px !important;
+                right: 3px !important;
+            }
+            
+            .leaflet-control-zoom {
+                bottom: 30px !important;
+                right: 5px !important;
+                top: auto !important;
+                left: auto !important;
+            }
         }
 
-        /* Très petits écrans - CORRECTIONS SPÉCIALES */
+        /* CORRECTION MAJEURE : Très petits écrans (inférieur à 360px) */
         @media (max-width: 360px) {
             .logo {
                 font-size: 1rem;
@@ -845,27 +977,32 @@
                 max-width: 280px;
             }
 
-            /* CORRECTION ULTRA-CRITIQUE: Sidebar pour très petits écrans */
+            /* CORRECTION CRITIQUE : Force le scroll avec des propriétés spécifiques */
             .sidebar-content {
-                padding: 0.4rem;
-                height: calc(100vh - 80px);
-                max-height: calc(100vh - 80px);
-                min-height: calc(100vh - 80px);
-                
-                /* CORRECTION: Force maximale du scroll */
+                height: calc(100vh - 110px) !important;
+                max-height: calc(100vh - 110px) !important;
+                padding: 0.4rem !important;
                 overflow-y: scroll !important;
+                overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch !important;
-                touch-action: pan-y !important;
                 overscroll-behavior: contain !important;
+                touch-action: pan-y !important;
                 
-                /* CORRECTION: GPU acceleration forcée */
-                -webkit-transform: translate3d(0,0,0) !important;
-                transform: translate3d(0,0,0) !important;
+                /* Force l'utilisation du GPU pour le scroll */
                 will-change: scroll-position !important;
-                
-                /* CORRECTION: Isoler le contexte de scroll */
-                position: relative !important;
-                z-index: 2 !important;
+                transform: translateZ(0) !important;
+                backface-visibility: hidden !important;
+            }
+
+            /* Assure que le contenu a une hauteur minimale pour déclencher le scroll */
+            .sidebar-content > * {
+                flex-shrink: 0;
+            }
+
+            .control-group {
+                position: relative;
+                top: 30px;
+                right: 3px;
             }
 
             .control-btn {
@@ -887,6 +1024,45 @@
                 padding: 0.5rem;
                 margin: 1% 0;
             }
+
+            .leaflet-control-zoom {
+                bottom: 30px !important;
+                right: 3px !important;
+                top: auto !important;
+                left: auto !important;
+            }
+
+            .leaflet-control-layers {
+                top: 180px !important;
+                right: 3px !important;
+            }
+
+            .leaflet-popup-content-wrapper {
+                max-width: calc(100vw - 20px) !important;
+                min-width: 180px !important;
+            }
+
+            .leaflet-popup-content {
+                margin: 6px 6px !important;
+                font-size: 0.75rem !important;
+                line-height: 1.2 !important;
+                padding: 0.2rem !important;
+                overflow: hidden !important;
+                word-wrap: break-word !important;
+            }
+
+            .overlap-popup .leaflet-popup-content-wrapper {
+                max-width: calc(100vw - 15px) !important;
+                min-width: 160px !important;
+            }
+
+            .overlap-popup .leaflet-popup-content {
+                margin: 4px 4px !important;
+                padding: 0.3rem !important;
+                font-size: 0.7rem !important;
+                line-height: 1.1 !important;
+                box-sizing: border-box !important;
+            }
         }
 
         /* Mode paysage sur mobile */
@@ -900,18 +1076,31 @@
                 max-width: 280px;
             }
 
-            .sidebar-content {
-                height: calc(100vh - 70px);
-                max-height: calc(100vh - 70px);
+            .leaflet-control-zoom {
+                bottom: 30px !important;
+                right: 5px !important;
+                top: auto !important;
+                left: auto !important;
+            }
+            
+            .leaflet-control-layers {
+                top: 140px !important;
+                right: 5px !important;
             }
 
             .legend {
                 bottom: 45px;
                 left: 5px;
             }
+
+            /* CORRECTION : Hauteur adaptée au mode paysage */
+            .sidebar-content {
+                height: calc(100vh - 80px) !important;
+                max-height: calc(100vh - 80px) !important;
+            }
         }
 
-        /* CORRECTION: Amélioration des interactions tactiles */
+        /* Amélioration des interactions tactiles */
         @media (hover: none) and (pointer: coarse) {
             .btn:hover,
             .control-btn:hover,
@@ -933,31 +1122,32 @@
             }
         }
 
-        /* CORRECTION: Styles spécifiques pour assurer le scroll sur tous les appareils */
-        .sidebar-content::-webkit-scrollbar {
-            width: 6px;
+        /* CORRECTION : Style pour empêcher le débordement du contenu des popups */
+        .leaflet-popup-content * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
         }
 
-        .sidebar-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
+        .leaflet-popup-content > div {
+            max-width: 100% !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
         }
 
-        .sidebar-content::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
+        /* CORRECTION MAJEURE : Classes d'aide pour forcer le scroll */
+        .force-scroll {
+            overflow-y: scroll !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
         }
 
-        .sidebar-content::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-        /* CORRECTION: Force le scroll pour les navigateurs qui ne supportent pas -webkit-overflow-scrolling */
-        @supports not (-webkit-overflow-scrolling: touch) {
-            .sidebar-content {
-                overflow-y: scroll !important;
-                scroll-behavior: auto !important;
-            }
+        .scroll-container {
+            height: 100% !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
     </style>
 </head>
@@ -976,10 +1166,10 @@
                 GéoFoncier
             </div>
             <div class="auth-buttons" id="authButtons">
-                <button class="btn btn-secondary" onclick="showNotification('Fonctionnalité de connexion', 'info')">
+                <button class="btn btn-secondary" onclick="openModal('loginModal')">
                     <i class="fas fa-sign-in-alt"></i> Connexion
                 </button>
-                <button class="btn btn-primary" onclick="showNotification('Fonctionnalité d\'inscription', 'info')">
+                <button class="btn btn-primary" onclick="openModal('registerModal')">
                     <i class="fas fa-user-plus"></i> Inscription
                 </button>
             </div>
@@ -1018,6 +1208,7 @@
                         <label for="arrondissementLayerToggle">
                             <i class="fas fa-map-marker-alt"></i> Arrondissements
                         </label>
+                        <div id="arrondissementLoading" class="loading-spinner" style="display: none;"></div>
                     </div>
                     
                     <div class="layer-toggle active" onclick="toggleParcelleLayer()">
@@ -1083,36 +1274,6 @@
                 <!-- Results Section -->
                 <div id="searchResults">
                     <!-- Les résultats de recherche apparaîtront ici -->
-                </div>
-
-                <!-- Section pour tester le scroll -->
-                <div class="filter-section">
-                    <div class="filter-title">Section de test (scroll)</div>
-                    <div style="height: 200px; background: #f0f0f0; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <p>Cette section permet de tester le scroll sur mobile.</p>
-                        <p>Vous devriez pouvoir faire défiler verticalement le contenu du sidebar.</p>
-                        <p>Section 1</p>
-                        <p>Section 2</p>
-                        <p>Section 3</p>
-                        <p>Section 4</p>
-                        <p>Section 5</p>
-                    </div>
-                </div>
-
-                <div class="filter-section">
-                    <div class="filter-title">Plus de contenu</div>
-                    <div style="height: 300px; background: #e8f4f8; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <p>Encore plus de contenu pour tester le scroll.</p>
-                        <p>Item A</p>
-                        <p>Item B</p>
-                        <p>Item C</p>
-                        <p>Item D</p>
-                        <p>Item E</p>
-                        <p>Item F</p>
-                        <p>Item G</p>
-                        <p>Item H</p>
-                        <p>Si vous pouvez lire ce texte en faisant défiler, le scroll fonctionne!</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1210,37 +1371,6 @@
                 <div id="searchResultsMobile">
                     <!-- Les résultats de recherche apparaîtront ici -->
                 </div>
-
-                <!-- Section pour tester le scroll mobile -->
-                <div class="filter-section">
-                    <div class="filter-title">Test scroll mobile</div>
-                    <div style="height: 200px; background: #f0f0f0; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <p><strong>✅ Si vous pouvez lire ce texte, le scroll fonctionne!</strong></p>
-                        <p>Section de test 1</p>
-                        <p>Section de test 2</p>
-                        <p>Section de test 3</p>
-                        <p>Section de test 4</p>
-                        <p>Section de test 5</p>
-                        <p>Section de test 6</p>
-                    </div>
-                </div>
-
-                <div class="filter-section">
-                    <div class="filter-title">Contenu supplémentaire</div>
-                    <div style="height: 300px; background: #e8f4f8; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <p><strong>Dernière section - scroll test</strong></p>
-                        <p>Élément A</p>
-                        <p>Élément B</p>
-                        <p>Élément C</p>
-                        <p>Élément D</p>
-                        <p>Élément E</p>
-                        <p>Élément F</p>
-                        <p>Élément G</p>
-                        <p>Élément H</p>
-                        <p>Élément I</p>
-                        <p><strong>🎉 Fin du contenu - scroll réussi!</strong></p>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -1252,23 +1382,23 @@
             <div class="map-controls">
                 <!-- Outils de mesure -->
                 <div class="control-group">
-                    <button class="control-btn" onclick="showNotification('Outil de mesure distance', 'info')" title="Mesurer distance" aria-label="Mesurer distance">
+                    <button class="control-btn" onclick="toggleMeasurement('distance')" title="Mesurer distance" aria-label="Mesurer distance">
                         <i class="fas fa-ruler"></i>
                     </button>
-                    <button class="control-btn" onclick="showNotification('Outil de mesure superficie', 'info')" title="Mesurer superficie" aria-label="Mesurer superficie">
+                    <button class="control-btn" onclick="toggleMeasurement('area')" title="Mesurer superficie" aria-label="Mesurer superficie">
                         <i class="fas fa-draw-polygon"></i>
                     </button>
-                    <button class="control-btn" onclick="showNotification('Effacer mesures', 'info')" title="Effacer mesures" aria-label="Effacer mesures">
+                    <button class="control-btn" onclick="clearMeasurements()" title="Effacer mesures" aria-label="Effacer mesures">
                         <i class="fas fa-eraser"></i>
                     </button>
                 </div>
                 
                 <!-- Outils de parcelles -->
                 <div class="control-group">
-                    <button class="control-btn" onclick="showNotification('Ajouter parcelle', 'info')" title="Ajouter parcelle" aria-label="Ajouter parcelle">
+                    <button class="control-btn" onclick="addParcelle()" title="Ajouter parcelle" aria-label="Ajouter parcelle">
                         <i class="fas fa-plus"></i>
                     </button>
-                    <button class="control-btn" onclick="showNotification('Importer CSV', 'info')" title="Importer CSV" aria-label="Importer CSV">
+                    <button class="control-btn" onclick="importCSV()" title="Importer CSV" aria-label="Importer CSV">
                         <i class="fas fa-file-csv"></i>
                     </button>
                 </div>
@@ -1308,6 +1438,128 @@
         </div>
     </div>
 
+    <!-- Modals (Login, Register, etc.) -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Connexion</div>
+                <span class="close" onclick="closeModal('loginModal')" aria-label="Fermer">&times;</span>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Inscription</div>
+                <span class="close" onclick="closeModal('registerModal')" aria-label="Fermer">&times;</span>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">Type d'utilisateur</label>
+                    <select class="form-input" required>
+                        <option value="">Choisir...</option>
+                        <option value="client">Client</option>
+                        <option value="proprietaire">Propriétaire</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom complet</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="tel" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> S'inscrire
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="parcelleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Informations de la parcelle</div>
+                <span class="close" onclick="closeModal('parcelleModal')" aria-label="Fermer">&times;</span>
+            </div>
+            <div id="parcelleInfo">
+                <!-- Les informations de la parcelle apparaîtront ici -->
+            </div>
+        </div>
+    </div>
+
+    <div id="addParcelleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Ajouter une parcelle</div>
+                <span class="close" onclick="closeModal('addParcelleModal')" aria-label="Fermer">&times;</span>
+            </div>
+            <form id="addParcelleForm">
+                <div class="form-group">
+                    <label class="form-label">Statut du terrain</label>
+                    <select class="form-input" id="terrainStatut" required onchange="updateFormFields()">
+                        <option value="">Sélectionner...</option>
+                        <option value="titre">Terrain titré</option>
+                        <option value="non_titre">Terrain non titré</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Matricule</label>
+                    <input type="text" class="form-input" id="matricule" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quartier/Village</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Activité</label>
+                    <select class="form-input" required>
+                        <option value="">Sélectionner...</option>
+                        <option value="propriete_privee">Propriété privée</option>
+                        <option value="vente_terrain">Vente de terrain</option>
+                        <option value="location_construction">Location pour construction</option>
+                        <option value="location_agriculture">Location pour agriculture</option>
+                        <option value="autres">Autres activités</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description de l'activité</label>
+                    <textarea class="form-input" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prix au m² (optionnel)</label>
+                    <input type="number" class="form-input" placeholder="Prix en XAF">
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Notification -->
     <div id="notification" class="notification"></div>
 
@@ -1315,20 +1567,141 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
     <script>
-        // Configuration globale
-        let map;
-        let mobileSidebarOpen = false;
+        // CORRECTION MAJEURE : Variables non constantes pour éviter l'erreur de reassignation
+        let map, currentUser = null;
+        let parcelleLayer, arrondissementLayer, overlapLayer;
+        let measurementMode = null;
+        let measurementMarkers = [];
+        let measurementLines = [];
         let legendCollapsed = false;
-
-        // Détection du type d'appareil
-        const isMobile = window.innerWidth <= 768;
-        const isSmallMobile = window.innerWidth <= 480;
-        const isVerySmallMobile = window.innerWidth <= 360;
-
-        // ================================
-        // FONCTIONS DE GESTION SIDEBAR MOBILE - AMÉLIORÉES
-        // ================================
+        let arrondissementsData = [];
+        let layerVisibility = {
+            arrondissements: true,
+            parcelles: true,
+            overlaps: true
+        };
         
+        const COLOR_PALETTE = {
+            TITRE_PRIVE: '#663399',
+            TITRE_VENTE: '#9b59b6',
+            NON_TITRE: '#e67e22',
+            OVERLAP_FILL: '#dc3545',
+            OVERLAP_BORDER: '#dc3545',
+            ARROND_BORDER: '#2c3e50',
+            ARROND_FILL: '#3498db'
+        };
+
+        // CORRECTION : Variables dynamiques au lieu de constantes
+        let isMobile = window.innerWidth <= 768;
+        let isSmallMobile = window.innerWidth <= 480;
+        let isVerySmallMobile = window.innerWidth <= 360;
+
+        // État de la sidebar mobile
+        let mobileSidebarOpen = false;
+
+        // CORRECTION MAJEURE : Fonction pour forcer le scroll mobile
+        function forceMobileScroll() {
+            const sidebarContents = document.querySelectorAll('.sidebar-content');
+            
+            sidebarContents.forEach(sidebarContent => {
+                if (sidebarContent && (isMobile || isSmallMobile || isVerySmallMobile)) {
+                    // Réinitialiser toutes les propriétés de scroll
+                    sidebarContent.style.overflowY = 'scroll';
+                    sidebarContent.style.overflowX = 'hidden';
+                    sidebarContent.style.webkitOverflowScrolling = 'touch';
+                    sidebarContent.style.touchAction = 'pan-y';
+                    sidebarContent.style.overscrollBehavior = 'contain';
+                    sidebarContent.style.willChange = 'scroll-position';
+                    sidebarContent.style.transform = 'translateZ(0)';
+                    sidebarContent.style.backfaceVisibility = 'hidden';
+                    
+                    // Hauteur dynamique selon la taille d'écran
+                    if (isVerySmallMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 110px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 110px)';
+                    } else if (isSmallMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 120px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 120px)';
+                    } else if (isMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 130px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 130px)';
+                    }
+                    
+                    // Ajouter les classes d'aide
+                    sidebarContent.classList.add('force-scroll');
+                    
+                    // Force le reflow
+                    void sidebarContent.offsetHeight;
+                    
+                    console.log('✅ Scroll mobile forcé pour:', sidebarContent.className);
+                }
+            });
+        }
+
+        // CORRECTION : Fonction pour ajuster les contrôles selon la taille d'écran
+        function adjustResponsiveControls() {
+            // Mettre à jour les variables de taille
+            isMobile = window.innerWidth <= 768;
+            isSmallMobile = window.innerWidth <= 480;
+            isVerySmallMobile = window.innerWidth <= 360;
+            
+            // Forcer le scroll mobile
+            forceMobileScroll();
+            
+            // Ajuster les contrôles de la carte
+            adjustControlPositions();
+        }
+
+        // Données de démonstration avec chevauchement réaliste
+        const sampleParcelles = [
+            {
+                id: 1,
+                matricule: "TF-001234",
+                coordinates: [[4.0511, 9.7679], [4.0515, 9.7679], [4.0515, 9.7685], [4.0511, 9.7685]],
+                statut: "titre",
+                is_terrain_titre: true,
+                quartier: "Bonanjo",
+                activite: "vente_terrain",
+                proprietaire: "Jean Dupont",
+                proprietaire_id: "prop_001",
+                telephone: "+237677123456",
+                superficie: 500,
+                prix_m2: 15000,
+                description: "Terrain résidentiel avec vue sur le fleuve"
+            },
+            {
+                id: 2,
+                matricule: "NT-0012345",
+                coordinates: [[4.0513, 9.7681], [4.0517, 9.7681], [4.0517, 9.7687], [4.0513, 9.7687]],
+                statut: "non_titre",
+                is_terrain_titre: false,
+                quartier: "Bonanjo",
+                activite: "location_construction",
+                proprietaire: "Marie Kamga",
+                proprietaire_id: "prop_002",
+                telephone: "+237678234567",
+                superficie: 300,
+                prix_m2: 8000,
+                description: "Terrain pour construction d'immeuble"
+            },
+            {
+                id: 3,
+                matricule: "TF-001235",
+                coordinates: [[4.0520, 9.7690], [4.0525, 9.7690], [4.0525, 9.7695], [4.0520, 9.7695]],
+                statut: "titre",
+                is_terrain_titre: true,
+                quartier: "Akwa",
+                activite: "propriete_privee",
+                proprietaire: "Paul Mbarga",
+                proprietaire_id: "prop_003",
+                telephone: "+237679345678",
+                superficie: 400,
+                prix_m2: 0,
+                description: "Résidence privée familiale"
+            }
+        ];
+
+        // Fonctions de gestion de la sidebar mobile
         function toggleMobileSidebar() {
             if (mobileSidebarOpen) {
                 closeMobileSidebar();
@@ -1345,23 +1718,13 @@
             sidebar.classList.add('active');
             mobileSidebarOpen = true;
             
-            // CORRECTION: Prévenir le scroll du body de manière plus efficace
+            // Prévenir le scroll du body
             document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
             
-            // CORRECTION: Focus sur le contenu scrollable pour améliorer l'accessibilité
+            // CORRECTION : Forcer le scroll après ouverture
             setTimeout(() => {
-                const sidebarContent = sidebar.querySelector('.sidebar-content');
-                if (sidebarContent) {
-                    sidebarContent.focus();
-                    // CORRECTION: Force le recalcul du scroll pour iOS
-                    sidebarContent.scrollTop = 0;
-                    setTimeout(() => {
-                        sidebarContent.style.transform = 'translateZ(0)';
-                    }, 10);
-                }
-            }, 300);
+                forceMobileScroll();
+            }, 100);
         }
 
         function closeMobileSidebar() {
@@ -1372,59 +1735,11 @@
             sidebar.classList.remove('active');
             mobileSidebarOpen = false;
             
-            // CORRECTION: Restaurer le scroll du body
+            // Restaurer le scroll du body
             document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
         }
 
-        // ================================
-        // FONCTIONS POUR LES COUCHES
-        // ================================
-        
-        function toggleArrondissementLayer() {
-            const checkbox = document.getElementById('arrondissementLayerToggle');
-            const toggle = checkbox.parentElement;
-            
-            if (checkbox.checked) {
-                toggle.classList.add('active');
-                showNotification('Couche arrondissements activée', 'success');
-            } else {
-                toggle.classList.remove('active');
-                showNotification('Couche arrondissements désactivée', 'info');
-            }
-        }
-
-        function toggleParcelleLayer() {
-            const checkbox = document.getElementById('parcelleLayerToggle');
-            const toggle = checkbox.parentElement;
-            
-            if (checkbox.checked) {
-                toggle.classList.add('active');
-                showNotification('Couche parcelles activée', 'success');
-            } else {
-                toggle.classList.remove('active');
-                showNotification('Couche parcelles désactivée', 'info');
-            }
-        }
-
-        function toggleOverlapLayer() {
-            const checkbox = document.getElementById('overlapLayerToggle');
-            const toggle = checkbox.parentElement;
-            
-            if (checkbox.checked) {
-                toggle.classList.add('active');
-                showNotification('Couche chevauchements activée', 'success');
-            } else {
-                toggle.classList.remove('active');
-                showNotification('Couche chevauchements désactivée', 'info');
-            }
-        }
-
-        // ================================
-        // FONCTIONS MOBILE SYNCHRONISÉES
-        // ================================
-        
+        // Fonctions mobile pour synchroniser avec desktop
         function searchParcelleMobile() {
             const matricule = document.getElementById('searchMatriculeMobile').value.trim();
             document.getElementById('searchMatricule').value = matricule;
@@ -1470,38 +1785,1171 @@
             clearFilters();
         }
 
-        // ================================
-        // FONCTIONS PRINCIPALES
-        // ================================
-        
+        // Initialisation de la carte avec options responsives
+        function initMap() {
+            // Options de configuration responsive
+            const mapOptions = {
+                zoomControl: false,
+                scrollWheelZoom: !isMobile,
+                doubleClickZoom: true,
+                touchZoom: true,
+                tap: isMobile,
+                tapTolerance: isMobile ? 30 : 15
+            };
+ 
+            map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
+ 
+            // Ajouter les contrôles de zoom avec positionnement corrigé
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
+ 
+            // Couches de base
+            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            });
+ 
+            const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                attribution: '© Google Maps',
+                maxZoom: 20
+            });
+ 
+            const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenTopoMap contributors',
+                maxZoom: 17
+            });
+ 
+            const baseLayers = {
+                "OpenStreetMap": osmLayer,
+                "Satellite": satelliteLayer,
+                "Topographique": topoLayer
+            };
+ 
+            osmLayer.addTo(map);
+            
+            // Contrôle des couches avec position adaptée au mobile
+            const layerControl = L.control.layers(baseLayers, null, {
+                position: 'topright',
+                collapsed: true
+            }).addTo(map);
+ 
+            // Créer des panes personnalisés avec z-index explicites
+            map.createPane('arrondissementPane');
+            map.getPane('arrondissementPane').style.zIndex = 200;
+            map.getPane('arrondissementPane').style.pointerEvents = 'auto';
+ 
+            map.createPane('parcellePane');
+            map.getPane('parcellePane').style.zIndex = 400;
+            map.getPane('parcellePane').style.pointerEvents = 'auto';
+ 
+            map.createPane('overlapPane');
+            map.getPane('overlapPane').style.zIndex = 500;
+            map.getPane('overlapPane').style.pointerEvents = 'auto';
+ 
+            // Initialiser les couches
+            initArrondissementLayer();
+            initParcelleLayer();
+            initOverlapLayer();
+ 
+            // Charger les données
+            loadArrondissements();
+            loadParcelles();
+            
+            // Détecter les chevauchements après chargement des parcelles
+            setTimeout(() => {
+                console.log('🔍 Lancement détection des chevauchements...');
+                detectOverlaps();
+            }, 1500);
+ 
+            // Configuration responsive des popups
+            configureResponsivePopups();
+            
+            // Ajuster la position des contrôles avec CSS amélioré
+            setTimeout(() => {
+                adjustControlPositions();
+            }, 100);
+        }
+
+        // Fonction pour ajuster les positions des contrôles
+        function adjustControlPositions() {
+            const layerControlElement = document.querySelector('.leaflet-control-layers');
+            const zoomControlElement = document.querySelector('.leaflet-control-zoom');
+            
+            if (layerControlElement) {
+                if (isVerySmallMobile) {
+                    layerControlElement.style.top = '160px';
+                    layerControlElement.style.right = '3px';
+                } else if (isMobile) {
+                    layerControlElement.style.top = '175px';
+                    layerControlElement.style.right = '5px';
+                } else {
+                    layerControlElement.style.top = '120px';
+                    layerControlElement.style.right = '10px';
+                }
+                layerControlElement.style.zIndex = '999';
+            }
+
+            if (zoomControlElement) {
+                zoomControlElement.style.bottom = '30px';
+                if (isVerySmallMobile) {
+                    zoomControlElement.style.right = '3px';
+                } else if (isMobile) {
+                    zoomControlElement.style.right = '5px';
+                } else {
+                    zoomControlElement.style.right = '10px';
+                }
+                zoomControlElement.style.top = 'auto';
+                zoomControlElement.style.left = 'auto';
+            }
+        }
+
+        // Configuration des popups responsives
+        function configureResponsivePopups() {
+            // Options globales pour les popups sur mobile
+            if (isMobile) {
+                L.Popup.prototype.options.maxWidth = Math.min(300, window.innerWidth - 40);
+                L.Popup.prototype.options.minWidth = Math.min(250, window.innerWidth - 60);
+                L.Popup.prototype.options.maxHeight = Math.min(250, window.innerHeight * 0.6);
+                L.Popup.prototype.options.autoPanPadding = [10, 10];
+                L.Popup.prototype.options.keepInView = true;
+                L.Popup.prototype.options.closeButton = true;
+                L.Popup.prototype.options.autoClose = false;
+                L.Popup.prototype.options.className = 'mobile-popup';
+            }
+        }
+
+        // Initialisation des couches
+        function initArrondissementLayer() {
+            arrondissementLayer = L.layerGroup();
+            if (layerVisibility.arrondissements) {
+                arrondissementLayer.addTo(map);
+            }
+        }
+
+        function initParcelleLayer() {
+            parcelleLayer = L.layerGroup();
+            if (layerVisibility.parcelles) {
+                parcelleLayer.addTo(map);
+            }
+        }
+
+        function initOverlapLayer() {
+            overlapLayer = L.layerGroup();
+            if (layerVisibility.overlaps) {
+                overlapLayer.addTo(map);
+            }
+        }
+
+        // Charger les arrondissements depuis l'API - VERSION RESPONSIVE
+        async function loadArrondissements() {
+            const loadingSpinner = document.getElementById('arrondissementLoading');
+            const filterSelect = document.getElementById('filterArrondissement');
+            const filterSelectMobile = document.getElementById('filterArrondissementMobile');
+            
+            try {
+                loadingSpinner.style.display = 'inline-block';
+                console.log('🔄 Chargement des arrondissements depuis l\'API...');
+                
+                const response = await fetch('/api/spatial/arrondissements');
+                if (!response.ok) {
+                    throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                arrondissementsData = data.arrondissements || [];
+                
+                console.log(`✅ ${arrondissementsData.length} arrondissements chargés`);
+                
+                // Nettoyer la couche existante
+                arrondissementLayer.clearLayers();
+                
+                // Populer les selects des filtres (desktop et mobile)
+                filterSelect.innerHTML = '<option value="">Tous les arrondissements</option>';
+                filterSelectMobile.innerHTML = '<option value="">Tous les arrondissements</option>';
+                
+                let polygonsCreated = 0;
+                
+                // Ajouter les arrondissements à la carte
+                arrondissementsData.forEach((arrondissement, index) => {
+                    console.log(`📍 Traitement ${index + 1}/${arrondissementsData.length}: ${arrondissement.nom_arrondissement}`);
+                    
+                    // Ajouter aux selects
+                    const option = document.createElement('option');
+                    option.value = arrondissement.nom_arrondissement;
+                    option.textContent = arrondissement.nom_arrondissement;
+                    filterSelect.appendChild(option);
+                    
+                    const optionMobile = document.createElement('option');
+                    optionMobile.value = arrondissement.nom_arrondissement;
+                    optionMobile.textContent = arrondissement.nom_arrondissement;
+                    filterSelectMobile.appendChild(optionMobile);
+                    
+                    // Traiter la géométrie
+                    let coordinates = [];
+                    const geomData = arrondissement.geom_wkt || arrondissement.geom;
+                    if (geomData) {
+                        coordinates = parsePostGISGeometry(geomData);
+                    }
+                    
+                    // Créer le polygone
+                    if (coordinates.length >= 3) {
+                        const hasInvalidCoords = coordinates.some(coord => 
+                            !coord || coord.length !== 2 ||
+                            isNaN(coord[0]) || isNaN(coord[1]) || 
+                            coord[0] < -90 || coord[0] > 90 || 
+                            coord[1] < -180 || coord[1] > 180
+                        );
+                        
+                        if (!hasInvalidCoords) {
+                            try {
+                                const polygon = L.polygon(coordinates, {
+                                    color: COLOR_PALETTE.ARROND_BORDER,
+                                    weight: isMobile ? 1.5 : 2,
+                                    fillOpacity: 0.05,
+                                    fillColor: COLOR_PALETTE.ARROND_FILL,
+                                    opacity: 1,
+                                    pane: 'arrondissementPane',
+                                    interactive: true,
+                                    bubblingMouseEvents: false
+                                });
+
+                                // Calculer la superficie
+                                let areaKm2;
+                                if (arrondissement.superficie_km2 && arrondissement.superficie_km2 > 0) {
+                                    areaKm2 = parseFloat(arrondissement.superficie_km2).toFixed(2);
+                                } else {
+                                    const area = calculatePolygonArea(coordinates);
+                                    areaKm2 = (area / 1000000).toFixed(2);
+                                }
+
+                                const departementReel = arrondissement.nom_departement || 'Non renseigné';
+                                const regionReelle = arrondissement.nom_region || 'Non renseignée';
+                                
+                                // POPUP RESPONSIVE OPTIMISÉ
+                                const popupContent = createResponsiveArrondissementPopup(
+                                    arrondissement.nom_arrondissement,
+                                    departementReel,
+                                    regionReelle,
+                                    areaKm2
+                                );
+                                
+                                // Options de popup améliorées pour éviter le débordement
+                                let popupOptions = {
+                                    className: isMobile ? 'mobile-popup' : 'desktop-popup',
+                                    autoPan: true,
+                                    autoPanPadding: isMobile ? [5, 5] : [10, 10],
+                                    closeButton: true,
+                                    autoClose: false,
+                                    keepInView: true
+                                };
+
+                                if (isVerySmallMobile) {
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 15, 200);
+                                    popupOptions.minWidth = 150;
+                                    popupOptions.autoPanPadding = [3, 3];
+                                } else if (isMobile) {
+                                    popupOptions.maxWidth = Math.min(window.innerWidth - 30, 280);
+                                    popupOptions.minWidth = 200;
+                                } else {
+                                    popupOptions.maxWidth = 400;
+                                    popupOptions.minWidth = 300;
+                                }
+                                
+                                polygon.bindPopup(popupContent, popupOptions);
+                                
+                                // Événements tactiles améliorés
+                                polygon.on('mouseover touchstart', function(e) {
+                                    if (!checkParcelleAtPoint(e.latlng)) {
+                                        this.setStyle({
+                                            weight: isMobile ? 2.5 : 3,
+                                            fillOpacity: 0.15,
+                                            color: '#e74c3c'
+                                        });
+                                    }
+                                });
+                                
+                                polygon.on('mouseout touchend', function(e) {
+                                    this.setStyle({
+                                        weight: isMobile ? 1.5 : 2,
+                                        fillOpacity: 0.05,
+                                        color: COLOR_PALETTE.ARROND_BORDER
+                                    });
+                                });
+                                
+                                polygon.on('click', function(e) {
+                                    L.DomEvent.stopPropagation(e);
+                                    setTimeout(() => {
+                                        if (!checkParcelleAtPoint(e.latlng)) {
+                                            map.closePopup();
+                                            
+                                            // Adaptation du comportement pour mobile
+                                            if (isMobile) {
+                                                map.setView(e.latlng, Math.max(map.getZoom(), 12));
+                                            } else {
+                                                map.fitBounds(polygon.getBounds(), {
+                                                    padding: [10, 10]
+                                                });
+                                            }
+                                            
+                                            polygon.openPopup(e.latlng);
+                                        }
+                                    }, 15);
+                                    return false;
+                                });
+                                
+                                arrondissementLayer.addLayer(polygon);
+                                polygonsCreated++;
+                                
+                            } catch (leafletError) {
+                                console.error(`❌ Erreur création polygone pour ${arrondissement.nom_arrondissement}:`, leafletError);
+                            }
+                        }
+                    }
+                });
+
+                console.log(`🎉 ${polygonsCreated} arrondissements affichés sur la carte`);
+                
+                if (polygonsCreated > 0) {
+                    const successRate = ((polygonsCreated / arrondissementsData.length) * 100).toFixed(1);
+                    showNotification(`${polygonsCreated} arrondissements chargés (${successRate}%)`, 'success');
+                } else {
+                    showNotification('Aucun arrondissement affiché', 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur chargement arrondissements:', error);
+                showNotification(`Erreur: ${error.message}`, 'error');
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Créer un popup responsive pour les arrondissements
+        function createResponsiveArrondissementPopup(nom, departement, region, superficie) {
+            const isMobileView = window.innerWidth <= 480;
+            const isVerySmallScreen = window.innerWidth <= 360;
+            
+            if (isVerySmallScreen) {
+                return `
+                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.2rem;">
+                        <h4 style="margin: 0 0 0.2rem 0; color: #2c3e50; font-size: 0.7rem; border-bottom: 1px solid #3498db; padding-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.6rem;"></i> ${nom.length > 10 ? nom.substring(0, 10) + '...' : nom}
+                        </h4>
+                        <div style="text-align: left; overflow: hidden; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.15rem; border-radius: 2px; margin-bottom: 0.1rem; box-sizing: border-box;">
+                                <div style="margin-bottom: 0.05rem;">
+                                    <strong style="font-size: 0.6rem;">🏛️ Dép:</strong><br>
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.55rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${departement.length > 10 ? departement.substring(0, 10) + '...' : departement}
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 0.05rem;">
+                                    <strong style="font-size: 0.6rem;">🌍 Rég:</strong><br>
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.55rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${region.length > 10 ? region.substring(0, 10) + '...' : region}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="font-size: 0.6rem;">📏 Sup:</strong><br>
+                                    <span style="color: #8e44ad; font-size: 0.55rem;">${superficie} km²</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (isMobileView) {
+                return `
+                    <div style="text-align: center; font-size: 0.75rem; line-height: 1.2; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.3rem;">
+                        <h4 style="margin: 0 0 0.3rem 0; color: #2c3e50; font-size: 0.8rem; border-bottom: 1px solid #3498db; padding-bottom: 0.2rem; word-wrap: break-word; overflow-wrap: break-word;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.75rem;"></i> ${nom}
+                        </h4>
+                        <div style="text-align: left; overflow: hidden; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.25rem; border-radius: 3px; margin-bottom: 0.2rem; box-sizing: border-box;">
+                                <div style="margin-bottom: 0.1rem;">
+                                    <strong style="font-size: 0.7rem;">🏛️ Département:</strong><br>
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-size: 0.65rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${departement}
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 0.1rem;">
+                                    <strong style="font-size: 0.7rem;">🌍 Région:</strong><br>
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-size: 0.65rem; word-wrap: break-word; overflow-wrap: break-word; display: block;">
+                                        ${region}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong style="font-size: 0.7rem;">📏 Superficie:</strong><br>
+                                    <span style="color: #8e44ad; font-size: 0.65rem;">${superficie} km²</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div style="text-align: center; min-width: 280px; max-width: 350px; box-sizing: border-box; padding: 0.5rem;">
+                        <h4 style="margin-bottom: 0.75rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word;">
+                            <i class="fas fa-map-marker-alt"></i> ${nom}
+                        </h4>
+                        <div style="text-align: left; font-size: 0.9rem;">
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #3498db; box-sizing: border-box;">
+                                <div style="margin-bottom: 0.5rem;">
+                                    <strong style="color: #2c3e50;">🏛️ Département:</strong> 
+                                    <span style="color: ${(departement === 'Non renseigné') ? '#e74c3c' : '#27ae60'}; font-weight: 500; word-wrap: break-word; overflow-wrap: break-word;">
+                                        ${departement}
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 0.5rem;">
+                                    <strong style="color: #2c3e50;">🌍 Région:</strong> 
+                                    <span style="color: ${(region === 'Non renseignée') ? '#e74c3c' : '#27ae60'}; font-weight: 500; word-wrap: break-word; overflow-wrap: break-word;">
+                                        ${region}
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 0.5rem;">
+                                    <strong style="color: #2c3e50;">📏 Superficie:</strong> 
+                                    <span style="color: #8e44ad; font-weight: 500;">${superficie} km²</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Parser la géométrie PostGIS
+        function parsePostGISGeometry(geomString) {
+            if (!geomString) return [];
+            
+            try {
+                if (geomString.includes('POLYGON')) {
+                    const coordsMatch = geomString.match(/POLYGON\(\(([^)]+)\)\)/);
+                    if (!coordsMatch) return [];
+                    
+                    const coordsString = coordsMatch[1];
+                    const pairs = coordsString.split(',');
+                    
+                    const coordinates = pairs.map(pair => {
+                        const coords = pair.trim().split(/\s+/);
+                        if (coords.length >= 2) {
+                            const lng = parseFloat(coords[0]);
+                            const lat = parseFloat(coords[1]);
+                            return [lat, lng]; // Leaflet utilise [lat, lng]
+                        }
+                        return null;
+                    }).filter(coord => {
+                        if (!coord) return false;
+                        const [lat, lng] = coord;
+                        const isValid = !isNaN(lat) && !isNaN(lng) && 
+                                       lat >= -90 && lat <= 90 && 
+                                       lng >= -180 && lng <= 180;
+                        return isValid;
+                    });
+                    
+                    return coordinates;
+                }
+                
+                if (geomString.includes('MULTIPOLYGON')) {
+                    const polygonsMatch = geomString.match(/MULTIPOLYGON\(\(\(([^)]+)\)\)\)/);
+                    if (!polygonsMatch) return [];
+                    
+                    const coordsString = polygonsMatch[1];
+                    const pairs = coordsString.split(',');
+                    
+                    const coordinates = pairs.map(pair => {
+                        const coords = pair.trim().split(/\s+/);
+                        if (coords.length >= 2) {
+                            const lng = parseFloat(coords[0]);
+                            const lat = parseFloat(coords[1]);
+                            return [lat, lng];
+                        }
+                        return null;
+                    }).filter(coord => {
+                        if (!coord) return false;
+                        const [lat, lng] = coord;
+                        const isValid = !isNaN(lat) && !isNaN(lng) && 
+                                       lat >= -90 && lat <= 90 && 
+                                       lng >= -180 && lng <= 180;
+                        return isValid;
+                    });
+                    
+                    return coordinates;
+                }
+                
+                return [];
+                
+            } catch (error) {
+                console.error('❌ Erreur parsing géométrie:', error);
+                return [];
+            }
+        }
+
+        // Charger les parcelles avec optimisations mobiles
+        function loadParcelles() {
+            console.log('🔄 Chargement des parcelles...');
+            
+            if (!parcelleLayer) {
+                console.error('❌ ParcelleLayer n\'existe pas !');
+                return;
+            }
+            
+            parcelleLayer.clearLayers();
+            
+            sampleParcelles.forEach((parcelle, index) => {
+                console.log(`📍 Traitement parcelle ${index + 1}: ${parcelle.matricule}`);
+                
+                try {
+                    const color = getParcelleColor(parcelle);
+                    
+                    const polygon = L.polygon(parcelle.coordinates, {
+                        color: color,
+                        weight: isMobile ? 1.5 : 2,
+                        fillOpacity: 0.3,
+                        fillColor: color,
+                        opacity: 0.8,
+                        pane: 'parcellePane',
+                        interactive: true,
+                        bubblingMouseEvents: false
+                    });
+
+                    // Popup responsive pour parcelles
+                    const popupContent = createParcellePopup(parcelle);
+                    polygon.bindPopup(popupContent, {
+                        maxWidth: isMobile ? Math.min(280, window.innerWidth - 40) : 300,
+                        className: isMobile ? 'mobile-popup' : 'desktop-popup'
+                    });
+                    
+                    polygon.on('click', function(e) {
+                        L.DomEvent.stopPropagation(e);
+                        map.closePopup();
+                        showParcelleDetails(parcelle);
+                        return false;
+                    });
+                    
+                    polygon.on('mouseover touchstart', function(e) {
+                        this.setStyle({ 
+                            weight: isMobile ? 2.5 : 3,
+                            fillOpacity: 0.5,
+                            opacity: 1
+                        });
+                    });
+                    
+                    polygon.on('mouseout touchend', function(e) {
+                        this.setStyle({ 
+                            weight: isMobile ? 1.5 : 2,
+                            fillOpacity: 0.3,
+                            opacity: 0.8
+                        });
+                    });
+                    
+                    parcelleLayer.addLayer(polygon);
+                    console.log(`✅ Parcelle ${parcelle.matricule} ajoutée`);
+                    
+                } catch (error) {
+                    console.error(`❌ Erreur parcelle ${parcelle.matricule}:`, error);
+                }
+            });
+            
+            console.log(`🎉 ${parcelleLayer.getLayers().length} parcelles chargées`);
+            
+            if (!map.hasLayer(parcelleLayer)) {
+                map.addLayer(parcelleLayer);
+            }
+        }
+
+        // Obtenir la couleur d'une parcelle
+        function getParcelleColor(parcelle) {
+            const isTitre = parcelle.is_terrain_titre === true || parcelle.statut === 'titre';
+            
+            if (isTitre) {
+                if (parcelle.prix_m2 > 0) {
+                    return COLOR_PALETTE.TITRE_VENTE;
+                } else {
+                    return COLOR_PALETTE.TITRE_PRIVE;
+                }
+            } else {
+                return COLOR_PALETTE.NON_TITRE;
+            }
+        }
+
+        // Détecter les chevauchements avec optimisations responsives
+        function detectOverlaps() {
+            console.log('🔄 Détection des chevauchements...');
+            
+            if (!overlapLayer) {
+                console.error('❌ OverlapLayer n\'existe pas !');
+                return;
+            }
+            
+            overlapLayer.clearLayers();
+            let overlapsFound = 0;
+            
+            for (let i = 0; i < sampleParcelles.length; i++) {
+                for (let j = i + 1; j < sampleParcelles.length; j++) {
+                    const parcelle1 = sampleParcelles[i];
+                    const parcelle2 = sampleParcelles[j];
+                    
+                    // Vérifier que ce sont des propriétaires différents
+                    if (parcelle1.proprietaire_id !== parcelle2.proprietaire_id) {
+                        const intersection = calculatePolygonIntersection(
+                            parcelle1.coordinates, 
+                            parcelle2.coordinates
+                        );
+                        
+                        if (intersection && intersection.area > 0) {
+                            console.log(`⚠️ CHEVAUCHEMENT: ${parcelle1.matricule} vs ${parcelle2.matricule}`);
+                            createOverlapWarning(intersection, parcelle1, parcelle2);
+                            overlapsFound++;
+                        }
+                    }
+                }
+            }
+            console.log(`🎉 ${overlapsFound} chevauchements détectés`);
+            
+            if (!map.hasLayer(overlapLayer)) {
+                map.addLayer(overlapLayer);
+            }
+        }
+
+        // Calculer l'intersection de deux polygones
+        function calculatePolygonIntersection(coords1, coords2) {
+            try {
+                // Algorithme de Sutherland-Hodgman pour l'intersection de polygones
+                const intersection = sutherlandHodgmanClip(coords1, coords2);
+                
+                if (intersection && intersection.length >= 3) {
+                    const center = calculateCentroid(intersection);
+                    const area = calculatePolygonArea(intersection);
+                    
+                    return {
+                        coordinates: intersection,
+                        center: center,
+                        area: area
+                    };
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Erreur calcul intersection:', error);
+                return null;
+            }
+        }
+
+        // Implémentation de l'algorithme Sutherland-Hodgman
+        function sutherlandHodgmanClip(subjectPolygon, clipPolygon) {
+            let outputList = [...subjectPolygon];
+            
+            for (let i = 0; i < clipPolygon.length; i++) {
+                if (outputList.length === 0) break;
+                
+                const inputList = [...outputList];
+                outputList = [];
+                
+                if (inputList.length === 0) continue;
+                
+                const clipVertex1 = clipPolygon[i];
+                const clipVertex2 = clipPolygon[(i + 1) % clipPolygon.length];
+                
+                if (inputList.length > 0) {
+                    let s = inputList[inputList.length - 1];
+                    
+                    for (const e of inputList) {
+                        if (isInside(e, clipVertex1, clipVertex2)) {
+                            if (!isInside(s, clipVertex1, clipVertex2)) {
+                                const intersection = getLineIntersection(s, e, clipVertex1, clipVertex2);
+                                if (intersection) outputList.push(intersection);
+                            }
+                            outputList.push(e);
+                        } else if (isInside(s, clipVertex1, clipVertex2)) {
+                            const intersection = getLineIntersection(s, e, clipVertex1, clipVertex2);
+                            if (intersection) outputList.push(intersection);
+                        }
+                        s = e;
+                    }
+                }
+            }
+            
+            return outputList;
+        }
+
+        function isInside(point, lineStart, lineEnd) {
+            return ((lineEnd[0] - lineStart[0]) * (point[1] - lineStart[1]) - 
+                    (lineEnd[1] - lineStart[1]) * (point[0] - lineStart[0])) >= 0;
+        }
+
+        function getLineIntersection(p1, p2, p3, p4) {
+            const x1 = p1[0], y1 = p1[1];
+            const x2 = p2[0], y2 = p2[1];
+            const x3 = p3[0], y3 = p3[1];
+            const x4 = p4[0], y4 = p4[1];
+            
+            const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+            if (Math.abs(denom) < 1e-10) return null;
+            
+            const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+            
+            return [
+                x1 + t * (x2 - x1),
+                y1 + t * (y2 - y1)
+            ];
+        }
+
+        function calculateCentroid(polygon) {
+            let x = 0, y = 0;
+            for (const point of polygon) {
+                x += point[0];
+                y += point[1];
+            }
+            return [x / polygon.length, y / polygon.length];
+        }
+
+        function calculatePolygonArea(coordinates) {
+            if (!coordinates || coordinates.length < 3) return 0;
+            
+            let area = 0;
+            const n = coordinates.length;
+            
+            for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n;
+                const xi = coordinates[i][1]; // longitude
+                const yi = coordinates[i][0]; // latitude  
+                const xj = coordinates[j][1]; // longitude
+                const yj = coordinates[j][0]; // latitude
+                
+                area += xi * yj;
+                area -= xj * yi;
+            }
+            
+            area = Math.abs(area) / 2;
+            
+            // Conversion approximative en m²
+            const metersPerDegree = 111319.9;
+            area *= metersPerDegree * metersPerDegree;
+            
+            return area;
+        }
+
+        // Créer l'avertissement de chevauchement responsive
+        function createOverlapWarning(intersection, parcelle1, parcelle2) {
+            console.log(`⚠️ Création warning pour chevauchement à:`, intersection.center);
+            
+            // Créer SEULEMENT le polygone de la zone d'intersection
+            const intersectionPolygon = L.polygon(intersection.coordinates, {
+                color: COLOR_PALETTE.OVERLAP_BORDER,
+                weight: isMobile ? 2.5 : 3,
+                fillOpacity: 0.6,
+                fillColor: COLOR_PALETTE.OVERLAP_FILL,
+                opacity: 1,
+                className: 'overlap-zone',
+                pane: 'overlapPane'
+            });
+
+            // Popup d'information détaillée responsive
+            const areaM2 = intersection.area.toFixed(2);
+            const areaPercent1 = ((intersection.area / calculatePolygonArea(parcelle1.coordinates)) * 100).toFixed(1);
+            const areaPercent2 = ((intersection.area / calculatePolygonArea(parcelle2.coordinates)) * 100).toFixed(1);
+            
+            const popupContent = createOverlapPopup(parcelle1, parcelle2, areaM2, areaPercent1, areaPercent2);
+            
+            // Options de popup spécialement optimisées pour les chevauchements
+            let popupOptions = {
+                className: isMobile ? 'mobile-popup overlap-popup' : 'desktop-popup overlap-popup',
+                autoPan: true,
+                closeButton: true,
+                autoClose: false,
+                keepInView: true
+            };
+
+            if (isVerySmallMobile) {
+                popupOptions.maxWidth = Math.min(window.innerWidth - 15, 180);
+                popupOptions.minWidth = 140;
+                popupOptions.autoPanPadding = [2, 2];
+            } else if (isMobile) {
+                popupOptions.maxWidth = Math.min(window.innerWidth - 30, 250);
+                popupOptions.minWidth = 180;
+                popupOptions.autoPanPadding = [5, 5];
+            } else {
+                popupOptions.maxWidth = 320;
+                popupOptions.minWidth = 250;
+                popupOptions.autoPanPadding = [10, 10];
+            }
+            
+            // Attacher le popup au polygone
+            intersectionPolygon.bindPopup(popupContent, popupOptions);
+
+            // Effets visuels tactiles
+            intersectionPolygon.on('mouseover touchstart', function() {
+                this.setStyle({
+                    weight: isMobile ? 3.5 : 5,
+                    fillOpacity: 0.8,
+                    color: '#b71c1c'
+                });
+            });
+            
+            intersectionPolygon.on('mouseout touchend', function() {
+                this.setStyle({
+                    weight: isMobile ? 2.5 : 3,
+                    fillOpacity: 0.6,
+                    color: COLOR_PALETTE.OVERLAP_BORDER
+                });
+            });
+
+            // Ajouter SEULEMENT le polygone à la couche
+            overlapLayer.addLayer(intersectionPolygon);
+            
+            console.log('✅ Zone de chevauchement ajoutée - Rectangle rouge uniquement');
+        }
+
+        // Créer un popup responsive pour les chevauchements avec padding contrôlé
+        function createOverlapPopup(parcelle1, parcelle2, areaM2, areaPercent1, areaPercent2) {
+            const isMobileView = window.innerWidth <= 480;
+            const isVerySmallScreen = window.innerWidth <= 360;
+            
+            if (isVerySmallScreen) {
+                // Version très petits écrans ultra-compacte avec padding réduit
+                return `
+                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.2rem; margin: 0;">
+                        <h4 style="color: #dc3545; margin: 0 0 0.2rem 0; font-size: 0.7rem; padding: 0;">
+                            ⚠️ Conflit
+                        </h4>
+                        <div style="text-align: left; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.15rem; border-radius: 2px; margin-bottom: 0.1rem; font-size: 0.6rem; box-sizing: border-box;">
+                                <strong>Zone:</strong> ${areaM2} m²<br>
+                                <strong>Impact ${parcelle1.matricule.substring(0, 8)}:</strong> ${areaPercent1}%<br>
+                                <strong>Impact ${parcelle2.matricule.substring(0, 8)}:</strong> ${areaPercent2}%
+                            </div>
+                            <div style="background: #ffe6e6; padding: 0.1rem; border-radius: 2px; box-sizing: border-box;">
+                                <p style="color: #dc3545; font-size: 0.55rem; margin: 0; padding: 0;">
+                                    <i class="fas fa-exclamation-triangle"></i> Conflit foncier
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (isMobileView) {
+                // Version mobile compacte
+                return `
+                    <div style="text-align: center; font-size: 0.75rem; line-height: 1.2; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.3rem; margin: 0;">
+                        <h4 style="color: #dc3545; margin: 0 0 0.3rem 0; font-size: 0.8rem; padding: 0;">
+                            ⚠️ Chevauchement
+                        </h4>
+                        <div style="text-align: left; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.25rem; border-radius: 3px; margin-bottom: 0.2rem; font-size: 0.7rem; box-sizing: border-box;">
+                                <strong>Zone:</strong> ${areaM2} m²<br>
+                                <strong>Impact ${parcelle1.matricule}:</strong> ${areaPercent1}%<br>
+                                <strong>Impact ${parcelle2.matricule}:</strong> ${areaPercent2}%
+                            </div>
+                            <div style="background: #ffe6e6; padding: 0.2rem; border-radius: 3px; box-sizing: border-box;">
+                                <p style="color: #dc3545; font-size: 0.65rem; margin: 0; padding: 0;">
+                                    <i class="fas fa-exclamation-triangle"></i> Conflit foncier détecté
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Version desktop complète
+                return `
+                    <div style="text-align: center; min-width: 240px; max-width: 300px; box-sizing: border-box; padding: 0.5rem; margin: 0;">
+                        <h4 style="color: #dc3545; margin-bottom: 0.4rem; font-size: 0.9rem; padding: 0;">
+                            ⚠️ Chevauchement Détecté
+                        </h4>
+                        <div style="text-align: left; font-size: 0.85rem; box-sizing: border-box;">
+                            <div style="background: #f8f9fa; padding: 0.4rem; border-radius: 4px; margin-bottom: 0.4rem; box-sizing: border-box;">
+                                <strong>Zone d'intersection:</strong><br>
+                                📐 Superficie: ${areaM2} m²<br>
+                                📊 Impact sur ${parcelle1.matricule}: ${areaPercent1}%<br>
+                                📊 Impact sur ${parcelle2.matricule}: ${areaPercent2}%
+                            </div>
+                            
+                            <p style="margin: 0.2rem 0; font-size: 0.8rem;"><strong>Parcelle 1:</strong> ${parcelle1.matricule}<br>
+                            <em>Propriétaire: ${parcelle1.proprietaire}</em></p>
+                            
+                            <p style="margin: 0.2rem 0; font-size: 0.8rem;"><strong>Parcelle 2:</strong> ${parcelle2.matricule}<br>
+                            <em>Propriétaire: ${parcelle2.proprietaire}</em></p>
+                        </div>
+                        
+                        <div style="background: #ffe6e6; padding: 0.3rem; border-radius: 4px; margin-top: 0.5rem; box-sizing: border-box;">
+                            <p style="color: #dc3545; font-size: 0.75rem; margin: 0; padding: 0;">
+                                <i class="fas fa-exclamation-triangle"></i> Conflit foncier critique
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Vérifier si un point est dans une parcelle
+        function checkParcelleAtPoint(latlng) {
+            let foundParcelle = false;
+            
+            if (parcelleLayer) {
+                parcelleLayer.eachLayer(function(layer) {
+                    if (layer instanceof L.Polygon) {
+                        const bounds = layer.getBounds();
+                        if (bounds.contains(latlng)) {
+                            const latLngs = layer.getLatLngs()[0];
+                            if (isPointInPolygon(latlng, latLngs)) {
+                                foundParcelle = true;
+                                return false;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            return foundParcelle;
+        }
+
+        function isPointInPolygon(point, polygon) {
+            const x = point.lat;
+            const y = point.lng;
+            let inside = false;
+
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].lat;
+                const yi = polygon[i].lng;
+                const xj = polygon[j].lat;
+                const yj = polygon[j].lng;
+
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+
+        // Gestion des couches avec optimisations tactiles
+        function toggleArrondissementLayer() {
+            const checkbox = document.getElementById('arrondissementLayerToggle');
+            const toggle = checkbox.parentElement;
+            
+            layerVisibility.arrondissements = checkbox.checked;
+            
+            if (checkbox.checked) {
+                if (!map.hasLayer(arrondissementLayer)) {
+                    map.addLayer(arrondissementLayer);
+                }
+                toggle.classList.add('active');
+            } else {
+                if (map.hasLayer(arrondissementLayer)) {
+                    map.removeLayer(arrondissementLayer);
+                }
+                toggle.classList.remove('active');
+            }
+        }
+
+        function toggleParcelleLayer() {
+            const checkbox = document.getElementById('parcelleLayerToggle');
+            const toggle = checkbox.parentElement;
+            
+            layerVisibility.parcelles = checkbox.checked;
+            
+            if (checkbox.checked) {
+                if (!map.hasLayer(parcelleLayer)) {
+                    map.addLayer(parcelleLayer);
+                }
+                toggle.classList.add('active');
+            } else {
+                if (map.hasLayer(parcelleLayer)) {
+                    map.removeLayer(parcelleLayer);
+                }
+                toggle.classList.remove('active');
+            }
+        }
+
+        function toggleOverlapLayer() {
+            const checkbox = document.getElementById('overlapLayerToggle');
+            const toggle = checkbox.parentElement;
+            
+            layerVisibility.overlaps = checkbox.checked;
+            
+            if (checkbox.checked) {
+                if (!map.hasLayer(overlapLayer)) {
+                    map.addLayer(overlapLayer);
+                }
+                toggle.classList.add('active');
+            } else {
+                if (map.hasLayer(overlapLayer)) {
+                    map.removeLayer(overlapLayer);
+                }
+                toggle.classList.remove('active');
+            }
+        }
+
+        // Créer le popup d'une parcelle responsive
+        function createParcellePopup(parcelle) {
+            const statusClass = parcelle.statut === 'titre' ? 'status-titled' : 'status-untitled';
+            const statusText = parcelle.statut === 'titre' ? 'Titré' : 'Non titré';
+            const isMobileView = window.innerWidth <= 480;
+            
+            if (isMobileView) {
+                // Version mobile compacte
+                return `
+                    <div class="parcelle-popup" style="font-size: 0.8rem; max-width: 100%; box-sizing: border-box; padding: 0.3rem; margin: 0;">
+                        <h4 style="margin: 0 0 0.3rem 0; font-size: 0.9rem; padding: 0;">${parcelle.matricule}</h4>
+                        <span class="status-indicator ${statusClass}" style="font-size: 0.7rem;">${statusText}</span>
+                        <div style="margin-top: 0.4rem; font-size: 0.75rem;">
+                            <p style="margin: 0.2rem 0; padding: 0;"><strong>Quartier:</strong> ${parcelle.quartier}</p>
+                            <p style="margin: 0.2rem 0; padding: 0;"><strong>Superficie:</strong> ${parcelle.superficie} m²</p>
+                            ${parcelle.prix_m2 ? `<p style="margin: 0.2rem 0; padding: 0;"><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</p>` : ''}
+                        </div>
+                        <button onclick="showParcelleDetails(${JSON.stringify(parcelle).replace(/"/g, '&quot;')})" class="btn btn-primary" style="margin-top: 0.4rem; padding: 0.3rem 0.6rem; font-size: 0.75rem; width: 100%; box-sizing: border-box;">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Version desktop normale
+                return `
+                    <div class="parcelle-popup" style="max-width: 100%; box-sizing: border-box; padding: 0.5rem; margin: 0;">
+                        <h4 style="margin: 0 0 0.5rem 0; padding: 0;">${parcelle.matricule}</h4>
+                        <span class="status-indicator ${statusClass}">${statusText}</span>
+                        <p style="margin: 0.3rem 0; padding: 0;"><strong>Quartier:</strong> ${parcelle.quartier}</p>
+                        <p style="margin: 0.3rem 0; padding: 0;"><strong>Superficie:</strong> ${parcelle.superficie} m²</p>
+                        ${parcelle.prix_m2 ? `<p style="margin: 0.3rem 0; padding: 0;"><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</p>` : ''}
+                        <button onclick="showParcelleDetails(${JSON.stringify(parcelle).replace(/"/g, '&quot;')})" class="btn btn-primary" style="margin-top: 0.5rem; box-sizing: border-box;">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Afficher les détails d'une parcelle avec adaptation mobile
+        function showParcelleDetails(parcelle) {
+            const modal = document.getElementById('parcelleModal');
+            const info = document.getElementById('parcelleInfo');
+            
+            const statusClass = parcelle.statut === 'titre' ? 'status-titled' : 'status-untitled';
+            const statusText = parcelle.statut === 'titre' ? 'Terrain titré' : 'Terrain non titré';
+            
+            const activityLabels = {
+                'propriete_privee': 'Propriété privée',
+                'vente_terrain': 'Vente de terrain',
+                'location_construction': 'Location pour construction',
+                'location_agriculture': 'Location pour agriculture',
+                'autres': 'Autres activités'
+            };
+
+            info.innerHTML = `
+                <div class="parcelle-info">
+                    <div class="parcelle-title">${parcelle.matricule}</div>
+                    <span class="status-indicator ${statusClass}">${statusText}</span>
+                    
+                    <div class="parcelle-details" style="margin-top: 0.75rem;">
+                        <span><strong>Quartier/Village:</strong> ${parcelle.quartier}</span>
+                        <span><strong>Activité:</strong> ${activityLabels[parcelle.activite] || parcelle.activite}</span>
+                        <span><strong>Superficie:</strong> ${parcelle.superficie} m²</span>
+                        <span><strong>Description:</strong> ${parcelle.description}</span>
+                        ${parcelle.prix_m2 ? `<span><strong>Prix au m²:</strong> ${parcelle.prix_m2.toLocaleString()} XAF</span>` : ''}
+                        ${parcelle.prix_m2 ? `<span><strong>Prix total:</strong> ${(parcelle.prix_m2 * parcelle.superficie).toLocaleString()} XAF</span>` : ''}
+                    </div>
+                    
+                    ${currentUser && parcelle.prix_m2 ? `
+                        <button class="btn btn-success contact-btn" onclick="contactOwner(${parcelle.id})">
+                            <i class="fas fa-phone"></i> Contacter le propriétaire
+                        </button>
+                    ` : ''}
+                    
+                    ${!currentUser && parcelle.prix_m2 ? `
+                        <p style="color: #e74c3c; margin-top: 1rem; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">
+                            <i class="fas fa-lock"></i> Connectez-vous pour contacter le propriétaire
+                        </p>
+                    ` : ''}
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Contacter le propriétaire
+        function contactOwner(parcelleId) {
+            if (!currentUser) {
+                showNotification('Veuillez vous connecter pour contacter le propriétaire', 'error');
+                return;
+            }
+            
+            const parcelle = sampleParcelles.find(p => p.id === parcelleId);
+            if (parcelle) {
+                showNotification(`Contact établi avec ${parcelle.proprietaire}. Téléphone: ${parcelle.telephone}`, 'success');
+            }
+        }
+
+        // Recherche de parcelle avec adaptation mobile
         function searchParcelle() {
             const matricule = document.getElementById('searchMatricule').value.trim();
             if (!matricule) {
                 showNotification('Veuillez saisir un matricule', 'error');
                 return;
             }
-            showNotification(`Recherche de: ${matricule}`, 'info');
-        }
 
-        function applyFilters() {
-            const arrondissement = document.getElementById('filterArrondissement').value;
-            const quartier = document.getElementById('filterQuartier').value.trim();
-            const activite = document.getElementById('filterActivite').value;
-            const statut = document.getElementById('filterStatut').value;
-            
-            let filterCount = 0;
-            if (arrondissement) filterCount++;
-            if (quartier) filterCount++;
-            if (activite) filterCount++;
-            if (statut) filterCount++;
-            
-            if (filterCount > 0) {
-                showNotification(`${filterCount} filtre(s) appliqué(s)`, 'success');
+            const parcelle = sampleParcelles.find(p => 
+                p.matricule.toLowerCase().includes(matricule.toLowerCase())
+            );
+
+            if (parcelle) {
+                const center = L.polygon(parcelle.coordinates).getBounds().getCenter();
+                map.setView(center, isMobile ? 15 : 16);
+                showParcelleDetails(parcelle);
+                showNotification('Parcelle trouvée', 'success');
             } else {
-                showNotification('Aucun filtre appliqué', 'info');
+                showNotification('Aucune parcelle trouvée avec ce matricule', 'error');
             }
         }
 
+        // Appliquer les filtres
+        function applyFilters() {
+            const arrondissement = document.getElementById('filterArrondissement').value;
+            const quartier = document.getElementById('filterQuartier').value.trim().toLowerCase();
+            const activite = document.getElementById('filterActivite').value;
+            const statut = document.getElementById('filterStatut').value;
+
+            let filteredParcelles = sampleParcelles;
+
+            if (arrondissement) {
+                filteredParcelles = filteredParcelles.filter(p => p.quartier.includes(arrondissement));
+            }
+
+            if (quartier) {
+                filteredParcelles = filteredParcelles.filter(p => 
+                    p.quartier.toLowerCase().includes(quartier)
+                );
+            }
+
+            if (activite) {
+                filteredParcelles = filteredParcelles.filter(p => p.activite === activite);
+            }
+
+            if (statut) {
+                filteredParcelles = filteredParcelles.filter(p => p.statut === statut);
+            }
+
+            // Recharger les parcelles filtrées
+            parcelleLayer.clearLayers();
+            filteredParcelles.forEach(parcelle => {
+                const color = getParcelleColor(parcelle);
+                
+                const polygon = L.polygon(parcelle.coordinates, {
+                    color: color,
+                    weight: isMobile ? 2 : 3,
+                    fillOpacity: 0.4,
+                    opacity: 1,
+                    pane: 'parcellePane'
+                });
+
+                polygon.bindPopup(createParcellePopup(parcelle));
+                polygon.on('click', () => showParcelleDetails(parcelle));
+                
+                parcelleLayer.addLayer(polygon);
+            });
+
+            displaySearchResults(filteredParcelles);
+            showNotification(`${filteredParcelles.length} parcelle(s) trouvée(s)`, 'info');
+        }
+
+        // Effacer les filtres
         function clearFilters() {
             document.getElementById('filterArrondissement').value = '';
             document.getElementById('filterQuartier').value = '';
@@ -1516,154 +2964,460 @@
             document.getElementById('filterStatutMobile').value = '';
             document.getElementById('searchMatriculeMobile').value = '';
             
+            loadParcelles();
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('searchResultsMobile').innerHTML = '';
             showNotification('Filtres effacés', 'info');
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.querySelector('.sidebar-toggle i');
+        // Afficher les résultats de recherche
+        function displaySearchResults(parcelles) {
+            const resultsDiv = document.getElementById('searchResults');
+            const resultsMobileDiv = document.getElementById('searchResultsMobile');
             
-            sidebar.classList.toggle('collapsed');
-            
-            if (sidebar.classList.contains('collapsed')) {
-                toggleBtn.className = 'fas fa-chevron-right';
-            } else {
-                toggleBtn.className = 'fas fa-bars';
+            if (parcelles.length === 0) {
+                const noResultsHtml = '<p style="text-align: center; color: #666;">Aucun résultat</p>';
+                resultsDiv.innerHTML = noResultsHtml;
+                resultsMobileDiv.innerHTML = noResultsHtml;
+                return;
             }
-        }
 
-        function toggleLegendCollapse() {
-            const legend = document.getElementById('legend');
-            const toggleBtn = document.getElementById('legendToggleBtn');
-            const toggleIcon = toggleBtn.querySelector('i');
-            
-            legendCollapsed = !legendCollapsed;
-            
-            if (legendCollapsed) {
-                legend.classList.add('collapsed');
-                toggleIcon.className = 'fas fa-chevron-down';
-                toggleBtn.title = 'Développer la légende';
-            } else {
-                legend.classList.remove('collapsed');
-                toggleIcon.className = 'fas fa-chevron-up';
-                toggleBtn.title = 'Réduire la légende';
-            }
-        }
-
-        // ================================
-        // SYSTÈME DE NOTIFICATION
-        // ================================
-        
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
-
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-
-        // ================================
-        // INITIALISATION DE LA CARTE
-        // ================================
-        
-        function initMap() {
-            // Options de configuration responsive
-            const mapOptions = {
-                zoomControl: true,
-                scrollWheelZoom: !isMobile,
-                doubleClickZoom: true,
-                touchZoom: true,
-                tap: isMobile,
-                tapTolerance: isMobile ? 30 : 15
+            const activityLabels = {
+                'propriete_privee': 'Propriété privée',
+                'vente_terrain': 'Vente de terrain',
+                'location_construction': 'Location pour construction',
+                'location_agriculture': 'Location pour agriculture',
+                'autres': 'Autres activités'
             };
 
-            map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
-
-            // Couche de base
-            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            });
-
-            const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-                attribution: '© Google Maps',
-                maxZoom: 20
-            });
-
-            const baseLayers = {
-                "OpenStreetMap": osmLayer,
-                "Satellite": satelliteLayer
-            };
-
-            osmLayer.addTo(map);
+            const resultsHtml = `
+                <div class="filter-title" style="margin-bottom: 1rem;">
+                    Résultats (${parcelles.length})
+                </div>
+                ${parcelles.map(parcelle => {
+                    const statusClass = parcelle.statut === 'titre' ? 'status-titled' : 'status-untitled';
+                    const statusText = parcelle.statut === 'titre' ? 'Titré' : 'Non titré';
+                    
+                    return `
+                        <div class="parcelle-info" onclick="focusOnParcelle(${parcelle.id})" style="cursor: pointer;">
+                            <div class="parcelle-title">${parcelle.matricule}</div>
+                            <span class="status-indicator ${statusClass}">${statusText}</span>
+                            <div class="parcelle-details">
+                                <span><strong>Quartier:</strong> ${parcelle.quartier}</span>
+                                <span><strong>Activité:</strong> ${activityLabels[parcelle.activite]}</span>
+                                <span><strong>Superficie:</strong> ${parcelle.superficie} m²</span>
+                                ${parcelle.prix_m2 ? `<span><strong>Prix:</strong> ${parcelle.prix_m2.toLocaleString()} XAF/m²</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
             
-            // Contrôle des couches
-            L.control.layers(baseLayers, null, {
-                position: 'topright',
-                collapsed: true
-            }).addTo(map);
-
-            showNotification('Carte initialisée avec succès', 'success');
+            resultsDiv.innerHTML = resultsHtml;
+            resultsMobileDiv.innerHTML = resultsHtml;
         }
 
-        // ================================
-        // CORRECTION DU SCROLL MOBILE AU CHARGEMENT
-        // ================================
-        
-        function fixMobileScrolling() {
-            const sidebarContents = document.querySelectorAll('.sidebar-content');
-            sidebarContents.forEach(sidebarContent => {
-                if (sidebarContent && isMobile) {
-                    // CORRECTION: Forcer les propriétés de scroll
-                    sidebarContent.style.overflowY = 'scroll';
-                    sidebarContent.style.overflowX = 'hidden';
-                    sidebarContent.style.webkitOverflowScrolling = 'touch';
-                    sidebarContent.style.position = 'relative';
-                    sidebarContent.style.touchAction = 'pan-y';
-                    sidebarContent.style.overscrollBehavior = 'contain';
-                    sidebarContent.style.willChange = 'scroll-position';
-                    sidebarContent.style.transform = 'translateZ(0)';
-                    
-                    // CORRECTION: Hauteur fixe basée sur la taille d'écran
-                    if (isVerySmallMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 80px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 80px)';
-                        sidebarContent.style.minHeight = 'calc(100vh - 80px)';
-                    } else if (isSmallMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 90px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 90px)';
-                        sidebarContent.style.minHeight = 'calc(100vh - 90px)';
-                    } else {
-                        sidebarContent.style.height = 'calc(100vh - 100px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 100px)';
-                        sidebarContent.style.minHeight = 'calc(100vh - 100px)';
-                    }
-                    
-                    console.log('✅ Scroll mobile corrigé pour:', sidebarContent.className);
+        // Centrer sur une parcelle
+        function focusOnParcelle(parcelleId) {
+            const parcelle = sampleParcelles.find(p => p.id === parcelleId);
+            if (parcelle) {
+                const center = L.polygon(parcelle.coordinates).getBounds().getCenter();
+                map.setView(center, isMobile ? 15 : 16);
+                showParcelleDetails(parcelle);
+                
+                // Fermer la sidebar mobile si ouverte
+                if (mobileSidebarOpen) {
+                    closeMobileSidebar();
                 }
-            });
+            }
         }
 
-        // ================================
-        // GESTION DES ÉVÉNEMENTS DE REDIMENSIONNEMENT
-        // ================================
+       // Outils de mesure avec adaptation mobile
+       function toggleMeasurement(type) {
+        clearMeasurements();
         
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                fixMobileScrolling();
-                showNotification('Interface adaptée à la nouvelle taille', 'info');
-            }, 250);
+        if (measurementMode === type) {
+            measurementMode = null;
+            document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.remove('active');
+            return;
+        }
+
+        measurementMode = type;
+        document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.add('active');
+
+        map.getContainer().style.cursor = 'crosshair';
+        
+        if (type === 'distance') {
+            startDistanceMeasurement();
+        } else if (type === 'area') {
+            startAreaMeasurement();
+        }
+    }
+
+    function startDistanceMeasurement() {
+        let points = [];
+        let polyline = null;
+
+        function onMapClick(e) {
+            points.push(e.latlng);
+            
+            const marker = L.marker(e.latlng).addTo(map);
+            measurementMarkers.push(marker);
+
+            if (points.length > 1) {
+                if (polyline) {
+                    map.removeLayer(polyline);
+                }
+                
+                polyline = L.polyline(points, {color: 'red', weight: 3}).addTo(map);
+                measurementLines.push(polyline);
+                
+                const distance = calculateDistance(points);
+                const popup = L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(`Distance: ${distance.toFixed(2)} m`)
+                    .openOn(map);
+            }
+        }
+
+        map.on('click', onMapClick);
+    }
+
+    function startAreaMeasurement() {
+        let points = [];
+        let polygon = null;
+
+        function onMapClick(e) {
+            points.push(e.latlng);
+            
+            const marker = L.marker(e.latlng).addTo(map);
+            measurementMarkers.push(marker);
+
+            if (points.length > 2) {
+                if (polygon) {
+                    map.removeLayer(polygon);
+                }
+                
+                polygon = L.polygon(points, {color: 'blue', weight: 2, fillOpacity: 0.2}).addTo(map);
+                measurementLines.push(polygon);
+                
+                const area = calculateArea(points);
+                const popup = L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(`Superficie: ${area.toFixed(2)} m²`)
+                    .openOn(map);
+            }
+        }
+
+        map.on('click', onMapClick);
+    }
+
+    function calculateDistance(points) {
+        let distance = 0;
+        for (let i = 1; i < points.length; i++) {
+            distance += points[i-1].distanceTo(points[i]);
+        }
+        return distance;
+    }
+
+    function calculateArea(points) {
+        if (points.length < 3) return 0;
+        
+        const polygon = L.polygon(points);
+        const geoJson = polygon.toGeoJSON();
+        
+        const coords = geoJson.geometry.coordinates[0];
+        let area = 0;
+        
+        for (let i = 0; i < coords.length - 1; i++) {
+            const p1 = coords[i];
+            const p2 = coords[i + 1];
+            area += (p2[0] - p1[0]) * (p2[1] + p1[1]);
+        }
+        
+        return Math.abs(area) * 111319.9 * 111319.9 / 2;
+    }
+
+    function clearMeasurements() {
+        measurementMarkers.forEach(marker => map.removeLayer(marker));
+        measurementLines.forEach(line => map.removeLayer(line));
+        measurementMarkers = [];
+        measurementLines = [];
+        map.off('click');
+        map.getContainer().style.cursor = '';
+        map.closePopup();
+        
+        document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+        measurementMode = null;
+    }
+
+    // Ajouter une parcelle
+    function addParcelle() {
+        if (!currentUser || currentUser.type !== 'proprietaire') {
+            showNotification('Connectez-vous en tant que propriétaire pour ajouter une parcelle', 'error');
+            return;
+        }
+        
+        openModal('addParcelleModal');
+    }
+
+    // Mettre à jour les champs du formulaire selon le statut
+    function updateFormFields() {
+        const statut = document.getElementById('terrainStatut').value;
+        const matriculeField = document.getElementById('matricule');
+        
+        if (statut === 'non_titre') {
+            const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+            matriculeField.value = `NT-${randomNum}`;
+        } else {
+            matriculeField.value = '';
+            matriculeField.readOnly = false;
+            matriculeField.placeholder = 'Saisir le matricule du titre foncier';
+        }
+    }
+
+    // Importer CSV
+    function importCSV() {
+        if (!currentUser || currentUser.type !== 'proprietaire') {
+            showNotification('Connectez-vous en tant que propriétaire pour importer des parcelles', 'error');
+            return;
+        }
+        
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = handleCSVImport;
+        input.click();
+    }
+
+    function handleCSVImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const csv = e.target.result;
+            parseCSV(csv);
+        };
+        reader.readAsText(file);
+    }
+
+    function parseCSV(csvText) {
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        
+        const requiredColumns = ['matricule', 'longitude', 'latitude'];
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+        
+        if (missingColumns.length > 0) {
+            showNotification(`Colonnes manquantes: ${missingColumns.join(', ')}`, 'error');
+            return;
+        }
+
+        const parcelles = [];
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+            if (values.length < headers.length) continue;
+
+            const parcelle = {};
+            headers.forEach((header, index) => {
+                parcelle[header] = values[index];
+            });
+
+            if (parcelle.matricule && parcelle.longitude && parcelle.latitude) {
+                parcelles.push(parcelle);
+            }
+        }
+
+        if (parcelles.length > 0) {
+            showNotification(`${parcelles.length} parcelle(s) importée(s) avec succès`, 'success');
+        } else {
+            showNotification('Aucune parcelle valide trouvée dans le fichier', 'error');
+        }
+    }
+
+    // Gestion des modales
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Basculer la sidebar desktop
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.querySelector('.sidebar-toggle i');
+        
+        sidebar.classList.toggle('collapsed');
+        
+        if (sidebar.classList.contains('collapsed')) {
+            toggleBtn.className = 'fas fa-chevron-right';
+        } else {
+            toggleBtn.className = 'fas fa-bars';
+        }
+    }
+
+    // Réduire/développer la légende
+    function toggleLegendCollapse() {
+        const legend = document.getElementById('legend');
+        const toggleBtn = document.getElementById('legendToggleBtn');
+        const toggleIcon = toggleBtn.querySelector('i');
+        
+        legendCollapsed = !legendCollapsed;
+        
+        if (legendCollapsed) {
+            legend.classList.add('collapsed');
+            toggleIcon.className = 'fas fa-chevron-down';
+            toggleBtn.title = 'Développer la légende';
+        } else {
+            legend.classList.remove('collapsed');
+            toggleIcon.className = 'fas fa-chevron-up';
+            toggleBtn.title = 'Réduire la légende';
+        }
+    }
+
+    // Système de notification
+    function showNotification(message, type = 'info') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+
+    // Gestion de l'authentification
+    function handleLogin(event) {
+        event.preventDefault();
+        
+        currentUser = {
+            id: 1,
+            name: 'Utilisateur Test',
+            email: 'test@example.com',
+            type: 'client'
+        };
+
+        updateAuthUI();
+        closeModal('loginModal');
+        showNotification('Connexion réussie', 'success');
+    }
+
+    function handleRegister(event) {
+        event.preventDefault();
+        
+        showNotification('Inscription réussie. Veuillez vous connecter.', 'success');
+        closeModal('registerModal');
+    }
+
+    function updateAuthUI() {
+        const authButtons = document.getElementById('authButtons');
+        
+        if (currentUser) {
+            authButtons.innerHTML = `
+                <span style="margin-right: 1rem;">Bonjour, ${currentUser.name}</span>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            `;
+        } else {
+            authButtons.innerHTML = `
+                <button class="btn btn-secondary" onclick="openModal('loginModal')">
+                    <i class="fas fa-sign-in-alt"></i> Connexion
+                </button>
+                <button class="btn btn-primary" onclick="openModal('registerModal')">
+                    <i class="fas fa-user-plus"></i> Inscription
+                </button>
+            `;
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        updateAuthUI();
+        showNotification('Déconnexion réussie', 'info');
+    }
+
+    // Fermer les modales en cliquant à l'extérieur
+    window.onclick = function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // CORRECTION : Gestion améliorée des événements de redimensionnement
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            adjustResponsiveControls();
+        }, 250);
+    });
+
+    // Gestion de l'orientation pour mobile
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            adjustResponsiveControls();
+        }, 300);
+    });
+
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Initialisation de GéoFoncier - Version Corrigée');
+        
+        // Initialiser la carte
+        initMap();
+
+        // CORRECTION MAJEURE : Forcer le scroll mobile au chargement
+        setTimeout(() => {
+            forceMobileScroll();
+            console.log('✅ Scroll mobile forcé au chargement');
+        }, 500);
+
+        // Double vérification après un délai plus long
+        setTimeout(() => {
+            forceMobileScroll();
+            console.log('✅ Double vérification scroll mobile');
+        }, 1500);
+
+        // Gestionnaires d'événements
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('registerForm').addEventListener('submit', handleRegister);
+        document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showNotification('Parcelle ajoutée avec succès', 'success');
+            closeModal('addParcelleModal');
         });
 
-        // ================================
-        // PRÉVENTION DU ZOOM PAR PINCEMENT
-        // ================================
-        
+        document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchParcelle();
+            }
+        });
+
+        document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchParcelleMobile();
+            }
+        });
+
+        // Initialiser les toggles
+        const toggles = document.querySelectorAll('.layer-toggle');
+        toggles.forEach(toggle => {
+            const checkbox = toggle.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                toggle.classList.add('active');
+            }
+        });
+
+        // CORRECTION : Prévenir le zoom par pincement sur iOS avec gestion améliorée
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function (event) {
             const now = (new Date()).getTime();
@@ -1679,338 +3433,33 @@
             }
         }, { passive: false });
 
-        // ================================
-        // FERMETURE DES MODALES AU CLIC EXTÉRIEUR
-        // ================================
-        
-        window.onclick = function(event) {
-            // Fermer le sidebar mobile si on clique en dehors
-            if (mobileSidebarOpen && event.target === document.getElementById('sidebarMobileOverlay')) {
-                closeMobileSidebar();
-            }
+        // Améliorer les interactions tactiles
+        if ('ontouchstart' in window) {
+            document.body.classList.add('touch-device');
         }
 
-        // ================================
-        // INITIALISATION AU CHARGEMENT
-        // ================================
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initialisation de GéoFoncier - Version Scroll Corrigée');
-            console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
-            console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
-            
-            // Initialiser la carte
-            initMap();
-            
-            // CORRECTION: Corriger le scroll mobile après l'initialisation
-            setTimeout(() => {
-                fixMobileScrolling();
-                showNotification('Scroll mobile optimisé', 'success');
-            }, 500);
-            
-            // Gestionnaires d'événements pour la recherche
-            document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchParcelle();
-                }
-            });
-
-            document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchParcelleMobile();
-                }
-            });
-
-            // Initialiser les toggles
-            const toggles = document.querySelectorAll('.layer-toggle');
-            toggles.forEach(toggle => {
-                const checkbox = toggle.querySelector('input[type="checkbox"]');
-                if (checkbox && checkbox.checked) {
-                    toggle.classList.add('active');
-                }
-            });
-
-            // Améliorer les interactions tactiles
-            if ('ontouchstart' in window) {
-                document.body.classList.add('touch-device');
-            }
-            
-            // Gestion du changement d'orientation
-            window.addEventListener('orientationchange', function() {
-                setTimeout(() => {
-                    fixMobileScrolling();
-                    showNotification('Orientation changée - interface adaptée', 'info');
-                }, 300);
-            });
-
-            console.log('✅ GéoFoncier initialisé avec succès - Scroll mobile corrigé');
-            
-            // Test du scroll mobile
-            if (isMobile) {
-                setTimeout(() => {
-                    console.log('🔧 Test du scroll mobile...');
-                    const mobileSidebarContent = document.querySelector('#sidebarMobile .sidebar-content');
-                    if (mobileSidebarContent) {
-                        console.log('📏 Hauteur du contenu mobile:', mobileSidebarContent.scrollHeight + 'px');
-                        console.log('📏 Hauteur visible:', mobileSidebarContent.clientHeight + 'px');
-                        console.log('🔄 Scroll possible:', mobileSidebarContent.scrollHeight > mobileSidebarContent.clientHeight ? 'OUI' : 'NON');
-                    }
-                }, 1000);
-            }
-        });
-
-        // ================================
-        // FONCTIONS SPÉCIFIQUES POUR TESTER LE SCROLL
-        // ================================
-        
-        function testMobileScroll() {
-            if (!isMobile) {
-                showNotification('Cette fonction est pour les mobiles uniquement', 'info');
-                return;
-            }
-            
-            openMobileSidebar();
-            setTimeout(() => {
-                const sidebarContent = document.querySelector('#sidebarMobile .sidebar-content');
-                if (sidebarContent) {
-                    // Faire défiler automatiquement pour montrer que ça fonctionne
-                    sidebarContent.scrollTo({
-                        top: sidebarContent.scrollHeight / 2,
-                        behavior: 'smooth'
-                    });
-                    showNotification('Test de scroll automatique', 'success');
-                }
-            }, 500);
-        }
-
-        // ================================
-        // DEBUGGING DU SCROLL MOBILE
-        // ================================
-        
-        function debugMobileScroll() {
-            const sidebarContent = document.querySelector('#sidebarMobile .sidebar-content');
-            if (sidebarContent) {
-                console.log('🔍 DEBUG SCROLL MOBILE:');
-                console.log('  - Hauteur totale:', sidebarContent.scrollHeight + 'px');
-                console.log('  - Hauteur visible:', sidebarContent.clientHeight + 'px');
-                console.log('  - Position scroll:', sidebarContent.scrollTop + 'px');
-                console.log('  - Overflow Y:', getComputedStyle(sidebarContent).overflowY);
-                console.log('  - Touch action:', getComputedStyle(sidebarContent).touchAction);
-                console.log('  - Webkit overflow scrolling:', getComputedStyle(sidebarContent).webkitOverflowScrolling);
-                
-                const canScroll = sidebarContent.scrollHeight > sidebarContent.clientHeight;
-                console.log('  - Peut défiler:', canScroll ? 'OUI ✅' : 'NON ❌');
-                
-                showNotification(canScroll ? 'Scroll possible ✅' : 'Scroll impossible ❌', canScroll ? 'success' : 'error');
-            }
-        }
-
-        // ================================
-        // FORCER LE SCROLL SUR PROBLÈMES
-        // ================================
-        
-        function forceEnableScroll() {
-            const sidebarContents = document.querySelectorAll('.sidebar-content');
-            sidebarContents.forEach((content, index) => {
-                // Force brutale des propriétés de scroll
-                content.style.setProperty('overflow-y', 'scroll', 'important');
-                content.style.setProperty('overflow-x', 'hidden', 'important');
-                content.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-                content.style.setProperty('touch-action', 'pan-y', 'important');
-                content.style.setProperty('overscroll-behavior', 'contain', 'important');
-                content.style.setProperty('scroll-behavior', 'smooth', 'important');
-                content.style.setProperty('will-change', 'scroll-position', 'important');
-                content.style.setProperty('transform', 'translateZ(0)', 'important');
-                content.style.setProperty('position', 'relative', 'important');
-                content.style.setProperty('z-index', '1', 'important');
-                
-                console.log(`🔧 Force scroll activé pour sidebar ${index + 1}`);
-            });
-            
-            showNotification('Scroll forcé sur toutes les sidebars', 'success');
-        }
-
-        // ================================
-        // CONNEXION AVEC L'API SUPABASE (SIMULATION)
-        // ================================
-        
-        async function loadArrondissementsFromSupabase() {
-            try {
-                showNotification('Chargement des arrondissements depuis Supabase...', 'info');
-                
-                // SIMULATION - Remplacez par votre vraie API
-                const simulatedArrondissements = [
-                    { id: 1, nom: 'Douala 1er' },
-                    { id: 2, nom: 'Douala 2ème' },
-                    { id: 3, nom: 'Douala 3ème' },
-                    { id: 4, nom: 'Douala 4ème' },
-                    { id: 5, nom: 'Douala 5ème' },
-                    { id: 6, nom: 'Douala 6ème' },
-                    { id: 7, nom: 'Yaoundé 1er' },
-                    { id: 8, nom: 'Yaoundé 2ème' },
-                    { id: 9, nom: 'Yaoundé 3ème' },
-                    { id: 10, nom: 'Yaoundé 4ème' },
-                    { id: 11, nom: 'Yaoundé 5ème' },
-                    { id: 12, nom: 'Yaoundé 6ème' },
-                    { id: 13, nom: 'Yaoundé 7ème' }
-                ];
-                
-                // Simuler un délai d'API
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Peupler les selects
-                const selects = ['filterArrondissement', 'filterArrondissementMobile'];
-                selects.forEach(selectId => {
-                    const select = document.getElementById(selectId);
-                    if (select) {
-                        // Vider le select
-                        select.innerHTML = '<option value="">Tous les arrondissements</option>';
-                        
-                        // Ajouter les arrondissements
-                        simulatedArrondissements.forEach(arr => {
-                            const option = document.createElement('option');
-                            option.value = arr.nom;
-                            option.textContent = arr.nom;
-                            select.appendChild(option);
-                        });
+        // CORRECTION MAJEURE : Surveillance continue du scroll mobile
+        setInterval(() => {
+            if (isMobile || isSmallMobile || isVerySmallMobile) {
+                const sidebarContents = document.querySelectorAll('.sidebar-content');
+                sidebarContents.forEach(sidebarContent => {
+                    if (sidebarContent && sidebarContent.scrollHeight > sidebarContent.clientHeight) {
+                        // Le contenu dépasse, s'assurer que le scroll fonctionne
+                        if (sidebarContent.style.overflowY !== 'scroll') {
+                            forceMobileScroll();
+                            console.log('🔧 Correction automatique du scroll détectée');
+                        }
                     }
                 });
-                
-                showNotification(`${simulatedArrondissements.length} arrondissements chargés`, 'success');
-                
-            } catch (error) {
-                console.error('Erreur lors du chargement des arrondissements:', error);
-                showNotification('Erreur de chargement des arrondissements', 'error');
             }
-        }
+        }, 2000); // Vérification toutes les 2 secondes
 
-        // Charger les arrondissements au démarrage
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                loadArrondissementsFromSupabase();
-            }, 2000);
-        });
+        console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
+        console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
+        console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
+        console.log('🔧 Scroll mobile forcé:', 'Activé avec surveillance continue');
+    });
 
-        // ================================
-        // FONCTIONS UTILITAIRES POUR LE DEBUGGING
-        // ================================
-        
-        // Fonction pour tester le scroll avec du contenu dynamique
-        function addTestContent() {
-            const resultsDivs = ['searchResults', 'searchResultsMobile'];
-            resultsDivs.forEach(divId => {
-                const div = document.getElementById(divId);
-                if (div) {
-                    div.innerHTML = `
-                        <div class="filter-title">Résultats de test</div>
-                        ${Array.from({length: 10}, (_, i) => `
-                            <div style="padding: 1rem; margin: 0.5rem 0; background: #f8f9fa; border-radius: 4px;">
-                                <strong>Parcelle ${i + 1}</strong><br>
-                                Matricule: TF-${String(i + 1).padStart(6, '0')}<br>
-                                Statut: ${i % 2 === 0 ? 'Titré' : 'Non titré'}
-                            </div>
-                        `).join('')}
-                    `;
-                }
-            });
-            showNotification('Contenu de test ajouté', 'success');
-        }
-
-        // Fonction pour vérifier l'état du scroll
-        function checkScrollStatus() {
-            const sidebarContents = document.querySelectorAll('.sidebar-content');
-            let report = '📊 RAPPORT DE SCROLL:\n';
-            
-            sidebarContents.forEach((content, index) => {
-                const canScroll = content.scrollHeight > content.clientHeight;
-                const type = index === 0 ? 'Desktop' : 'Mobile';
-                report += `\n${type}:\n`;
-                report += `  - Peut défiler: ${canScroll ? '✅' : '❌'}\n`;
-                report += `  - Hauteur totale: ${content.scrollHeight}px\n`;
-                report += `  - Hauteur visible: ${content.clientHeight}px\n`;
-                report += `  - Overflow: ${getComputedStyle(content).overflowY}\n`;
-            });
-            
-            console.log(report);
-            showNotification('Rapport de scroll dans la console', 'info');
-        }
-
-        // ================================
-        // RACCOURCIS CLAVIER POUR LE DEBUGGING
-        // ================================
-        
-        document.addEventListener('keydown', function(e) {
-            // Ctrl + Shift + D = Debug scroll
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-                e.preventDefault();
-                debugMobileScroll();
-            }
-            
-            // Ctrl + Shift + F = Force scroll
-            if (e.ctrlKey && e.shiftKey && e.key === 'F') {
-                e.preventDefault();
-                forceEnableScroll();
-            }
-            
-            // Ctrl + Shift + T = Test content
-            if (e.ctrlKey && e.shiftKey && e.key === 'T') {
-                e.preventDefault();
-                addTestContent();
-            }
-            
-            // Ctrl + Shift + S = Check status
-            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-                e.preventDefault();
-                checkScrollStatus();
-            }
-            
-            // Ctrl + Shift + M = Test mobile scroll
-            if (e.ctrlKey && e.shiftKey && e.key === 'M') {
-                e.preventDefault();
-                testMobileScroll();
-            }
-        });
-
-        // ================================
-        // INSTRUCTIONS DE DEBUG DANS LA CONSOLE
-        // ================================
-        
-        console.log(`
-🔧 COMMANDES DE DEBUG DISPONIBLES:
-   
-   Via raccourcis clavier:
-   - Ctrl+Shift+D : Debug scroll mobile
-   - Ctrl+Shift+F : Forcer le scroll
-   - Ctrl+Shift+T : Ajouter contenu de test
-   - Ctrl+Shift+S : Vérifier statut scroll
-   - Ctrl+Shift+M : Test scroll mobile
-   
-   Via console:
-   - debugMobileScroll() : Info détaillées sur le scroll
-   - forceEnableScroll() : Force l'activation du scroll
-   - addTestContent() : Ajoute du contenu pour tester
-   - checkScrollStatus() : Rapport complet du scroll
-   - testMobileScroll() : Test automatique du scroll mobile
-   
-📱 ÉTAT ACTUEL:
-   - Mobile détecté: ${isMobile}
-   - Petit mobile: ${isSmallMobile}
-   - Très petit mobile: ${isVerySmallMobile}
-   - Largeur écran: ${window.innerWidth}px
-   - Hauteur écran: ${window.innerHeight}px
-        `);
-
-        // ================================
-        // EXPORT DES FONCTIONS POUR LE DEBUGGING GLOBAL
-        // ================================
-        
-        window.debugMobileScroll = debugMobileScroll;
-        window.forceEnableScroll = forceEnableScroll;
-        window.addTestContent = addTestContent;
-        window.checkScrollStatus = checkScrollStatus;
-        window.testMobileScroll = testMobileScroll;
-        window.fixMobileScrolling = fixMobileScrolling;
-
-    </script>
+</script>
 </body>
 </html>
