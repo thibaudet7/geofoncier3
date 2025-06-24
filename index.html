@@ -156,7 +156,11 @@
             width: 50px;
         }
 
-        /* SIDEBAR - Version Mobile (Overlay) */
+        /* =====================================================
+           CORRECTION MAJEURE - SIDEBAR MOBILE OPTIMISÉE
+        ===================================================== */
+        
+        /* Overlay pour la sidebar mobile */
         .sidebar-mobile-overlay {
             display: none;
             position: fixed;
@@ -176,6 +180,7 @@
             visibility: visible;
         }
 
+        /* Sidebar mobile - Configuration spéciale */
         .sidebar-mobile {
             display: none;
             position: fixed;
@@ -195,6 +200,7 @@
             left: 0;
         }
 
+        /* Header de la sidebar */
         .sidebar-header {
             padding: 0.75rem;
             border-bottom: 1px solid #eee;
@@ -204,6 +210,7 @@
             min-height: 50px;
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
+            flex-shrink: 0; /* Important: empêche le header de rétrécir */
         }
 
         .sidebar-header h3 {
@@ -227,50 +234,62 @@
             background-color: rgba(255, 255, 255, 0.2);
         }
 
-        /* CORRECTION MAJEURE : CSS optimisé pour le scroll mobile */
+        /* =====================================================
+           SOLUTION DÉFINITIVE - SIDEBAR CONTENT SCROLL
+        ===================================================== */
+        
         .sidebar-content {
             flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
             padding: 0.75rem;
             position: relative;
             
-            /* NOUVELLES PROPRIÉTÉS POUR FORCER LE SCROLL MOBILE */
-            height: 0; /* Force le flex-grow à calculer la hauteur */
-            min-height: 0; /* Permet au conteneur de rétrécir */
+            /* PROPRIÉTÉS CRITIQUES POUR LE SCROLL MOBILE */
+            min-height: 0 !important; /* Critique pour flexbox */
+            height: auto !important;
+            max-height: none !important;
             
             /* Optimisations pour le scroll tactile */
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch !important;
             scroll-behavior: smooth;
             overscroll-behavior: contain;
             touch-action: pan-y;
             
             /* Force la création d'un contexte de stacking pour le GPU */
             will-change: scroll-position;
-            transform: translateZ(0); /* Hack pour activer l'accélération hardware */
+            transform: translateZ(0);
+            contain: layout style paint;
         }
 
-        /* CORRECTION : Scroll forcé sur très petits écrans */
+        /* Scrollbar personnalisée pour mobile */
         .sidebar-content::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
 
         .sidebar-content::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .sidebar-content::-webkit-scrollbar-thumb {
             background: #888;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .sidebar-content::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
 
+        /* Version desktop collapsed */
         .sidebar.collapsed .sidebar-content {
             display: none;
+        }
+
+        /* Conteneur pour forcer la hauteur minimale sur mobile */
+        .sidebar-content-wrapper {
+            min-height: calc(100vh - 120px);
+            padding-bottom: 50px; /* Espace pour assurer le scroll */
         }
 
         .search-section {
@@ -847,19 +866,16 @@
                 max-width: 300px;
             }
 
-            /* CORRECTION MAJEURE : CSS spécifique pour très petits écrans */
+            /* =====================================================
+               CORRECTION MAJEURE - MOBILE TRÈS PETIT
+            ===================================================== */
             .sidebar-content {
                 padding: 0.5rem;
-                /* Force la hauteur et le scroll sur mobile */
-                height: calc(100vh - 120px) !important;
-                max-height: calc(100vh - 120px) !important;
-                overflow-y: scroll !important; /* Force le scroll */
+                /* Configuration spécifique pour très petits écrans */
+                min-height: 0 !important;
+                overflow-y: auto !important;
                 overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch !important;
-                
-                /* Propriétés supplémentaires pour assurer le fonctionnement */
-                position: relative !important;
-                contain: layout style paint !important; /* Optimisation du rendu */
             }
 
             .search-box, .filter-select, .form-input {
@@ -977,12 +993,14 @@
                 max-width: 280px;
             }
 
-            /* CORRECTION CRITIQUE : Force le scroll avec des propriétés spécifiques */
+            /* =====================================================
+               SOLUTION DÉFINITIVE - TRÈS PETIT ÉCRAN
+            ===================================================== */
             .sidebar-content {
-                height: calc(100vh - 110px) !important;
-                max-height: calc(100vh - 110px) !important;
                 padding: 0.4rem !important;
-                overflow-y: scroll !important;
+                /* Configuration ultra-optimisée pour très petits écrans */
+                min-height: 0 !important;
+                overflow-y: auto !important;
                 overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch !important;
                 overscroll-behavior: contain !important;
@@ -992,11 +1010,7 @@
                 will-change: scroll-position !important;
                 transform: translateZ(0) !important;
                 backface-visibility: hidden !important;
-            }
-
-            /* Assure que le contenu a une hauteur minimale pour déclencher le scroll */
-            .sidebar-content > * {
-                flex-shrink: 0;
+                contain: layout style paint !important;
             }
 
             .control-group {
@@ -1095,8 +1109,8 @@
 
             /* CORRECTION : Hauteur adaptée au mode paysage */
             .sidebar-content {
-                height: calc(100vh - 80px) !important;
-                max-height: calc(100vh - 80px) !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
             }
         }
 
@@ -1136,18 +1150,49 @@
             box-sizing: border-box !important;
         }
 
-        /* CORRECTION MAJEURE : Classes d'aide pour forcer le scroll */
+        /* =====================================================
+           CLASSES D'AIDE POUR FORCER LE SCROLL
+        ===================================================== */
         .force-scroll {
-            overflow-y: scroll !important;
+            overflow-y: auto !important;
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch !important;
             touch-action: pan-y !important;
+            min-height: 0 !important;
         }
 
         .scroll-container {
             height: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
+            min-height: 0 !important;
+        }
+
+        /* =====================================================
+           SOLUTION ULTIME POUR SCROLL MOBILE RÉCALCITRANT
+        ===================================================== */
+        .mobile-scroll-fix {
+            position: relative !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            scroll-behavior: smooth !important;
+            overscroll-behavior: contain !important;
+            touch-action: pan-y pinch-zoom !important;
+            will-change: scroll-position !important;
+            transform: translateZ(0) !important;
+            backface-visibility: hidden !important;
+            contain: layout style paint !important;
+            isolation: isolate !important;
+        }
+
+        /* Force le contexte de formatage pour mobile */
+        @supports (-webkit-overflow-scrolling: touch) {
+            .sidebar-content {
+                -webkit-overflow-scrolling: touch !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
         }
     </style>
 </head>
@@ -1190,90 +1235,92 @@
                 </button>
             </div>
             <div class="sidebar-content">
-                <!-- Search Section -->
-                <div class="search-section">
-                    <input type="text" class="search-box" id="searchMatricule" 
-                           placeholder="Rechercher par matricule...">
-                    <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelle()">
-                        <i class="fas fa-search"></i> Rechercher
-                    </button>
-                </div>
-
-                <!-- Layer Control Section -->
-                <div class="layer-section">
-                    <div class="filter-title">Couches cartographiques</div>
-                    
-                    <div class="layer-toggle active" onclick="toggleArrondissementLayer()">
-                        <input type="checkbox" id="arrondissementLayerToggle" checked>
-                        <label for="arrondissementLayerToggle">
-                            <i class="fas fa-map-marker-alt"></i> Arrondissements
-                        </label>
-                        <div id="arrondissementLoading" class="loading-spinner" style="display: none;"></div>
-                    </div>
-                    
-                    <div class="layer-toggle active" onclick="toggleParcelleLayer()">
-                        <input type="checkbox" id="parcelleLayerToggle" checked>
-                        <label for="parcelleLayerToggle">
-                            <i class="fas fa-square"></i> Parcelles
-                        </label>
-                    </div>
-                    
-                    <div class="layer-toggle active" onclick="toggleOverlapLayer()">
-                        <input type="checkbox" id="overlapLayerToggle" checked>
-                        <label for="overlapLayerToggle">
-                            <i class="fas fa-exclamation-triangle"></i> Chevauchements
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Filters Section -->
-                <div class="filter-section">
-                    <div class="filter-title">Filtres</div>
-                    
-                    <div class="filter-group">
-                        <label class="form-label">Arrondissement</label>
-                        <select class="filter-select" id="filterArrondissement" onchange="applyFilters()">
-                            <option value="">Tous les arrondissements</option>
-                        </select>
+                <div class="sidebar-content-wrapper">
+                    <!-- Search Section -->
+                    <div class="search-section">
+                        <input type="text" class="search-box" id="searchMatricule" 
+                               placeholder="Rechercher par matricule...">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelle()">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="form-label">Quartier/Village</label>
-                        <input type="text" class="search-box" id="filterQuartier" 
-                               placeholder="Rechercher un quartier/village..." 
-                               onkeyup="applyFilters()" 
-                               style="margin-bottom: 0.5rem;">
+                    <!-- Layer Control Section -->
+                    <div class="layer-section">
+                        <div class="filter-title">Couches cartographiques</div>
+                        
+                        <div class="layer-toggle active" onclick="toggleArrondissementLayer()">
+                            <input type="checkbox" id="arrondissementLayerToggle" checked>
+                            <label for="arrondissementLayerToggle">
+                                <i class="fas fa-map-marker-alt"></i> Arrondissements
+                            </label>
+                            <div id="arrondissementLoading" class="loading-spinner" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="layer-toggle active" onclick="toggleParcelleLayer()">
+                            <input type="checkbox" id="parcelleLayerToggle" checked>
+                            <label for="parcelleLayerToggle">
+                                <i class="fas fa-square"></i> Parcelles
+                            </label>
+                        </div>
+                        
+                        <div class="layer-toggle active" onclick="toggleOverlapLayer()">
+                            <input type="checkbox" id="overlapLayerToggle" checked>
+                            <label for="overlapLayerToggle">
+                                <i class="fas fa-exclamation-triangle"></i> Chevauchements
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="form-label">Type d'activité</label>
-                        <select class="filter-select" id="filterActivite" onchange="applyFilters()">
-                            <option value="">Toutes les activités</option>
-                            <option value="propriete_privee">Propriété privée</option>
-                            <option value="vente_terrain">Vente de terrain</option>
-                            <option value="location_construction">Location pour construction</option>
-                            <option value="location_agriculture">Location pour agriculture</option>
-                            <option value="autres">Autres activités</option>
-                        </select>
+                    <!-- Filters Section -->
+                    <div class="filter-section">
+                        <div class="filter-title">Filtres</div>
+                        
+                        <div class="filter-group">
+                            <label class="form-label">Arrondissement</label>
+                            <select class="filter-select" id="filterArrondissement" onchange="applyFilters()">
+                                <option value="">Tous les arrondissements</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label">Quartier/Village</label>
+                            <input type="text" class="search-box" id="filterQuartier" 
+                                   placeholder="Rechercher un quartier/village..." 
+                                   onkeyup="applyFilters()" 
+                                   style="margin-bottom: 0.5rem;">
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label">Type d'activité</label>
+                            <select class="filter-select" id="filterActivite" onchange="applyFilters()">
+                                <option value="">Toutes les activités</option>
+                                <option value="propriete_privee">Propriété privée</option>
+                                <option value="vente_terrain">Vente de terrain</option>
+                                <option value="location_construction">Location pour construction</option>
+                                <option value="location_agriculture">Location pour agriculture</option>
+                                <option value="autres">Autres activités</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label">Statut du terrain</label>
+                            <select class="filter-select" id="filterStatut" onchange="applyFilters()">
+                                <option value="">Tous les statuts</option>
+                                <option value="titre">Terrain titré</option>
+                                <option value="non_titre">Terrain non titré</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-warning" style="width: 100%; margin-top: 1rem;" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Effacer les filtres
+                        </button>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="form-label">Statut du terrain</label>
-                        <select class="filter-select" id="filterStatut" onchange="applyFilters()">
-                            <option value="">Tous les statuts</option>
-                            <option value="titre">Terrain titré</option>
-                            <option value="non_titre">Terrain non titré</option>
-                        </select>
+                    <!-- Results Section -->
+                    <div id="searchResults">
+                        <!-- Les résultats de recherche apparaîtront ici -->
                     </div>
-
-                    <button class="btn btn-warning" style="width: 100%; margin-top: 1rem;" onclick="clearFilters()">
-                        <i class="fas fa-times"></i> Effacer les filtres
-                    </button>
-                </div>
-
-                <!-- Results Section -->
-                <div id="searchResults">
-                    <!-- Les résultats de recherche apparaîtront ici -->
                 </div>
             </div>
         </div>
@@ -1286,90 +1333,92 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="sidebar-content">
-                <!-- Search Section Mobile -->
-                <div class="search-section">
-                    <input type="text" class="search-box" id="searchMatriculeMobile" 
-                           placeholder="Rechercher par matricule...">
-                    <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelleMobile()">
-                        <i class="fas fa-search"></i> Rechercher
-                    </button>
-                </div>
-
-                <!-- Layer Control Section Mobile -->
-                <div class="layer-section">
-                    <div class="filter-title">Couches cartographiques</div>
-                    
-                    <div class="layer-toggle active" onclick="toggleArrondissementLayerMobile()">
-                        <input type="checkbox" id="arrondissementLayerToggleMobile" checked>
-                        <label for="arrondissementLayerToggleMobile">
-                            <i class="fas fa-map-marker-alt"></i> Arrondissements
-                        </label>
-                    </div>
-                    
-                    <div class="layer-toggle active" onclick="toggleParcelleLayerMobile()">
-                        <input type="checkbox" id="parcelleLayerToggleMobile" checked>
-                        <label for="parcelleLayerToggleMobile">
-                            <i class="fas fa-square"></i> Parcelles
-                        </label>
-                    </div>
-                    
-                    <div class="layer-toggle active" onclick="toggleOverlapLayerMobile()">
-                        <input type="checkbox" id="overlapLayerToggleMobile" checked>
-                        <label for="overlapLayerToggleMobile">
-                            <i class="fas fa-exclamation-triangle"></i> Chevauchements
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Filters Section Mobile -->
-                <div class="filter-section">
-                    <div class="filter-title">Filtres</div>
-                    
-                    <div class="filter-group">
-                        <label class="form-label">Arrondissement</label>
-                        <select class="filter-select" id="filterArrondissementMobile" onchange="applyFiltersMobile()">
-                            <option value="">Tous les arrondissements</option>
-                        </select>
+            <div class="sidebar-content mobile-scroll-fix">
+                <div class="sidebar-content-wrapper">
+                    <!-- Search Section Mobile -->
+                    <div class="search-section">
+                        <input type="text" class="search-box" id="searchMatriculeMobile" 
+                               placeholder="Rechercher par matricule...">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelleMobile()">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="form-label">Quartier/Village</label>
-                        <input type="text" class="search-box" id="filterQuartierMobile" 
-                               placeholder="Rechercher un quartier/village..." 
-                               onkeyup="applyFiltersMobile()" 
-                               style="margin-bottom: 0.5rem;">
+                    <!-- Layer Control Section Mobile -->
+                    <div class="layer-section">
+                        <div class="filter-title">Couches cartographiques</div>
+                        
+                        <div class="layer-toggle active" onclick="toggleArrondissementLayerMobile()">
+                            <input type="checkbox" id="arrondissementLayerToggleMobile" checked>
+                            <label for="arrondissementLayerToggleMobile">
+                                <i class="fas fa-map-marker-alt"></i> Arrondissements
+                            </label>
+                        </div>
+                        
+                        <div class="layer-toggle active" onclick="toggleParcelleLayerMobile()">
+                            <input type="checkbox" id="parcelleLayerToggleMobile" checked>
+                            <label for="parcelleLayerToggleMobile">
+                                <i class="fas fa-square"></i> Parcelles
+                            </label>
+                        </div>
+                        
+                        <div class="layer-toggle active" onclick="toggleOverlapLayerMobile()">
+                            <input type="checkbox" id="overlapLayerToggleMobile" checked>
+                            <label for="overlapLayerToggleMobile">
+                                <i class="fas fa-exclamation-triangle"></i> Chevauchements
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="form-label">Type d'activité</label>
-                        <select class="filter-select" id="filterActiviteMobile" onchange="applyFiltersMobile()">
-                            <option value="">Toutes les activités</option>
-                            <option value="propriete_privee">Propriété privée</option>
-                            <option value="vente_terrain">Vente de terrain</option>
-                            <option value="location_construction">Location pour construction</option>
-                            <option value="location_agriculture">Location pour agriculture</option>
-                            <option value="autres">Autres activités</option>
-                        </select>
+                    <!-- Filters Section Mobile -->
+                    <div class="filter-section">
+                        <div class="filter-title">Filtres</div>
+                        
+                        <div class="filter-group">
+                            <label class="form-label">Arrondissement</label>
+                            <select class="filter-select" id="filterArrondissementMobile" onchange="applyFiltersMobile()">
+                                <option value="">Tous les arrondissements</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label">Quartier/Village</label>
+                            <input type="text" class="search-box" id="filterQuartierMobile" 
+                                   placeholder="Rechercher un quartier/village..." 
+                                   onkeyup="applyFiltersMobile()" 
+                                   style="margin-bottom: 0.5rem;">
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label">Type d'activité</label>
+                            <select class="filter-select" id="filterActiviteMobile" onchange="applyFiltersMobile()">
+                                <option value="">Toutes les activités</option>
+                                <option value="propriete_privee">Propriété privée</option>
+                                <option value="vente_terrain">Vente de terrain</option>
+                                <option value="location_construction">Location pour construction</option>
+                                <option value="location_agriculture">Location pour agriculture</option>
+                                <option value="autres">Autres activités</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label">Statut du terrain</label>
+                            <select class="filter-select" id="filterStatutMobile" onchange="applyFiltersMobile()">
+                                <option value="">Tous les statuts</option>
+                                <option value="titre">Terrain titré</option>
+                                <option value="non_titre">Terrain non titré</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-warning" style="width: 100%; margin-top: 1rem;" onclick="clearFiltersMobile()">
+                            <i class="fas fa-times"></i> Effacer les filtres
+                        </button>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="form-label">Statut du terrain</label>
-                        <select class="filter-select" id="filterStatutMobile" onchange="applyFiltersMobile()">
-                            <option value="">Tous les statuts</option>
-                            <option value="titre">Terrain titré</option>
-                            <option value="non_titre">Terrain non titré</option>
-                        </select>
+                    <!-- Results Section Mobile -->
+                    <div id="searchResultsMobile">
+                        <!-- Les résultats de recherche apparaîtront ici -->
                     </div>
-
-                    <button class="btn btn-warning" style="width: 100%; margin-top: 1rem;" onclick="clearFiltersMobile()">
-                        <i class="fas fa-times"></i> Effacer les filtres
-                    </button>
-                </div>
-
-                <!-- Results Section Mobile -->
-                <div id="searchResultsMobile">
-                    <!-- Les résultats de recherche apparaîtront ici -->
                 </div>
             </div>
         </div>
@@ -1567,7 +1616,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
     <script>
-        // CORRECTION MAJEURE : Variables non constantes pour éviter l'erreur de reassignation
+        // =====================================================
+        //  VARIABLES GLOBALES - DÉFINITION CORRIGÉE
+        // =====================================================
         let map, currentUser = null;
         let parcelleLayer, arrondissementLayer, overlapLayer;
         let measurementMode = null;
@@ -1591,7 +1642,7 @@
             ARROND_FILL: '#3498db'
         };
 
-        // CORRECTION : Variables dynamiques au lieu de constantes
+        // Variables dynamiques pour la responsivité
         let isMobile = window.innerWidth <= 768;
         let isSmallMobile = window.innerWidth <= 480;
         let isVerySmallMobile = window.innerWidth <= 360;
@@ -1599,109 +1650,98 @@
         // État de la sidebar mobile
         let mobileSidebarOpen = false;
 
-        // CORRECTION MAJEURE : Fonction pour forcer le scroll mobile
-        function forceMobileScroll() {
+        // =====================================================
+        //  SOLUTION ULTIME - FORCE LE SCROLL MOBILE
+        // =====================================================
+        function ultimateMobileScrollFix() {
+            console.log('🔧 Application de la solution ultime pour le scroll mobile...');
+            
             const sidebarContents = document.querySelectorAll('.sidebar-content');
             
-            sidebarContents.forEach(sidebarContent => {
+            sidebarContents.forEach((sidebarContent, index) => {
                 if (sidebarContent && (isMobile || isSmallMobile || isVerySmallMobile)) {
-                    // Réinitialiser toutes les propriétés de scroll
-                    sidebarContent.style.overflowY = 'scroll';
-                    sidebarContent.style.overflowX = 'hidden';
-                    sidebarContent.style.webkitOverflowScrolling = 'touch';
-                    sidebarContent.style.touchAction = 'pan-y';
-                    sidebarContent.style.overscrollBehavior = 'contain';
-                    sidebarContent.style.willChange = 'scroll-position';
-                    sidebarContent.style.transform = 'translateZ(0)';
-                    sidebarContent.style.backfaceVisibility = 'hidden';
+                    console.log(`🔧 Traitement sidebar ${index + 1}...`);
                     
-                    // Hauteur dynamique selon la taille d'écran
-                    if (isVerySmallMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 110px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 110px)';
-                    } else if (isSmallMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 120px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 120px)';
-                    } else if (isMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 130px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 130px)';
-                    }
+                    // Réinitialiser complètement les styles
+                    sidebarContent.style.cssText = '';
+                    
+                    // Appliquer la configuration ultime
+                    const ultimateStyles = {
+                        'position': 'relative',
+                        'flex': '1',
+                        'min-height': '0',
+                        'height': 'auto',
+                        'max-height': 'none',
+                        'overflow-y': 'auto',
+                        'overflow-x': 'hidden',
+                        'padding': isVerySmallMobile ? '0.4rem' : '0.5rem',
+                        '-webkit-overflow-scrolling': 'touch',
+                        'scroll-behavior': 'smooth',
+                        'overscroll-behavior': 'contain',
+                        'touch-action': 'pan-y',
+                        'will-change': 'scroll-position',
+                        'transform': 'translateZ(0)',
+                        'backface-visibility': 'hidden',
+                        'contain': 'layout style paint',
+                        'isolation': 'isolate'
+                    };
+                    
+                    // Appliquer chaque style individuellement
+                    Object.entries(ultimateStyles).forEach(([property, value]) => {
+                        sidebarContent.style.setProperty(property, value, 'important');
+                    });
                     
                     // Ajouter les classes d'aide
-                    sidebarContent.classList.add('force-scroll');
+                    sidebarContent.classList.add('mobile-scroll-fix', 'force-scroll');
                     
-                    // Force le reflow
-                    void sidebarContent.offsetHeight;
+                    // Forcer le reflow et repaint
+                    sidebarContent.offsetHeight;
+                    sidebarContent.scrollTop = 0;
                     
-                    console.log('✅ Scroll mobile forcé pour:', sidebarContent.className);
+                    // Test du scroll
+                    setTimeout(() => {
+                        if (sidebarContent.scrollHeight > sidebarContent.clientHeight) {
+                            console.log(`✅ Scroll activé pour sidebar ${index + 1} - Hauteur: ${sidebarContent.scrollHeight}px, Visible: ${sidebarContent.clientHeight}px`);
+                        } else {
+                            console.log(`⚠️ Sidebar ${index + 1} - Contenu trop petit pour nécessiter un scroll`);
+                        }
+                    }, 100);
                 }
             });
+            
+            // Vérification du wrapper
+            const wrappers = document.querySelectorAll('.sidebar-content-wrapper');
+            wrappers.forEach(wrapper => {
+                if (wrapper) {
+                    wrapper.style.setProperty('min-height', 'calc(100vh - 120px)', 'important');
+                    wrapper.style.setProperty('padding-bottom', '50px', 'important');
+                }
+            });
+            
+            console.log('✅ Solution ultime appliquée avec succès');
         }
 
-        // CORRECTION : Fonction pour ajuster les contrôles selon la taille d'écran
+        // =====================================================
+        //  FONCTION D'AJUSTEMENT RESPONSIVE AMÉLIORÉE
+        // =====================================================
         function adjustResponsiveControls() {
             // Mettre à jour les variables de taille
             isMobile = window.innerWidth <= 768;
             isSmallMobile = window.innerWidth <= 480;
             isVerySmallMobile = window.innerWidth <= 360;
             
-            // Forcer le scroll mobile
-            forceMobileScroll();
+            console.log(`📱 Ajustement responsive - Mobile: ${isMobile}, Small: ${isSmallMobile}, VerySmall: ${isVerySmallMobile}`);
+            
+            // Appliquer la correction ultime du scroll
+            ultimateMobileScrollFix();
             
             // Ajuster les contrôles de la carte
             adjustControlPositions();
         }
 
-        // Données de démonstration avec chevauchement réaliste
-        const sampleParcelles = [
-            {
-                id: 1,
-                matricule: "TF-001234",
-                coordinates: [[4.0511, 9.7679], [4.0515, 9.7679], [4.0515, 9.7685], [4.0511, 9.7685]],
-                statut: "titre",
-                is_terrain_titre: true,
-                quartier: "Bonanjo",
-                activite: "vente_terrain",
-                proprietaire: "Jean Dupont",
-                proprietaire_id: "prop_001",
-                telephone: "+237677123456",
-                superficie: 500,
-                prix_m2: 15000,
-                description: "Terrain résidentiel avec vue sur le fleuve"
-            },
-            {
-                id: 2,
-                matricule: "NT-0012345",
-                coordinates: [[4.0513, 9.7681], [4.0517, 9.7681], [4.0517, 9.7687], [4.0513, 9.7687]],
-                statut: "non_titre",
-                is_terrain_titre: false,
-                quartier: "Bonanjo",
-                activite: "location_construction",
-                proprietaire: "Marie Kamga",
-                proprietaire_id: "prop_002",
-                telephone: "+237678234567",
-                superficie: 300,
-                prix_m2: 8000,
-                description: "Terrain pour construction d'immeuble"
-            },
-            {
-                id: 3,
-                matricule: "TF-001235",
-                coordinates: [[4.0520, 9.7690], [4.0525, 9.7690], [4.0525, 9.7695], [4.0520, 9.7695]],
-                statut: "titre",
-                is_terrain_titre: true,
-                quartier: "Akwa",
-                activite: "propriete_privee",
-                proprietaire: "Paul Mbarga",
-                proprietaire_id: "prop_003",
-                telephone: "+237679345678",
-                superficie: 400,
-                prix_m2: 0,
-                description: "Résidence privée familiale"
-            }
-        ];
-
-        // Fonctions de gestion de la sidebar mobile
+        // =====================================================
+        //  GESTION DE LA SIDEBAR MOBILE AMÉLIORÉE
+        // =====================================================
         function toggleMobileSidebar() {
             if (mobileSidebarOpen) {
                 closeMobileSidebar();
@@ -1721,10 +1761,11 @@
             // Prévenir le scroll du body
             document.body.style.overflow = 'hidden';
             
-            // CORRECTION : Forcer le scroll après ouverture
+            // Appliquer la correction du scroll après ouverture
             setTimeout(() => {
-                forceMobileScroll();
-            }, 100);
+                ultimateMobileScrollFix();
+                console.log('🔧 Scroll corrigé après ouverture sidebar mobile');
+            }, 150);
         }
 
         function closeMobileSidebar() {
@@ -1785,7 +1826,9 @@
             clearFilters();
         }
 
-        // Initialisation de la carte avec options responsives
+        // =====================================================
+        //  INITIALISATION DE LA CARTE AVEC OPTIONS RESPONSIVES
+        // =====================================================
         function initMap() {
             // Options de configuration responsive
             const mapOptions = {
@@ -1941,7 +1984,9 @@
             }
         }
 
-        // Charger les arrondissements depuis l'API - VERSION RESPONSIVE
+        // =====================================================
+        //  CHARGEMENT DES ARRONDISSEMENTS DEPUIS L'API
+        // =====================================================
         async function loadArrondissements() {
             const loadingSpinner = document.getElementById('arrondissementLoading');
             const filterSelect = document.getElementById('filterArrondissement');
@@ -2283,6 +2328,59 @@
                 return [];
             }
         }
+
+        // =====================================================
+        //  DONNÉES DE DÉMONSTRATION ET FONCTIONS DE BASE
+        // =====================================================
+        
+        // Données de démonstration avec chevauchement réaliste
+        const sampleParcelles = [
+            {
+                id: 1,
+                matricule: "TF-001234",
+                coordinates: [[4.0511, 9.7679], [4.0515, 9.7679], [4.0515, 9.7685], [4.0511, 9.7685]],
+                statut: "titre",
+                is_terrain_titre: true,
+                quartier: "Bonanjo",
+                activite: "vente_terrain",
+                proprietaire: "Jean Dupont",
+                proprietaire_id: "prop_001",
+                telephone: "+237677123456",
+                superficie: 500,
+                prix_m2: 15000,
+                description: "Terrain résidentiel avec vue sur le fleuve"
+            },
+            {
+                id: 2,
+                matricule: "NT-0012345",
+                coordinates: [[4.0513, 9.7681], [4.0517, 9.7681], [4.0517, 9.7687], [4.0513, 9.7687]],
+                statut: "non_titre",
+                is_terrain_titre: false,
+                quartier: "Bonanjo",
+                activite: "location_construction",
+                proprietaire: "Marie Kamga",
+                proprietaire_id: "prop_002",
+                telephone: "+237678234567",
+                superficie: 300,
+                prix_m2: 8000,
+                description: "Terrain pour construction d'immeuble"
+            },
+            {
+                id: 3,
+                matricule: "TF-001235",
+                coordinates: [[4.0520, 9.7690], [4.0525, 9.7690], [4.0525, 9.7695], [4.0520, 9.7695]],
+                statut: "titre",
+                is_terrain_titre: true,
+                quartier: "Akwa",
+                activite: "propriete_privee",
+                proprietaire: "Paul Mbarga",
+                proprietaire_id: "prop_003",
+                telephone: "+237679345678",
+                superficie: 400,
+                prix_m2: 0,
+                description: "Résidence privée familiale"
+            }
+        ];
 
         // Charger les parcelles avec optimisations mobiles
         function loadParcelles() {
@@ -2720,7 +2818,9 @@
             return inside;
         }
 
-        // Gestion des couches avec optimisations tactiles
+        // =====================================================
+        //  GESTION DES COUCHES AVEC OPTIMISATIONS TACTILES
+        // =====================================================
         function toggleArrondissementLayer() {
             const checkbox = document.getElementById('arrondissementLayerToggle');
             const toggle = checkbox.parentElement;
@@ -2863,6 +2963,10 @@
             
             modal.style.display = 'block';
         }
+
+        // =====================================================
+        //  FONCTIONS UTILITAIRES ET INTERACTIONS
+        // =====================================================
 
         // Contacter le propriétaire
         function contactOwner(parcelleId) {
@@ -3032,434 +3136,469 @@
             }
         }
 
-       // Outils de mesure avec adaptation mobile
-       function toggleMeasurement(type) {
-        clearMeasurements();
-        
-        if (measurementMode === type) {
+        // =====================================================
+        //  OUTILS DE MESURE AVEC ADAPTATION MOBILE
+        // =====================================================
+        function toggleMeasurement(type) {
+            clearMeasurements();
+            
+            if (measurementMode === type) {
+                measurementMode = null;
+                document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.remove('active');
+                return;
+            }
+
+            measurementMode = type;
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.add('active');
+
+            map.getContainer().style.cursor = 'crosshair';
+            
+            if (type === 'distance') {
+                startDistanceMeasurement();
+            } else if (type === 'area') {
+                startAreaMeasurement();
+            }
+        }
+
+        function startDistanceMeasurement() {
+            let points = [];
+            let polyline = null;
+
+            function onMapClick(e) {
+                points.push(e.latlng);
+                
+                const marker = L.marker(e.latlng).addTo(map);
+                measurementMarkers.push(marker);
+
+                if (points.length > 1) {
+                    if (polyline) {
+                        map.removeLayer(polyline);
+                    }
+                    
+                    polyline = L.polyline(points, {color: 'red', weight: 3}).addTo(map);
+                    measurementLines.push(polyline);
+                    
+                    const distance = calculateDistance(points);
+                    const popup = L.popup()
+                        .setLatLng(e.latlng)
+                        .setContent(`Distance: ${distance.toFixed(2)} m`)
+                        .openOn(map);
+                }
+            }
+
+            map.on('click', onMapClick);
+        }
+
+        function startAreaMeasurement() {
+            let points = [];
+            let polygon = null;
+
+            function onMapClick(e) {
+                points.push(e.latlng);
+                
+                const marker = L.marker(e.latlng).addTo(map);
+                measurementMarkers.push(marker);
+
+                if (points.length > 2) {
+                    if (polygon) {
+                        map.removeLayer(polygon);
+                    }
+                    
+                    polygon = L.polygon(points, {color: 'blue', weight: 2, fillOpacity: 0.2}).addTo(map);
+                    measurementLines.push(polygon);
+                    
+                    const area = calculateArea(points);
+                    const popup = L.popup()
+                        .setLatLng(e.latlng)
+                        .setContent(`Superficie: ${area.toFixed(2)} m²`)
+                        .openOn(map);
+                }
+            }
+
+            map.on('click', onMapClick);
+        }
+
+        function calculateDistance(points) {
+            let distance = 0;
+            for (let i = 1; i < points.length; i++) {
+                distance += points[i-1].distanceTo(points[i]);
+            }
+            return distance;
+        }
+
+        function calculateArea(points) {
+            if (points.length < 3) return 0;
+            
+            const polygon = L.polygon(points);
+            const geoJson = polygon.toGeoJSON();
+            
+            const coords = geoJson.geometry.coordinates[0];
+            let area = 0;
+            
+            for (let i = 0; i < coords.length - 1; i++) {
+                const p1 = coords[i];
+                const p2 = coords[i + 1];
+                area += (p2[0] - p1[0]) * (p2[1] + p1[1]);
+            }
+            
+            return Math.abs(area) * 111319.9 * 111319.9 / 2;
+        }
+
+        function clearMeasurements() {
+            measurementMarkers.forEach(marker => map.removeLayer(marker));
+            measurementLines.forEach(line => map.removeLayer(line));
+            measurementMarkers = [];
+            measurementLines = [];
+            map.off('click');
+            map.getContainer().style.cursor = '';
+            map.closePopup();
+            
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
             measurementMode = null;
-            document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.remove('active');
-            return;
         }
 
-        measurementMode = type;
-        document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.add('active');
+        // =====================================================
+        //  FONCTIONS D'AJOUT ET IMPORT
+        // =====================================================
 
-        map.getContainer().style.cursor = 'crosshair';
-        
-        if (type === 'distance') {
-            startDistanceMeasurement();
-        } else if (type === 'area') {
-            startAreaMeasurement();
-        }
-    }
-
-    function startDistanceMeasurement() {
-        let points = [];
-        let polyline = null;
-
-        function onMapClick(e) {
-            points.push(e.latlng);
+        // Ajouter une parcelle
+        function addParcelle() {
+            if (!currentUser || currentUser.type !== 'proprietaire') {
+                showNotification('Connectez-vous en tant que propriétaire pour ajouter une parcelle', 'error');
+                return;
+            }
             
-            const marker = L.marker(e.latlng).addTo(map);
-            measurementMarkers.push(marker);
+            openModal('addParcelleModal');
+        }
 
-            if (points.length > 1) {
-                if (polyline) {
-                    map.removeLayer(polyline);
-                }
-                
-                polyline = L.polyline(points, {color: 'red', weight: 3}).addTo(map);
-                measurementLines.push(polyline);
-                
-                const distance = calculateDistance(points);
-                const popup = L.popup()
-                    .setLatLng(e.latlng)
-                    .setContent(`Distance: ${distance.toFixed(2)} m`)
-                    .openOn(map);
+        // Mettre à jour les champs du formulaire selon le statut
+        function updateFormFields() {
+            const statut = document.getElementById('terrainStatut').value;
+            const matriculeField = document.getElementById('matricule');
+            
+            if (statut === 'non_titre') {
+                const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+                matriculeField.value = `NT-${randomNum}`;
+            } else {
+                matriculeField.value = '';
+                matriculeField.readOnly = false;
+                matriculeField.placeholder = 'Saisir le matricule du titre foncier';
             }
         }
 
-        map.on('click', onMapClick);
-    }
-
-    function startAreaMeasurement() {
-        let points = [];
-        let polygon = null;
-
-        function onMapClick(e) {
-            points.push(e.latlng);
+        // Importer CSV
+        function importCSV() {
+            if (!currentUser || currentUser.type !== 'proprietaire') {
+                showNotification('Connectez-vous en tant que propriétaire pour importer des parcelles', 'error');
+                return;
+            }
             
-            const marker = L.marker(e.latlng).addTo(map);
-            measurementMarkers.push(marker);
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = handleCSVImport;
+            input.click();
+        }
 
-            if (points.length > 2) {
-                if (polygon) {
-                    map.removeLayer(polygon);
+        function handleCSVImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csv = e.target.result;
+                parseCSV(csv);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            const requiredColumns = ['matricule', 'longitude', 'latitude'];
+            const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+            
+            if (missingColumns.length > 0) {
+                showNotification(`Colonnes manquantes: ${missingColumns.join(', ')}`, 'error');
+                return;
+            }
+
+            const parcelles = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length < headers.length) continue;
+
+                const parcelle = {};
+                headers.forEach((header, index) => {
+                    parcelle[header] = values[index];
+                });
+
+                if (parcelle.matricule && parcelle.longitude && parcelle.latitude) {
+                    parcelles.push(parcelle);
                 }
-                
-                polygon = L.polygon(points, {color: 'blue', weight: 2, fillOpacity: 0.2}).addTo(map);
-                measurementLines.push(polygon);
-                
-                const area = calculateArea(points);
-                const popup = L.popup()
-                    .setLatLng(e.latlng)
-                    .setContent(`Superficie: ${area.toFixed(2)} m²`)
-                    .openOn(map);
+            }
+
+            if (parcelles.length > 0) {
+                showNotification(`${parcelles.length} parcelle(s) importée(s) avec succès`, 'success');
+            } else {
+                showNotification('Aucune parcelle valide trouvée dans le fichier', 'error');
             }
         }
 
-        map.on('click', onMapClick);
-    }
+        // =====================================================
+        //  GESTION DES MODALES ET UI
+        // =====================================================
 
-    function calculateDistance(points) {
-        let distance = 0;
-        for (let i = 1; i < points.length; i++) {
-            distance += points[i-1].distanceTo(points[i]);
-        }
-        return distance;
-    }
-
-    function calculateArea(points) {
-        if (points.length < 3) return 0;
-        
-        const polygon = L.polygon(points);
-        const geoJson = polygon.toGeoJSON();
-        
-        const coords = geoJson.geometry.coordinates[0];
-        let area = 0;
-        
-        for (let i = 0; i < coords.length - 1; i++) {
-            const p1 = coords[i];
-            const p2 = coords[i + 1];
-            area += (p2[0] - p1[0]) * (p2[1] + p1[1]);
-        }
-        
-        return Math.abs(area) * 111319.9 * 111319.9 / 2;
-    }
-
-    function clearMeasurements() {
-        measurementMarkers.forEach(marker => map.removeLayer(marker));
-        measurementLines.forEach(line => map.removeLayer(line));
-        measurementMarkers = [];
-        measurementLines = [];
-        map.off('click');
-        map.getContainer().style.cursor = '';
-        map.closePopup();
-        
-        document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
-        measurementMode = null;
-    }
-
-    // Ajouter une parcelle
-    function addParcelle() {
-        if (!currentUser || currentUser.type !== 'proprietaire') {
-            showNotification('Connectez-vous en tant que propriétaire pour ajouter une parcelle', 'error');
-            return;
-        }
-        
-        openModal('addParcelleModal');
-    }
-
-    // Mettre à jour les champs du formulaire selon le statut
-    function updateFormFields() {
-        const statut = document.getElementById('terrainStatut').value;
-        const matriculeField = document.getElementById('matricule');
-        
-        if (statut === 'non_titre') {
-            const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
-            matriculeField.value = `NT-${randomNum}`;
-        } else {
-            matriculeField.value = '';
-            matriculeField.readOnly = false;
-            matriculeField.placeholder = 'Saisir le matricule du titre foncier';
-        }
-    }
-
-    // Importer CSV
-    function importCSV() {
-        if (!currentUser || currentUser.type !== 'proprietaire') {
-            showNotification('Connectez-vous en tant que propriétaire pour importer des parcelles', 'error');
-            return;
-        }
-        
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.csv';
-        input.onchange = handleCSVImport;
-        input.click();
-    }
-
-    function handleCSVImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const csv = e.target.result;
-            parseCSV(csv);
-        };
-        reader.readAsText(file);
-    }
-
-    function parseCSV(csvText) {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-        
-        const requiredColumns = ['matricule', 'longitude', 'latitude'];
-        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-        
-        if (missingColumns.length > 0) {
-            showNotification(`Colonnes manquantes: ${missingColumns.join(', ')}`, 'error');
-            return;
+        // Gestion des modales
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
         }
 
-        const parcelles = [];
-        for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim());
-            if (values.length < headers.length) continue;
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
 
-            const parcelle = {};
-            headers.forEach((header, index) => {
-                parcelle[header] = values[index];
+        // Basculer la sidebar desktop
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.querySelector('.sidebar-toggle i');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                toggleBtn.className = 'fas fa-chevron-right';
+            } else {
+                toggleBtn.className = 'fas fa-bars';
+            }
+        }
+
+        // Réduire/développer la légende
+        function toggleLegendCollapse() {
+            const legend = document.getElementById('legend');
+            const toggleBtn = document.getElementById('legendToggleBtn');
+            const toggleIcon = toggleBtn.querySelector('i');
+            
+            legendCollapsed = !legendCollapsed;
+            
+            if (legendCollapsed) {
+                legend.classList.add('collapsed');
+                toggleIcon.className = 'fas fa-chevron-down';
+                toggleBtn.title = 'Développer la légende';
+            } else {
+                legend.classList.remove('collapsed');
+                toggleIcon.className = 'fas fa-chevron-up';
+                toggleBtn.title = 'Réduire la légende';
+            }
+        }
+
+        // Système de notification
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // =====================================================
+        //  GESTION DE L'AUTHENTIFICATION
+        // =====================================================
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            currentUser = {
+                id: 1,
+                name: 'Utilisateur Test',
+                email: 'test@example.com',
+                type: 'client'
+            };
+
+            updateAuthUI();
+            closeModal('loginModal');
+            showNotification('Connexion réussie', 'success');
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            showNotification('Inscription réussie. Veuillez vous connecter.', 'success');
+            closeModal('registerModal');
+        }
+
+        function updateAuthUI() {
+            const authButtons = document.getElementById('authButtons');
+            
+            if (currentUser) {
+                authButtons.innerHTML = `
+                    <span style="margin-right: 1rem;">Bonjour, ${currentUser.name}</span>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                `;
+            } else {
+                authButtons.innerHTML = `
+                    <button class="btn btn-secondary" onclick="openModal('loginModal')">
+                        <i class="fas fa-sign-in-alt"></i> Connexion
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('registerModal')">
+                        <i class="fas fa-user-plus"></i> Inscription
+                    </button>
+                `;
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            updateAuthUI();
+            showNotification('Déconnexion réussie', 'info');
+        }
+
+        // =====================================================
+        //  ÉVÉNEMENTS ET INITIALISATION
+        // =====================================================
+
+        // Fermer les modales en cliquant à l'extérieur
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Gestion améliorée des événements de redimensionnement
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                adjustResponsiveControls();
+            }, 250);
+        });
+
+        // Gestion de l'orientation pour mobile
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                adjustResponsiveControls();
+            }, 300);
+        });
+
+        // =====================================================
+        //  INITIALISATION AU CHARGEMENT DE LA PAGE
+        // =====================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisation de GéoFoncier - Version Corrigée Scroll Mobile');
+            
+            // Initialiser la carte
+            initMap();
+
+            // CORRECTION ULTIME : Forcer le scroll mobile au chargement
+            setTimeout(() => {
+                ultimateMobileScrollFix();
+                console.log('✅ Solution ultime appliquée au chargement');
+            }, 500);
+
+            // Double vérification après un délai plus long
+            setTimeout(() => {
+                ultimateMobileScrollFix();
+                console.log('✅ Double vérification solution ultime');
+            }, 1500);
+
+            // Triple vérification pour s'assurer que ça marche
+            setTimeout(() => {
+                ultimateMobileScrollFix();
+                console.log('✅ Triple vérification solution ultime');
+            }, 3000);
+
+            // Gestionnaires d'événements
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showNotification('Parcelle ajoutée avec succès', 'success');
+                closeModal('addParcelleModal');
             });
 
-            if (parcelle.matricule && parcelle.longitude && parcelle.latitude) {
-                parcelles.push(parcelle);
+            document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchParcelle();
+                }
+            });
+
+            document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchParcelleMobile();
+                }
+            });
+
+            // Initialiser les toggles
+            const toggles = document.querySelectorAll('.layer-toggle');
+            toggles.forEach(toggle => {
+                const checkbox = toggle.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    toggle.classList.add('active');
+                }
+            });
+
+            // Prévenir le zoom par pincement sur iOS avec gestion améliorée
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(event) {
+                if (event.scale !== 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            // Améliorer les interactions tactiles
+            if ('ontouchstart' in window) {
+                document.body.classList.add('touch-device');
             }
-        }
 
-        if (parcelles.length > 0) {
-            showNotification(`${parcelles.length} parcelle(s) importée(s) avec succès`, 'success');
-        } else {
-            showNotification('Aucune parcelle valide trouvée dans le fichier', 'error');
-        }
-    }
-
-    // Gestion des modales
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    // Basculer la sidebar desktop
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.querySelector('.sidebar-toggle i');
-        
-        sidebar.classList.toggle('collapsed');
-        
-        if (sidebar.classList.contains('collapsed')) {
-            toggleBtn.className = 'fas fa-chevron-right';
-        } else {
-            toggleBtn.className = 'fas fa-bars';
-        }
-    }
-
-    // Réduire/développer la légende
-    function toggleLegendCollapse() {
-        const legend = document.getElementById('legend');
-        const toggleBtn = document.getElementById('legendToggleBtn');
-        const toggleIcon = toggleBtn.querySelector('i');
-        
-        legendCollapsed = !legendCollapsed;
-        
-        if (legendCollapsed) {
-            legend.classList.add('collapsed');
-            toggleIcon.className = 'fas fa-chevron-down';
-            toggleBtn.title = 'Développer la légende';
-        } else {
-            legend.classList.remove('collapsed');
-            toggleIcon.className = 'fas fa-chevron-up';
-            toggleBtn.title = 'Réduire la légende';
-        }
-    }
-
-    // Système de notification
-    function showNotification(message, type = 'info') {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        notification.style.display = 'block';
-
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-    }
-
-    // Gestion de l'authentification
-    function handleLogin(event) {
-        event.preventDefault();
-        
-        currentUser = {
-            id: 1,
-            name: 'Utilisateur Test',
-            email: 'test@example.com',
-            type: 'client'
-        };
-
-        updateAuthUI();
-        closeModal('loginModal');
-        showNotification('Connexion réussie', 'success');
-    }
-
-    function handleRegister(event) {
-        event.preventDefault();
-        
-        showNotification('Inscription réussie. Veuillez vous connecter.', 'success');
-        closeModal('registerModal');
-    }
-
-    function updateAuthUI() {
-        const authButtons = document.getElementById('authButtons');
-        
-        if (currentUser) {
-            authButtons.innerHTML = `
-                <span style="margin-right: 1rem;">Bonjour, ${currentUser.name}</span>
-                <button class="btn btn-secondary" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </button>
-            `;
-        } else {
-            authButtons.innerHTML = `
-                <button class="btn btn-secondary" onclick="openModal('loginModal')">
-                    <i class="fas fa-sign-in-alt"></i> Connexion
-                </button>
-                <button class="btn btn-primary" onclick="openModal('registerModal')">
-                    <i class="fas fa-user-plus"></i> Inscription
-                </button>
-            `;
-        }
-    }
-
-    function logout() {
-        currentUser = null;
-        updateAuthUI();
-        showNotification('Déconnexion réussie', 'info');
-    }
-
-    // Fermer les modales en cliquant à l'extérieur
-    window.onclick = function(event) {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    }
-
-    // CORRECTION : Gestion améliorée des événements de redimensionnement
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            adjustResponsiveControls();
-        }, 250);
-    });
-
-    // Gestion de l'orientation pour mobile
-    window.addEventListener('orientationchange', function() {
-        setTimeout(() => {
-            adjustResponsiveControls();
-        }, 300);
-    });
-
-    // Initialisation au chargement de la page
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🚀 Initialisation de GéoFoncier - Version Corrigée');
-        
-        // Initialiser la carte
-        initMap();
-
-        // CORRECTION MAJEURE : Forcer le scroll mobile au chargement
-        setTimeout(() => {
-            forceMobileScroll();
-            console.log('✅ Scroll mobile forcé au chargement');
-        }, 500);
-
-        // Double vérification après un délai plus long
-        setTimeout(() => {
-            forceMobileScroll();
-            console.log('✅ Double vérification scroll mobile');
-        }, 1500);
-
-        // Gestionnaires d'événements
-        document.getElementById('loginForm').addEventListener('submit', handleLogin);
-        document.getElementById('registerForm').addEventListener('submit', handleRegister);
-        document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            showNotification('Parcelle ajoutée avec succès', 'success');
-            closeModal('addParcelleModal');
-        });
-
-        document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchParcelle();
-            }
-        });
-
-        document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchParcelleMobile();
-            }
-        });
-
-        // Initialiser les toggles
-        const toggles = document.querySelectorAll('.layer-toggle');
-        toggles.forEach(toggle => {
-            const checkbox = toggle.querySelector('input[type="checkbox"]');
-            if (checkbox.checked) {
-                toggle.classList.add('active');
-            }
-        });
-
-        // CORRECTION : Prévenir le zoom par pincement sur iOS avec gestion améliorée
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, { passive: false });
-
-        document.addEventListener('touchmove', function(event) {
-            if (event.scale !== 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
-
-        // Améliorer les interactions tactiles
-        if ('ontouchstart' in window) {
-            document.body.classList.add('touch-device');
-        }
-
-        // CORRECTION MAJEURE : Surveillance continue du scroll mobile
-        setInterval(() => {
-            if (isMobile || isSmallMobile || isVerySmallMobile) {
-                const sidebarContents = document.querySelectorAll('.sidebar-content');
-                sidebarContents.forEach(sidebarContent => {
-                    if (sidebarContent && sidebarContent.scrollHeight > sidebarContent.clientHeight) {
-                        // Le contenu dépasse, s'assurer que le scroll fonctionne
-                        if (sidebarContent.style.overflowY !== 'scroll') {
-                            forceMobileScroll();
-                            console.log('🔧 Correction automatique du scroll détectée');
+            // SURVEILLANCE CONTINUE DU SCROLL MOBILE
+            setInterval(() => {
+                if (isMobile || isSmallMobile || isVerySmallMobile) {
+                    const sidebarContents = document.querySelectorAll('.sidebar-content');
+                    sidebarContents.forEach(sidebarContent => {
+                        if (sidebarContent && sidebarContent.scrollHeight > sidebarContent.clientHeight) {
+                            // Le contenu dépasse, s'assurer que le scroll fonctionne
+                            if (sidebarContent.style.overflowY !== 'auto') {
+                                ultimateMobileScrollFix();
+                                console.log('🔧 Correction automatique du scroll détectée');
+                            }
                         }
-                    }
+                    });
+                }
+            }, 2000); // Vérification toutes les 2 secondes
+
+            // FORCE LE SCROLL SUR OUVERTURE SIDEBAR MOBILE
+            const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+            if (mobileSearchBtn) {
+                mobileSearchBtn.addEventListener('click', function() {
+                    setTimeout(() => {
+                        ultimateMobileScrollFix();
+                        console.log('🔧 Scroll forcé après click bouton mobile');
+                    }, 200);
                 });
             }
-        }, 2000); // Vérification toutes les 2 secondes
 
-        console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
-        console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
-        console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
-        console.log('🔧 Scroll mobile forcé:', 'Activé avec surveillance continue');
-    });
+            console.log('✅ GéoFoncier initialisé avec succès - Solution ultime pour scroll mobile activée');
+            console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
+            console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
+            console.log('🔧 Solution ultime scroll mobile:', 'Activée avec surveillance continue');
+        });
 
-</script>
+    </script>
 </body>
 </html>
