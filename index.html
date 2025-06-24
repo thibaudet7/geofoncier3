@@ -23,7 +23,7 @@
             background-color: #f5f5f5;
             color: #333;
             overflow-x: hidden;
-            padding-top: 60px; /* Nouveau padding pour compenser le header */
+            padding-top: 60px;
         }
 
         .header {
@@ -33,7 +33,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: fixed;
             z-index: 2000;
-            /* CORRECTION: Empêcher le header de passer sous la barre d'état */
             top: 0;
             left: 0;
             right: 0;
@@ -58,7 +57,6 @@
             gap: 0.5rem;
         }
 
-        /* Bouton Search & Filter pour mobile */
         .mobile-search-btn {
             display: none;
             background: transparent;
@@ -229,21 +227,46 @@
             background-color: rgba(255, 255, 255, 0.2);
         }
 
+        /* CORRECTION MAJEURE : CSS optimisé pour le scroll mobile */
         .sidebar-content {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
             padding: 0.75rem;
-            /* CORRECTION: Forcer le scroll sur tous les mobiles */
+            position: relative;
+            
+            /* NOUVELLES PROPRIÉTÉS POUR FORCER LE SCROLL MOBILE */
+            height: 0; /* Force le flex-grow à calculer la hauteur */
+            min-height: 0; /* Permet au conteneur de rétrécir */
+            
+            /* Optimisations pour le scroll tactile */
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            /* CORRECTION: Hauteur fixe pour assurer le scroll */
-            height: calc(100vh - 120px);
-            max-height: calc(100vh - 120px);
-            overscroll-behavior: contain; /* Empêche le défilement de l'élément parent */
-            touch-action: pan-y; /* Meilleure reconnaissance du geste de défilement */
-            position: relative;
-            will-change: scroll-position; /* Optimisation performance */
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+            
+            /* Force la création d'un contexte de stacking pour le GPU */
+            will-change: scroll-position;
+            transform: translateZ(0); /* Hack pour activer l'accélération hardware */
+        }
+
+        /* CORRECTION : Scroll forcé sur très petits écrans */
+        .sidebar-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 2px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         .sidebar.collapsed .sidebar-content {
@@ -329,7 +352,6 @@
             z-index: 999 !important;
         }
 
-        /* CORRECTION: Positionnement du contrôle de zoom amélioré */
         .leaflet-control-zoom {
             top: 10px !important;
             left: 10px !important;
@@ -377,9 +399,6 @@
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             overflow: hidden;
-            padding: absolute;
-
-    
         }
 
         .control-btn {
@@ -411,7 +430,6 @@
             color: white;
         }
 
-        /* CORRECTION: Positionnement de la légende amélioré */
         .legend {
             position: absolute;
             bottom: 35px;
@@ -660,7 +678,6 @@
             50% { transform: translateY(-5px); }
         }
 
-        /* CORRECTION: Popup de chevauchement améliorée pour éviter le débordement */
         .mobile-popup .leaflet-popup-content-wrapper {
             max-width: calc(100vw - 30px) !important;
             box-sizing: border-box !important;
@@ -750,7 +767,6 @@
                 min-height: 36px;
             }
 
-            /* CORRECTION: Positionnement légende amélioré sur tablettes */
             .legend {
                 bottom: 25px;
                 left: 8px;
@@ -789,7 +805,6 @@
                 right: 2px !important;
             }
             
-            /* CORRECTION: Contrôle de zoom repositionné */
             .leaflet-control-zoom {
                 bottom: 30px !important;
                 right: 5px !important;
@@ -798,7 +813,6 @@
                 z-index: 1001 !important;
             }
 
-            /* CORRECTION: Popup arrondissement ajustée pour tablettes */
             .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 60px) !important;
             }
@@ -833,16 +847,19 @@
                 max-width: 300px;
             }
 
+            /* CORRECTION MAJEURE : CSS spécifique pour très petits écrans */
             .sidebar-content {
                 padding: 0.5rem;
-                /* CORRECTION: Hauteur fixe pour assurer le scroll sur mobiles */
-                height: calc(100vh - 100px);
-                max-height: calc(100vh - 100px);
-                overflow-y: auto;
-                overflow-x: hidden;
-                -webkit-overflow-scrolling: touch;
-                scroll-behavior: smooth;
-                position: relative;
+                /* Force la hauteur et le scroll sur mobile */
+                height: calc(100vh - 120px) !important;
+                max-height: calc(100vh - 120px) !important;
+                overflow-y: scroll !important; /* Force le scroll */
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
+                
+                /* Propriétés supplémentaires pour assurer le fonctionnement */
+                position: relative !important;
+                contain: layout style paint !important; /* Optimisation du rendu */
             }
 
             .search-box, .filter-select, .form-input {
@@ -871,7 +888,6 @@
                 min-height: 32px;
             }
 
-            /* CORRECTION: Légend positionnée plus haut sur mobiles */
             .legend {
                 bottom: 35px;
                 left: 5px;
@@ -915,7 +931,6 @@
                 padding: 0.5rem 0.75rem;
             }
 
-            /* CORRECTION: Popup arrondissement réduite pour mobiles */
             .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 40px) !important;
                 border-radius: 6px !important;
@@ -938,7 +953,6 @@
                 right: 3px !important;
             }
             
-            /* CORRECTION: Contrôle de zoom repositionné pour mobiles */
             .leaflet-control-zoom {
                 bottom: 30px !important;
                 right: 5px !important;
@@ -947,7 +961,7 @@
             }
         }
 
-        /* CORRECTION: Très petits écrans (inférieur à 360px) - Améliorations majeures */
+        /* CORRECTION MAJEURE : Très petits écrans (inférieur à 360px) */
         @media (max-width: 360px) {
             .logo {
                 font-size: 1rem;
@@ -963,44 +977,40 @@
                 max-width: 280px;
             }
 
-            /* CORRECTION: Amélioration majeure du scroll sur très petits écrans */
+            /* CORRECTION CRITIQUE : Force le scroll avec des propriétés spécifiques */
             .sidebar-content {
-                height: calc(100vh - 90px) !important;
-                max-height: calc(100vh - 90px) !important;
-                padding: 0.4rem;
-                overflow-y: scroll !important; /* Force le défilement */
+                height: calc(100vh - 110px) !important;
+                max-height: calc(100vh - 110px) !important;
+                padding: 0.4rem !important;
+                overflow-y: scroll !important;
+                overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior: contain !important;
+                touch-action: pan-y !important;
+                
+                /* Force l'utilisation du GPU pour le scroll */
+                will-change: scroll-position !important;
+                transform: translateZ(0) !important;
+                backface-visibility: hidden !important;
             }
 
-             /* Contournement pour iOS */
-                @supports (-webkit-overflow-scrolling: touch) {
-                    .sidebar-content {
-                        height: auto !important;
-                        max-height: calc(100vh - 90px) !important;
-                    }
-                }
+            /* Assure que le contenu a une hauteur minimale pour déclencher le scroll */
+            .sidebar-content > * {
+                flex-shrink: 0;
+            }
 
             .control-group {
-                background: white;
-                border-radius: 4px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                overflow: hidden;
-                padding: absolute;
                 position: relative;
                 top: 30px;
                 right: 3px;
-                
-        
             }
 
             .control-btn {
                 min-width: 28px;
                 min-height: 28px;
                 font-size: 0.7rem;
-                
             }
 
-            /* CORRECTION: Légende repositionnée pour éviter les conflits */
             .legend {
                 bottom: 45px;
                 left: 3px;
@@ -1015,7 +1025,6 @@
                 margin: 1% 0;
             }
 
-            /* CORRECTION: Contrôle de zoom repositionné pour très petits écrans */
             .leaflet-control-zoom {
                 bottom: 30px !important;
                 right: 3px !important;
@@ -1028,7 +1037,6 @@
                 right: 3px !important;
             }
 
-            /* CORRECTION: Popup arrondissement optimisée pour très petits écrans */
             .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 20px) !important;
                 min-width: 180px !important;
@@ -1043,7 +1051,6 @@
                 word-wrap: break-word !important;
             }
 
-            /* CORRECTION: Popup de chevauchement spécialement optimisée */
             .overlap-popup .leaflet-popup-content-wrapper {
                 max-width: calc(100vw - 15px) !important;
                 min-width: 160px !important;
@@ -1069,7 +1076,6 @@
                 max-width: 280px;
             }
 
-            /* CORRECTION: Positionnement en mode paysage */
             .leaflet-control-zoom {
                 bottom: 30px !important;
                 right: 5px !important;
@@ -1087,9 +1093,10 @@
                 left: 5px;
             }
 
+            /* CORRECTION : Hauteur adaptée au mode paysage */
             .sidebar-content {
-                height: calc(100vh - 70px) !important;
-                max-height: calc(100vh - 70px) !important;
+                height: calc(100vh - 80px) !important;
+                max-height: calc(100vh - 80px) !important;
             }
         }
 
@@ -1113,13 +1120,9 @@
             .close:active {
                 transform: scale(0.95);
             }
-            .sidebar-content {
-                height: calc(100vh - 70px); /* Ajustement pour paysage */
-                max-height: calc(100vh - 70px);
-            }
         }
 
-        /* CORRECTION: Style pour empêcher le débordement du contenu des popups */
+        /* CORRECTION : Style pour empêcher le débordement du contenu des popups */
         .leaflet-popup-content * {
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -1127,11 +1130,24 @@
             overflow-wrap: break-word !important;
         }
 
-        /* CORRECTION: Forcer le conteneur des popups à respecter les limites */
         .leaflet-popup-content > div {
             max-width: 100% !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
+        }
+
+        /* CORRECTION MAJEURE : Classes d'aide pour forcer le scroll */
+        .force-scroll {
+            overflow-y: scroll !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+        }
+
+        .scroll-container {
+            height: 100% !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
     </style>
 </head>
@@ -1551,7 +1567,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
     <script>
-        // Configuration globale
+        // CORRECTION MAJEURE : Variables non constantes pour éviter l'erreur de reassignation
         let map, currentUser = null;
         let parcelleLayer, arrondissementLayer, overlapLayer;
         let measurementMode = null;
@@ -1575,13 +1591,66 @@
             ARROND_FILL: '#3498db'
         };
 
-        // Détection du type d'appareil
-        const isMobile = window.innerWidth <= 768;
-        const isSmallMobile = window.innerWidth <= 480;
-        const isVerySmallMobile = window.innerWidth <= 360;
+        // CORRECTION : Variables dynamiques au lieu de constantes
+        let isMobile = window.innerWidth <= 768;
+        let isSmallMobile = window.innerWidth <= 480;
+        let isVerySmallMobile = window.innerWidth <= 360;
 
         // État de la sidebar mobile
         let mobileSidebarOpen = false;
+
+        // CORRECTION MAJEURE : Fonction pour forcer le scroll mobile
+        function forceMobileScroll() {
+            const sidebarContents = document.querySelectorAll('.sidebar-content');
+            
+            sidebarContents.forEach(sidebarContent => {
+                if (sidebarContent && (isMobile || isSmallMobile || isVerySmallMobile)) {
+                    // Réinitialiser toutes les propriétés de scroll
+                    sidebarContent.style.overflowY = 'scroll';
+                    sidebarContent.style.overflowX = 'hidden';
+                    sidebarContent.style.webkitOverflowScrolling = 'touch';
+                    sidebarContent.style.touchAction = 'pan-y';
+                    sidebarContent.style.overscrollBehavior = 'contain';
+                    sidebarContent.style.willChange = 'scroll-position';
+                    sidebarContent.style.transform = 'translateZ(0)';
+                    sidebarContent.style.backfaceVisibility = 'hidden';
+                    
+                    // Hauteur dynamique selon la taille d'écran
+                    if (isVerySmallMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 110px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 110px)';
+                    } else if (isSmallMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 120px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 120px)';
+                    } else if (isMobile) {
+                        sidebarContent.style.height = 'calc(100vh - 130px)';
+                        sidebarContent.style.maxHeight = 'calc(100vh - 130px)';
+                    }
+                    
+                    // Ajouter les classes d'aide
+                    sidebarContent.classList.add('force-scroll');
+                    
+                    // Force le reflow
+                    void sidebarContent.offsetHeight;
+                    
+                    console.log('✅ Scroll mobile forcé pour:', sidebarContent.className);
+                }
+            });
+        }
+
+        // CORRECTION : Fonction pour ajuster les contrôles selon la taille d'écran
+        function adjustResponsiveControls() {
+            // Mettre à jour les variables de taille
+            isMobile = window.innerWidth <= 768;
+            isSmallMobile = window.innerWidth <= 480;
+            isVerySmallMobile = window.innerWidth <= 360;
+            
+            // Forcer le scroll mobile
+            forceMobileScroll();
+            
+            // Ajuster les contrôles de la carte
+            adjustControlPositions();
+        }
 
         // Données de démonstration avec chevauchement réaliste
         const sampleParcelles = [
@@ -1651,6 +1720,11 @@
             
             // Prévenir le scroll du body
             document.body.style.overflow = 'hidden';
+            
+            // CORRECTION : Forcer le scroll après ouverture
+            setTimeout(() => {
+                forceMobileScroll();
+            }, 100);
         }
 
         function closeMobileSidebar() {
@@ -1715,7 +1789,7 @@
         function initMap() {
             // Options de configuration responsive
             const mapOptions = {
-                zoomControl: false, // CORRECTION: Désactiver le contrôle par défaut
+                zoomControl: false,
                 scrollWheelZoom: !isMobile,
                 doubleClickZoom: true,
                 touchZoom: true,
@@ -1725,7 +1799,7 @@
  
             map = L.map('map', mapOptions).setView([4.0515, 9.7682], isMobile ? 14 : 15);
  
-            // CORRECTION: Ajouter les contrôles de zoom avec positionnement corrigé
+            // Ajouter les contrôles de zoom avec positionnement corrigé
             L.control.zoom({
                 position: 'bottomright'
             }).addTo(map);
@@ -1791,13 +1865,13 @@
             // Configuration responsive des popups
             configureResponsivePopups();
             
-            // CORRECTION: Ajuster la position des contrôles avec CSS amélioré
+            // Ajuster la position des contrôles avec CSS amélioré
             setTimeout(() => {
                 adjustControlPositions();
             }, 100);
         }
 
-        // CORRECTION: Fonction pour ajuster les positions des contrôles
+        // Fonction pour ajuster les positions des contrôles
         function adjustControlPositions() {
             const layerControlElement = document.querySelector('.leaflet-control-layers');
             const zoomControlElement = document.querySelector('.leaflet-control-zoom');
@@ -1817,7 +1891,6 @@
             }
 
             if (zoomControlElement) {
-                // CORRECTION: Positionnement uniforme à 30px du bottom
                 zoomControlElement.style.bottom = '30px';
                 if (isVerySmallMobile) {
                     zoomControlElement.style.right = '3px';
@@ -1961,7 +2034,7 @@
                                     areaKm2
                                 );
                                 
-                                // CORRECTION: Options de popup améliorées pour éviter le débordement
+                                // Options de popup améliorées pour éviter le débordement
                                 let popupOptions = {
                                     className: isMobile ? 'mobile-popup' : 'desktop-popup',
                                     autoPan: true,
@@ -1972,16 +2045,13 @@
                                 };
 
                                 if (isVerySmallMobile) {
-                                    // Très petits écrans
                                     popupOptions.maxWidth = Math.min(window.innerWidth - 15, 200);
                                     popupOptions.minWidth = 150;
                                     popupOptions.autoPanPadding = [3, 3];
                                 } else if (isMobile) {
-                                    // Mobiles
                                     popupOptions.maxWidth = Math.min(window.innerWidth - 30, 280);
                                     popupOptions.minWidth = 200;
                                 } else {
-                                    // Desktop
                                     popupOptions.maxWidth = 400;
                                     popupOptions.minWidth = 300;
                                 }
@@ -2015,10 +2085,8 @@
                                             
                                             // Adaptation du comportement pour mobile
                                             if (isMobile) {
-                                                // Sur mobile, centrer sans trop zoomer
                                                 map.setView(e.latlng, Math.max(map.getZoom(), 12));
                                             } else {
-                                                // Sur desktop, comportement normal
                                                 map.fitBounds(polygon.getBounds(), {
                                                     padding: [10, 10]
                                                 });
@@ -2063,7 +2131,6 @@
             const isVerySmallScreen = window.innerWidth <= 360;
             
             if (isVerySmallScreen) {
-                // CORRECTION: Version très petits écrans optimisée
                 return `
                     <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.2rem;">
                         <h4 style="margin: 0 0 0.2rem 0; color: #2c3e50; font-size: 0.7rem; border-bottom: 1px solid #3498db; padding-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -2092,7 +2159,6 @@
                     </div>
                 `;
             } else if (isMobileView) {
-                // Version mobile standard
                 return `
                     <div style="text-align: center; font-size: 0.75rem; line-height: 1.2; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.3rem;">
                         <h4 style="margin: 0 0 0.3rem 0; color: #2c3e50; font-size: 0.8rem; border-bottom: 1px solid #3498db; padding-bottom: 0.2rem; word-wrap: break-word; overflow-wrap: break-word;">
@@ -2121,7 +2187,6 @@
                     </div>
                 `;
             } else {
-                // Version desktop/tablette
                 return `
                     <div style="text-align: center; min-width: 280px; max-width: 350px; box-sizing: border-box; padding: 0.5rem;">
                         <h4 style="margin-bottom: 0.75rem; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word;">
@@ -2339,7 +2404,6 @@
                     }
                 }
             }
-            
             console.log(`🎉 ${overlapsFound} chevauchements détectés`);
             
             if (!map.hasLayer(overlapLayer)) {
@@ -2487,7 +2551,7 @@
             
             const popupContent = createOverlapPopup(parcelle1, parcelle2, areaM2, areaPercent1, areaPercent2);
             
-            // CORRECTION: Options de popup spécialement optimisées pour les chevauchements
+            // Options de popup spécialement optimisées pour les chevauchements
             let popupOptions = {
                 className: isMobile ? 'mobile-popup overlap-popup' : 'desktop-popup overlap-popup',
                 autoPan: true,
@@ -2536,13 +2600,13 @@
             console.log('✅ Zone de chevauchement ajoutée - Rectangle rouge uniquement');
         }
 
-        // CORRECTION: Créer un popup responsive pour les chevauchements avec padding contrôlé
+        // Créer un popup responsive pour les chevauchements avec padding contrôlé
         function createOverlapPopup(parcelle1, parcelle2, areaM2, areaPercent1, areaPercent2) {
             const isMobileView = window.innerWidth <= 480;
             const isVerySmallScreen = window.innerWidth <= 360;
             
             if (isVerySmallScreen) {
-                // CORRECTION: Version très petits écrans ultra-compacte avec padding réduit
+                // Version très petits écrans ultra-compacte avec padding réduit
                 return `
                     <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; max-width: 100%; overflow: hidden; box-sizing: border-box; padding: 0.2rem; margin: 0;">
                         <h4 style="color: #dc3545; margin: 0 0 0.2rem 0; font-size: 0.7rem; padding: 0;">
@@ -2968,515 +3032,434 @@
             }
         }
 
-        // Outils de mesure avec adaptation mobile
-        function toggleMeasurement(type) {
-            clearMeasurements();
-            
-            if (measurementMode === type) {
-                measurementMode = null;
-                document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.remove('active');
-                return;
-            }
-
-            measurementMode = type;
-            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.add('active');
-
-            map.getContainer().style.cursor = 'crosshair';
-            
-            if (type === 'distance') {
-                startDistanceMeasurement();
-            } else if (type === 'area') {
-                startAreaMeasurement();
-            }
-        }
-
-        function startDistanceMeasurement() {
-            let points = [];
-            let polyline = null;
-
-            function onMapClick(e) {
-                points.push(e.latlng);
-                
-                const marker = L.marker(e.latlng).addTo(map);
-                measurementMarkers.push(marker);
-
-                if (points.length > 1) {
-                    if (polyline) {
-                        map.removeLayer(polyline);
-                    }
-                    
-                    polyline = L.polyline(points, {color: 'red', weight: 3}).addTo(map);
-                    measurementLines.push(polyline);
-                    
-                    const distance = calculateDistance(points);
-                    const popup = L.popup()
-                        .setLatLng(e.latlng)
-                        .setContent(`Distance: ${distance.toFixed(2)} m`)
-                        .openOn(map);
-                }
-            }
-
-            map.on('click', onMapClick);
-        }
-
-        function startAreaMeasurement() {
-            let points = [];
-            let polygon = null;
-
-            function onMapClick(e) {
-                points.push(e.latlng);
-                
-                const marker = L.marker(e.latlng).addTo(map);
-                measurementMarkers.push(marker);
-
-                if (points.length > 2) {
-                    if (polygon) {
-                        map.removeLayer(polygon);
-                    }
-                    
-                    polygon = L.polygon(points, {color: 'blue', weight: 2, fillOpacity: 0.2}).addTo(map);
-                    measurementLines.push(polygon);
-                    
-                    const area = calculateArea(points);
-                    const popup = L.popup()
-                        .setLatLng(e.latlng)
-                        .setContent(`Superficie: ${area.toFixed(2)} m²`)
-                        .openOn(map);
-                }
-            }
-
-            map.on('click', onMapClick);
-        }
-
-        function calculateDistance(points) {
-            let distance = 0;
-            for (let i = 1; i < points.length; i++) {
-                distance += points[i-1].distanceTo(points[i]);
-            }
-            return distance;
-        }
-
-        function calculateArea(points) {
-            if (points.length < 3) return 0;
-            
-            const polygon = L.polygon(points);
-            const geoJson = polygon.toGeoJSON();
-            
-            const coords = geoJson.geometry.coordinates[0];
-            let area = 0;
-            
-            for (let i = 0; i < coords.length - 1; i++) {
-                const p1 = coords[i];
-                const p2 = coords[i + 1];
-                area += (p2[0] - p1[0]) * (p2[1] + p1[1]);
-            }
-            
-            return Math.abs(area) * 111319.9 * 111319.9 / 2;
-        }
-
-        function clearMeasurements() {
-            measurementMarkers.forEach(marker => map.removeLayer(marker));
-            measurementLines.forEach(line => map.removeLayer(line));
-            measurementMarkers = [];
-            measurementLines = [];
-            map.off('click');
-            map.getContainer().style.cursor = '';
-            map.closePopup();
-            
-            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+       // Outils de mesure avec adaptation mobile
+       function toggleMeasurement(type) {
+        clearMeasurements();
+        
+        if (measurementMode === type) {
             measurementMode = null;
+            document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.remove('active');
+            return;
         }
 
-        // Ajouter une parcelle
-        function addParcelle() {
-            if (!currentUser || currentUser.type !== 'proprietaire') {
-                showNotification('Connectez-vous en tant que propriétaire pour ajouter une parcelle', 'error');
-                return;
-            }
-            
-            openModal('addParcelleModal');
+        measurementMode = type;
+        document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[onclick="toggleMeasurement('${type}')"]`).classList.add('active');
+
+        map.getContainer().style.cursor = 'crosshair';
+        
+        if (type === 'distance') {
+            startDistanceMeasurement();
+        } else if (type === 'area') {
+            startAreaMeasurement();
         }
+    }
 
-        // Mettre à jour les champs du formulaire selon le statut
-        function updateFormFields() {
-            const statut = document.getElementById('terrainStatut').value;
-            const matriculeField = document.getElementById('matricule');
+    function startDistanceMeasurement() {
+        let points = [];
+        let polyline = null;
+
+        function onMapClick(e) {
+            points.push(e.latlng);
             
-            if (statut === 'non_titre') {
-                const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
-                matriculeField.value = `NT-${randomNum}`;
-            } else {
-                matriculeField.value = '';
-                matriculeField.readOnly = false;
-                matriculeField.placeholder = 'Saisir le matricule du titre foncier';
-            }
-        }
+            const marker = L.marker(e.latlng).addTo(map);
+            measurementMarkers.push(marker);
 
-        // Importer CSV
-        function importCSV() {
-            if (!currentUser || currentUser.type !== 'proprietaire') {
-                showNotification('Connectez-vous en tant que propriétaire pour importer des parcelles', 'error');
-                return;
-            }
-            
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.csv';
-            input.onchange = handleCSVImport;
-            input.click();
-        }
-
-        function handleCSVImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const csv = e.target.result;
-                parseCSV(csv);
-            };
-            reader.readAsText(file);
-        }
-
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            
-            const requiredColumns = ['matricule', 'longitude', 'latitude'];
-            const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-            
-            if (missingColumns.length > 0) {
-                showNotification(`Colonnes manquantes: ${missingColumns.join(', ')}`, 'error');
-                return;
-            }
-
-            const parcelles = [];
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim());
-                if (values.length < headers.length) continue;
-
-                const parcelle = {};
-                headers.forEach((header, index) => {
-                    parcelle[header] = values[index];
-                });
-
-                if (parcelle.matricule && parcelle.longitude && parcelle.latitude) {
-                    parcelles.push(parcelle);
+            if (points.length > 1) {
+                if (polyline) {
+                    map.removeLayer(polyline);
                 }
-            }
-
-            if (parcelles.length > 0) {
-                showNotification(`${parcelles.length} parcelle(s) importée(s) avec succès`, 'success');
-            } else {
-                showNotification('Aucune parcelle valide trouvée dans le fichier', 'error');
-            }
-        }
-
-        // Gestion des modales
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // Basculer la sidebar desktop
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.querySelector('.sidebar-toggle i');
-            
-            sidebar.classList.toggle('collapsed');
-            
-            if (sidebar.classList.contains('collapsed')) {
-                toggleBtn.className = 'fas fa-chevron-right';
-            } else {
-                toggleBtn.className = 'fas fa-bars';
-            }
-        }
-
-        // Réduire/développer la légende
-        function toggleLegendCollapse() {
-            const legend = document.getElementById('legend');
-            const toggleBtn = document.getElementById('legendToggleBtn');
-            const toggleIcon = toggleBtn.querySelector('i');
-            
-            legendCollapsed = !legendCollapsed;
-            
-            if (legendCollapsed) {
-                legend.classList.add('collapsed');
-                toggleIcon.className = 'fas fa-chevron-down';
-                toggleBtn.title = 'Développer la légende';
-            } else {
-                legend.classList.remove('collapsed');
-                toggleIcon.className = 'fas fa-chevron-up';
-                toggleBtn.title = 'Réduire la légende';
-            }
-        }
-
-        // Système de notification
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
-
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-
-        // Gestion de l'authentification
-        function handleLogin(event) {
-            event.preventDefault();
-            
-            currentUser = {
-                id: 1,
-                name: 'Utilisateur Test',
-                email: 'test@example.com',
-                type: 'client'
-            };
-
-            updateAuthUI();
-            closeModal('loginModal');
-            showNotification('Connexion réussie', 'success');
-        }
-
-        function handleRegister(event) {
-            event.preventDefault();
-            
-            showNotification('Inscription réussie. Veuillez vous connecter.', 'success');
-            closeModal('registerModal');
-        }
-
-        function updateAuthUI() {
-            const authButtons = document.getElementById('authButtons');
-            
-            if (currentUser) {
-                authButtons.innerHTML = `
-                    <span style="margin-right: 1rem;">Bonjour, ${currentUser.name}</span>
-                    <button class="btn btn-secondary" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i> Déconnexion
-                    </button>
-                `;
-            } else {
-                authButtons.innerHTML = `
-                    <button class="btn btn-secondary" onclick="openModal('loginModal')">
-                        <i class="fas fa-sign-in-alt"></i> Connexion
-                    </button>
-                    <button class="btn btn-primary" onclick="openModal('registerModal')">
-                        <i class="fas fa-user-plus"></i> Inscription
-                    </button>
-                `;
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            updateAuthUI();
-            showNotification('Déconnexion réussie', 'info');
-        }
-
-        // Fermer les modales en cliquant à l'extérieur
-        window.onclick = function(event) {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-        }
-
-        // CORRECTION: Gestion améliorée des événements de redimensionnement
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                // Mettre à jour les variables de taille
-                isMobile = window.innerWidth <= 768;
-                isSmallMobile = window.innerWidth <= 480;
-                isVerySmallMobile = window.innerWidth <= 360;
                 
-                fixMobileScrolling();
-                adjustControlPositions();
-            }, 250);
-        });
-
-       
-        function fixMobileScrolling() {
-            const sidebarContents = document.querySelectorAll('.sidebar-content');
-            sidebarContents.forEach(sidebarContent => {
-                if (sidebarContent) {
-                    if (isVerySmallMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 90px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 90px)';
-                    } else if (isMobile) {
-                        sidebarContent.style.height = 'calc(100vh - 100px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 100px)';
-                    }
-                    sidebarContent.style.overflowY = 'auto';
-                    sidebarContent.style.overflowX = 'hidden';
-                    sidebarContent.style.webkitOverflowScrolling = 'touch';
-                    sidebarContent.style.position = 'relative';
-                    sidebarContent.style.touchAction = 'pan-y';
-                    sidebarContent.style.overscrollBehavior = 'contain';
-                    sidebarContent.style.willChange = 'scroll-position'; // Force la création d'un contexte de scroll
-                }
-            });
-        }
-    
-        function forceMobileScrolling() {
-            const sidebarContents = document.querySelectorAll('.sidebar-content');
-            
-            sidebarContents.forEach(sidebarContent => {
-                if (sidebarContent) {
-                    // Réinitialiser les propriétés de défilement
-                    sidebarContent.style.overflowY = 'auto';
-                    sidebarContent.style.overflowX = 'hidden';
-                    sidebarContent.style.webkitOverflowScrolling = 'touch';
-                    sidebarContent.style.touchAction = 'pan-y';
-                    sidebarContent.style.overscrollBehavior = 'contain';
-                    
-                    // Calculer la hauteur dynamiquement
-                    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-                    const isVerySmall = window.innerWidth <= 360;
-                    
-                    if (isVerySmall) {
-                        if (isLandscape) {
-                            sidebarContent.style.height = 'calc(100vh - 70px)';
-                            sidebarContent.style.maxHeight = 'calc(100vh - 70px)';
-                        } else {
-                            sidebarContent.style.height = 'calc(100vh - 90px)';
-                            sidebarContent.style.maxHeight = 'calc(100vh - 90px)';
-                        }
-                    } else {
-                        sidebarContent.style.height = 'calc(100vh - 100px)';
-                        sidebarContent.style.maxHeight = 'calc(100vh - 100px)';
-                    }
-                    
-                    // Forcer le reflow pour activer le défilement
-                    void sidebarContent.offsetHeight;
-                }
-            });
-        }
-    
-        // CORRECTION: Vérifier périodiquement le scroll
-        function checkScroll() {
-            const sidebarContents = document.querySelectorAll('.sidebar-content');
-            
-            sidebarContents.forEach(sidebarContent => {
-                if (sidebarContent) {
-                    // Vérifier si le contenu dépasse
-                    const isOverflowing = sidebarContent.scrollHeight > sidebarContent.clientHeight;
-                    
-                    if (isOverflowing) {
-                        // Activer explicitement le défilement
-                        sidebarContent.style.overflowY = 'scroll';
-                    } else {
-                        sidebarContent.style.overflowY = 'auto';
-                    }
-                }
-            });
-        }
-
-        // Initialisation au chargement de la page
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initialisation de GéoFoncier - Version Corrigée');
-            
-            // Initialiser la carte
-            initMap();
-
-            forceMobileScrolling();
-        
-            // Vérifier périodiquement l'état du scroll
-            setInterval(checkScroll, 1000);
-            
-            // Reforcer après le rendu complet
-            setTimeout(forceMobileScrolling, 1000);
-
-            
-            // CORRECTION: Corriger le scroll mobile après l'initialisation
-            setTimeout(() => {
-                fixMobileScrolling();
-            }, 500);
-            
-           
-
-
-            // Gestionnaires d'événements
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            document.getElementById('registerForm').addEventListener('submit', handleRegister);
-            document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                showNotification('Parcelle ajoutée avec succès', 'success');
-                closeModal('addParcelleModal');
-            });
-
-            document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchParcelle();
-                }
-            });
-
-            document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchParcelleMobile();
-                }
-            });
-
-            // Initialiser les toggles
-            const toggles = document.querySelectorAll('.layer-toggle');
-            toggles.forEach(toggle => {
-                const checkbox = toggle.querySelector('input[type="checkbox"]');
-                if (checkbox.checked) {
-                    toggle.classList.add('active');
-                }
-            });
-
-            // CORRECTION: Prévenir le zoom par pincement sur iOS avec gestion améliorée
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function (event) {
-                const now = (new Date()).getTime();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, { passive: false });
-
-            document.addEventListener('touchmove', function(event) {
-                if (event.scale !== 1) {
-                    event.preventDefault();
-                }
-            }, { passive: false });
-
-            // Améliorer les interactions tactiles
-            if ('ontouchstart' in window) {
-                document.body.classList.add('touch-device');
+                polyline = L.polyline(points, {color: 'red', weight: 3}).addTo(map);
+                measurementLines.push(polyline);
+                
+                const distance = calculateDistance(points);
+                const popup = L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(`Distance: ${distance.toFixed(2)} m`)
+                    .openOn(map);
             }
+        }
+
+        map.on('click', onMapClick);
+    }
+
+    function startAreaMeasurement() {
+        let points = [];
+        let polygon = null;
+
+        function onMapClick(e) {
+            points.push(e.latlng);
             
-            window.addEventListener('orientationchange', function() {
-                setTimeout(() => {
-                    fixMobileScrolling();
-                    adjustControlPositions();
-                }, 300);
-            });
+            const marker = L.marker(e.latlng).addTo(map);
+            measurementMarkers.push(marker);
 
+            if (points.length > 2) {
+                if (polygon) {
+                    map.removeLayer(polygon);
+                }
+                
+                polygon = L.polygon(points, {color: 'blue', weight: 2, fillOpacity: 0.2}).addTo(map);
+                measurementLines.push(polygon);
+                
+                const area = calculateArea(points);
+                const popup = L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(`Superficie: ${area.toFixed(2)} m²`)
+                    .openOn(map);
+            }
+        }
 
-            window.addEventListener('resize', function() {
-                forceMobileScrolling();
-            });
+        map.on('click', onMapClick);
+    }
+
+    function calculateDistance(points) {
+        let distance = 0;
+        for (let i = 1; i < points.length; i++) {
+            distance += points[i-1].distanceTo(points[i]);
+        }
+        return distance;
+    }
+
+    function calculateArea(points) {
+        if (points.length < 3) return 0;
         
-            // Gestion de la rotation
-            window.addEventListener('orientationchange', function() {
-                setTimeout(forceMobileScrolling, 300);
+        const polygon = L.polygon(points);
+        const geoJson = polygon.toGeoJSON();
+        
+        const coords = geoJson.geometry.coordinates[0];
+        let area = 0;
+        
+        for (let i = 0; i < coords.length - 1; i++) {
+            const p1 = coords[i];
+            const p2 = coords[i + 1];
+            area += (p2[0] - p1[0]) * (p2[1] + p1[1]);
+        }
+        
+        return Math.abs(area) * 111319.9 * 111319.9 / 2;
+    }
+
+    function clearMeasurements() {
+        measurementMarkers.forEach(marker => map.removeLayer(marker));
+        measurementLines.forEach(line => map.removeLayer(line));
+        measurementMarkers = [];
+        measurementLines = [];
+        map.off('click');
+        map.getContainer().style.cursor = '';
+        map.closePopup();
+        
+        document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+        measurementMode = null;
+    }
+
+    // Ajouter une parcelle
+    function addParcelle() {
+        if (!currentUser || currentUser.type !== 'proprietaire') {
+            showNotification('Connectez-vous en tant que propriétaire pour ajouter une parcelle', 'error');
+            return;
+        }
+        
+        openModal('addParcelleModal');
+    }
+
+    // Mettre à jour les champs du formulaire selon le statut
+    function updateFormFields() {
+        const statut = document.getElementById('terrainStatut').value;
+        const matriculeField = document.getElementById('matricule');
+        
+        if (statut === 'non_titre') {
+            const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+            matriculeField.value = `NT-${randomNum}`;
+        } else {
+            matriculeField.value = '';
+            matriculeField.readOnly = false;
+            matriculeField.placeholder = 'Saisir le matricule du titre foncier';
+        }
+    }
+
+    // Importer CSV
+    function importCSV() {
+        if (!currentUser || currentUser.type !== 'proprietaire') {
+            showNotification('Connectez-vous en tant que propriétaire pour importer des parcelles', 'error');
+            return;
+        }
+        
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = handleCSVImport;
+        input.click();
+    }
+
+    function handleCSVImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const csv = e.target.result;
+            parseCSV(csv);
+        };
+        reader.readAsText(file);
+    }
+
+    function parseCSV(csvText) {
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        
+        const requiredColumns = ['matricule', 'longitude', 'latitude'];
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+        
+        if (missingColumns.length > 0) {
+            showNotification(`Colonnes manquantes: ${missingColumns.join(', ')}`, 'error');
+            return;
+        }
+
+        const parcelles = [];
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+            if (values.length < headers.length) continue;
+
+            const parcelle = {};
+            headers.forEach((header, index) => {
+                parcelle[header] = values[index];
             });
 
-            console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
-            console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
-            console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
+            if (parcelle.matricule && parcelle.longitude && parcelle.latitude) {
+                parcelles.push(parcelle);
+            }
+        }
+
+        if (parcelles.length > 0) {
+            showNotification(`${parcelles.length} parcelle(s) importée(s) avec succès`, 'success');
+        } else {
+            showNotification('Aucune parcelle valide trouvée dans le fichier', 'error');
+        }
+    }
+
+    // Gestion des modales
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Basculer la sidebar desktop
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.querySelector('.sidebar-toggle i');
+        
+        sidebar.classList.toggle('collapsed');
+        
+        if (sidebar.classList.contains('collapsed')) {
+            toggleBtn.className = 'fas fa-chevron-right';
+        } else {
+            toggleBtn.className = 'fas fa-bars';
+        }
+    }
+
+    // Réduire/développer la légende
+    function toggleLegendCollapse() {
+        const legend = document.getElementById('legend');
+        const toggleBtn = document.getElementById('legendToggleBtn');
+        const toggleIcon = toggleBtn.querySelector('i');
+        
+        legendCollapsed = !legendCollapsed;
+        
+        if (legendCollapsed) {
+            legend.classList.add('collapsed');
+            toggleIcon.className = 'fas fa-chevron-down';
+            toggleBtn.title = 'Développer la légende';
+        } else {
+            legend.classList.remove('collapsed');
+            toggleIcon.className = 'fas fa-chevron-up';
+            toggleBtn.title = 'Réduire la légende';
+        }
+    }
+
+    // Système de notification
+    function showNotification(message, type = 'info') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+
+    // Gestion de l'authentification
+    function handleLogin(event) {
+        event.preventDefault();
+        
+        currentUser = {
+            id: 1,
+            name: 'Utilisateur Test',
+            email: 'test@example.com',
+            type: 'client'
+        };
+
+        updateAuthUI();
+        closeModal('loginModal');
+        showNotification('Connexion réussie', 'success');
+    }
+
+    function handleRegister(event) {
+        event.preventDefault();
+        
+        showNotification('Inscription réussie. Veuillez vous connecter.', 'success');
+        closeModal('registerModal');
+    }
+
+    function updateAuthUI() {
+        const authButtons = document.getElementById('authButtons');
+        
+        if (currentUser) {
+            authButtons.innerHTML = `
+                <span style="margin-right: 1rem;">Bonjour, ${currentUser.name}</span>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            `;
+        } else {
+            authButtons.innerHTML = `
+                <button class="btn btn-secondary" onclick="openModal('loginModal')">
+                    <i class="fas fa-sign-in-alt"></i> Connexion
+                </button>
+                <button class="btn btn-primary" onclick="openModal('registerModal')">
+                    <i class="fas fa-user-plus"></i> Inscription
+                </button>
+            `;
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        updateAuthUI();
+        showNotification('Déconnexion réussie', 'info');
+    }
+
+    // Fermer les modales en cliquant à l'extérieur
+    window.onclick = function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // CORRECTION : Gestion améliorée des événements de redimensionnement
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            adjustResponsiveControls();
+        }, 250);
+    });
+
+    // Gestion de l'orientation pour mobile
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            adjustResponsiveControls();
+        }, 300);
+    });
+
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Initialisation de GéoFoncier - Version Corrigée');
+        
+        // Initialiser la carte
+        initMap();
+
+        // CORRECTION MAJEURE : Forcer le scroll mobile au chargement
+        setTimeout(() => {
+            forceMobileScroll();
+            console.log('✅ Scroll mobile forcé au chargement');
+        }, 500);
+
+        // Double vérification après un délai plus long
+        setTimeout(() => {
+            forceMobileScroll();
+            console.log('✅ Double vérification scroll mobile');
+        }, 1500);
+
+        // Gestionnaires d'événements
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('registerForm').addEventListener('submit', handleRegister);
+        document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showNotification('Parcelle ajoutée avec succès', 'success');
+            closeModal('addParcelleModal');
         });
 
-    </script>
+        document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchParcelle();
+            }
+        });
+
+        document.getElementById('searchMatriculeMobile').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchParcelleMobile();
+            }
+        });
+
+        // Initialiser les toggles
+        const toggles = document.querySelectorAll('.layer-toggle');
+        toggles.forEach(toggle => {
+            const checkbox = toggle.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                toggle.classList.add('active');
+            }
+        });
+
+        // CORRECTION : Prévenir le zoom par pincement sur iOS avec gestion améliorée
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // Améliorer les interactions tactiles
+        if ('ontouchstart' in window) {
+            document.body.classList.add('touch-device');
+        }
+
+        // CORRECTION MAJEURE : Surveillance continue du scroll mobile
+        setInterval(() => {
+            if (isMobile || isSmallMobile || isVerySmallMobile) {
+                const sidebarContents = document.querySelectorAll('.sidebar-content');
+                sidebarContents.forEach(sidebarContent => {
+                    if (sidebarContent && sidebarContent.scrollHeight > sidebarContent.clientHeight) {
+                        // Le contenu dépasse, s'assurer que le scroll fonctionne
+                        if (sidebarContent.style.overflowY !== 'scroll') {
+                            forceMobileScroll();
+                            console.log('🔧 Correction automatique du scroll détectée');
+                        }
+                    }
+                });
+            }
+        }, 2000); // Vérification toutes les 2 secondes
+
+        console.log('✅ GéoFoncier initialisé avec succès - Tous les problèmes corrigés');
+        console.log('📱 Mode mobile:', isMobile ? 'Activé' : 'Désactivé');
+        console.log('📏 Écran très petit:', isVerySmallMobile ? 'Oui' : 'Non');
+        console.log('🔧 Scroll mobile forcé:', 'Activé avec surveillance continue');
+    });
+
+</script>
 </body>
 </html>
