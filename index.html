@@ -1194,6 +1194,193 @@
                 overflow-x: hidden !important;
             }
         }
+
+        /* =====================================================
+           FLÈCHES DE NAVIGATION POUR SIDEBAR MOBILE
+        ===================================================== */
+        .sidebar-scroll-controls {
+            display: none;
+            position: absolute;
+            top: 50px; /* Sous le header */
+            right: 5px;
+            z-index: 3100;
+            flex-direction: column;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 6px;
+            padding: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 1px solid #ddd;
+        }
+
+        .sidebar-scroll-controls.visible {
+            display: flex;
+        }
+
+        .scroll-control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .scroll-control-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .scroll-control-btn:active {
+            background: #21618c;
+            transform: scale(0.95);
+        }
+
+        .scroll-control-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Indicateur de position de scroll */
+        .scroll-indicator {
+            position: absolute;
+            top: 50px;
+            left: 5px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.6rem;
+            font-weight: bold;
+            z-index: 3100;
+            display: none;
+            min-width: 40px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .scroll-indicator.visible {
+            display: block;
+        }
+
+        /* Amélioration des zones tactiles */
+        .enhanced-touch-scroll {
+            /* Agrandir la zone tactile pour le scroll */
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            
+            /* Améliorer la réactivité tactile */
+            touch-action: pan-y !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            
+            /* Optimisations pour le scroll sur mobile */
+            -webkit-overflow-scrolling: touch !important;
+            scroll-snap-type: y proximity !important;
+        }
+
+        /* Points d'accroche pour le scroll snap */
+        .scroll-snap-item {
+            scroll-snap-align: start;
+            scroll-margin-top: 10px;
+        }
+
+        /* Animation de feedback tactile */
+        .touch-feedback {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .touch-feedback::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+
+        .touch-feedback.touched::before {
+            left: 100%;
+        }
+
+        /* Optimisations spécifiques pour très petits écrans */
+        @media (max-width: 360px) {
+            .sidebar-scroll-controls {
+                right: 3px;
+                top: 48px;
+            }
+            
+            .scroll-control-btn {
+                width: 28px;
+                height: 24px;
+                font-size: 0.65rem;
+            }
+            
+            .scroll-indicator {
+                left: 3px;
+                top: 48px;
+                font-size: 0.55rem;
+                padding: 1px 4px;
+            }
+        }
+
+        /* Animation pour les flèches */
+        .scroll-arrow-animation {
+            animation: scrollPulse 1.5s infinite;
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+            50% { 
+                opacity: 0.7; 
+                transform: translateY(-2px);
+            }
+        }
+
+        /* Style pour le contenu avec scroll amélioré */
+        .smooth-scroll-content {
+            scroll-behavior: smooth !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior: contain !important;
+        }
+
+        /* Indicateur visuel de la zone scrollable */
+        .scrollable-zone-indicator {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, 
+                rgba(52, 152, 219, 0.3) 0%, 
+                rgba(52, 152, 219, 0.6) 50%, 
+                rgba(52, 152, 219, 0.3) 100%);
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .sidebar-content:hover .scrollable-zone-indicator,
+        .sidebar-content.scrolling .scrollable-zone-indicator {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -1237,7 +1424,7 @@
             <div class="sidebar-content">
                 <div class="sidebar-content-wrapper">
                     <!-- Search Section -->
-                    <div class="search-section">
+                    <div class="search-section scroll-snap-item">
                         <input type="text" class="search-box" id="searchMatricule" 
                                placeholder="Rechercher par matricule...">
                         <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelle()">
@@ -1246,7 +1433,7 @@
                     </div>
 
                     <!-- Layer Control Section -->
-                    <div class="layer-section">
+                    <div class="layer-section scroll-snap-item">
                         <div class="filter-title">Couches cartographiques</div>
                         
                         <div class="layer-toggle active" onclick="toggleArrondissementLayer()">
@@ -1273,7 +1460,7 @@
                     </div>
 
                     <!-- Filters Section -->
-                    <div class="filter-section">
+                    <div class="filter-section scroll-snap-item">
                         <div class="filter-title">Filtres</div>
                         
                         <div class="filter-group">
@@ -1318,7 +1505,7 @@
                     </div>
 
                     <!-- Results Section -->
-                    <div id="searchResults">
+                    <div id="searchResults" class="scroll-snap-item">
                         <!-- Les résultats de recherche apparaîtront ici -->
                     </div>
                 </div>
@@ -1329,14 +1516,33 @@
         <div class="sidebar-mobile" id="sidebarMobile">
             <div class="sidebar-header">
                 <h3>Search & Filter</h3>
-                <button class="sidebar-toggle" onclick="closeMobileSidebar()" aria-label="Fermer le panneau">
-                    <i class="fas fa-times"></i>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button class="sidebar-toggle" onclick="closeMobileSidebar()" aria-label="Fermer le panneau">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- NOUVEAUTÉ : Contrôles de scroll pour mobile -->
+            <div class="sidebar-scroll-controls" id="sidebarScrollControls">
+                <button class="scroll-control-btn" id="scrollUpBtn" onclick="scrollSidebarUp()" aria-label="Défiler vers le haut">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+                <button class="scroll-control-btn" id="scrollDownBtn" onclick="scrollSidebarDown()" aria-label="Défiler vers le bas">
+                    <i class="fas fa-chevron-down"></i>
                 </button>
             </div>
-            <div class="sidebar-content mobile-scroll-fix">
+            
+            <!-- NOUVEAUTÉ : Indicateur de position -->
+            <div class="scroll-indicator" id="scrollIndicator">1/5</div>
+            
+            <div class="sidebar-content mobile-scroll-fix enhanced-touch-scroll smooth-scroll-content touch-feedback" id="sidebarContentMobile">
+                <!-- NOUVEAUTÉ : Indicateur de zone scrollable -->
+                <div class="scrollable-zone-indicator"></div>
+                
                 <div class="sidebar-content-wrapper">
                     <!-- Search Section Mobile -->
-                    <div class="search-section">
+                    <div class="search-section scroll-snap-item">
                         <input type="text" class="search-box" id="searchMatriculeMobile" 
                                placeholder="Rechercher par matricule...">
                         <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelleMobile()">
@@ -1345,7 +1551,7 @@
                     </div>
 
                     <!-- Layer Control Section Mobile -->
-                    <div class="layer-section">
+                    <div class="layer-section scroll-snap-item">
                         <div class="filter-title">Couches cartographiques</div>
                         
                         <div class="layer-toggle active" onclick="toggleArrondissementLayerMobile()">
@@ -1371,7 +1577,7 @@
                     </div>
 
                     <!-- Filters Section Mobile -->
-                    <div class="filter-section">
+                    <div class="filter-section scroll-snap-item">
                         <div class="filter-title">Filtres</div>
                         
                         <div class="filter-group">
@@ -1416,7 +1622,7 @@
                     </div>
 
                     <!-- Results Section Mobile -->
-                    <div id="searchResultsMobile">
+                    <div id="searchResultsMobile" class="scroll-snap-item">
                         <!-- Les résultats de recherche apparaîtront ici -->
                     </div>
                 </div>
@@ -1651,21 +1857,30 @@
         let mobileSidebarOpen = false;
 
         // =====================================================
-        //  SOLUTION ULTIME - FORCE LE SCROLL MOBILE
+        //  NOUVELLES VARIABLES POUR LE SYSTÈME DE NAVIGATION
+        // =====================================================
+        let currentScrollSection = 0;
+        let totalScrollSections = 5; // search, layers, filters, results, + buffer
+        let scrollSectionHeight = 0;
+        let isScrollControlsActive = false;
+        let scrollAnimationInProgress = false;
+
+        // =====================================================
+        //  SOLUTION ULTIME + AMÉLIORATION TACTILE
         // =====================================================
         function ultimateMobileScrollFix() {
-            console.log('🔧 Application de la solution ultime pour le scroll mobile...');
+            console.log('🔧 Application de la solution ultime + améliorations tactiles...');
             
             const sidebarContents = document.querySelectorAll('.sidebar-content');
             
             sidebarContents.forEach((sidebarContent, index) => {
                 if (sidebarContent && (isMobile || isSmallMobile || isVerySmallMobile)) {
-                    console.log(`🔧 Traitement sidebar ${index + 1}...`);
+                    console.log(`🔧 Traitement sidebar ${index + 1} avec améliorations tactiles...`);
                     
                     // Réinitialiser complètement les styles
                     sidebarContent.style.cssText = '';
                     
-                    // Appliquer la configuration ultime
+                    // Configuration ultime + améliorations tactiles
                     const ultimateStyles = {
                         'position': 'relative',
                         'flex': '1',
@@ -1683,7 +1898,11 @@
                         'transform': 'translateZ(0)',
                         'backface-visibility': 'hidden',
                         'contain': 'layout style paint',
-                        'isolation': 'isolate'
+                        'isolation': 'isolate',
+                        // NOUVELLES PROPRIÉTÉS TACTILES
+                        'scroll-snap-type': 'y proximity',
+                        '-webkit-user-select': 'none',
+                        'user-select': 'none'
                     };
                     
                     // Appliquer chaque style individuellement
@@ -1691,20 +1910,19 @@
                         sidebarContent.style.setProperty(property, value, 'important');
                     });
                     
-                    // Ajouter les classes d'aide
-                    sidebarContent.classList.add('mobile-scroll-fix', 'force-scroll');
+                    // Ajouter les classes d'aide améliorées
+                    sidebarContent.classList.add('mobile-scroll-fix', 'force-scroll', 'enhanced-touch-scroll', 'smooth-scroll-content');
+                    
+                    // NOUVEAUTÉ : Améliorer les événements tactiles
+                    enhanceTouchEvents(sidebarContent);
                     
                     // Forcer le reflow et repaint
                     sidebarContent.offsetHeight;
                     sidebarContent.scrollTop = 0;
                     
-                    // Test du scroll
+                    // Calculer la hauteur des sections pour la navigation
                     setTimeout(() => {
-                        if (sidebarContent.scrollHeight > sidebarContent.clientHeight) {
-                            console.log(`✅ Scroll activé pour sidebar ${index + 1} - Hauteur: ${sidebarContent.scrollHeight}px, Visible: ${sidebarContent.clientHeight}px`);
-                        } else {
-                            console.log(`⚠️ Sidebar ${index + 1} - Contenu trop petit pour nécessiter un scroll`);
-                        }
+                        calculateScrollSections(sidebarContent);
                     }, 100);
                 }
             });
@@ -1714,11 +1932,295 @@
             wrappers.forEach(wrapper => {
                 if (wrapper) {
                     wrapper.style.setProperty('min-height', 'calc(100vh - 120px)', 'important');
-                    wrapper.style.setProperty('padding-bottom', '50px', 'important');
+                    wrapper.style.setProperty('padding-bottom', '80px', 'important'); // Plus d'espace pour le scroll
                 }
             });
             
-            console.log('✅ Solution ultime appliquée avec succès');
+            console.log('✅ Solution ultime + améliorations tactiles appliquées avec succès');
+        }
+
+        // =====================================================
+        //  NOUVELLES FONCTIONS : NAVIGATION PAR FLÈCHES
+        // =====================================================
+        
+        function setupScrollControls() {
+            const sidebarMobile = document.getElementById('sidebarMobile');
+            const scrollControls = document.getElementById('sidebarScrollControls');
+            const scrollIndicator = document.getElementById('scrollIndicator');
+            
+            if (isMobile && sidebarMobile && scrollControls) {
+                // Afficher les contrôles sur mobile
+                scrollControls.classList.add('visible');
+                scrollIndicator.classList.add('visible');
+                isScrollControlsActive = true;
+                
+                // Mettre à jour l'indicateur initial
+                updateScrollIndicator();
+                
+                console.log('🎮 Contrôles de scroll activés');
+            }
+        }
+
+        function scrollSidebarUp() {
+            const sidebarContent = document.getElementById('sidebarContentMobile');
+            if (!sidebarContent || scrollAnimationInProgress) return;
+
+            scrollAnimationInProgress = true;
+            
+            if (currentScrollSection > 0) {
+                currentScrollSection--;
+                const targetScroll = currentScrollSection * scrollSectionHeight;
+                
+                // Animation fluide
+                smoothScrollTo(sidebarContent, targetScroll);
+                
+                // Effet visuel de feedback
+                addTouchFeedback(sidebarContent, 'up');
+            }
+            
+            updateScrollIndicator();
+            updateScrollButtons();
+            
+            setTimeout(() => {
+                scrollAnimationInProgress = false;
+            }, 300);
+        }
+
+        function scrollSidebarDown() {
+            const sidebarContent = document.getElementById('sidebarContentMobile');
+            if (!sidebarContent || scrollAnimationInProgress) return;
+
+            scrollAnimationInProgress = true;
+            
+            if (currentScrollSection < totalScrollSections - 1) {
+                currentScrollSection++;
+                const targetScroll = currentScrollSection * scrollSectionHeight;
+                
+                // Animation fluide
+                smoothScrollTo(sidebarContent, targetScroll);
+                
+                // Effet visuel de feedback
+                addTouchFeedback(sidebarContent, 'down');
+            }
+            
+            updateScrollIndicator();
+            updateScrollButtons();
+            
+            setTimeout(() => {
+                scrollAnimationInProgress = false;
+            }, 300);
+        }
+
+        function calculateScrollSections(sidebarContent) {
+            if (!sidebarContent) return;
+            
+            const contentHeight = sidebarContent.scrollHeight;
+            const visibleHeight = sidebarContent.clientHeight;
+            
+            // Calculer la hauteur optimale par section
+            scrollSectionHeight = Math.max(100, visibleHeight * 0.7); // 70% de la hauteur visible
+            totalScrollSections = Math.ceil(contentHeight / scrollSectionHeight);
+            
+            console.log(`📏 Sections calculées: ${totalScrollSections}, Hauteur section: ${scrollSectionHeight}px`);
+        }
+
+        function smoothScrollTo(element, targetScroll) {
+            if (!element) return;
+            
+            const startScroll = element.scrollTop;
+            const distance = targetScroll - startScroll;
+            const duration = 300;
+            let start = null;
+
+            function animation(currentTime) {
+                if (start === null) start = currentTime;
+                const timeElapsed = currentTime - start;
+                const progress = Math.min(timeElapsed / duration, 1);
+                
+                // Fonction d'easing pour une animation plus fluide
+                const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                
+                element.scrollTop = startScroll + (distance * ease);
+                
+                if (timeElapsed < duration) {
+                    requestAnimationFrame(animation);
+                }
+            }
+            
+            requestAnimationFrame(animation);
+        }
+
+        function updateScrollIndicator() {
+            const indicator = document.getElementById('scrollIndicator');
+            if (indicator) {
+                indicator.textContent = `${currentScrollSection + 1}/${totalScrollSections}`;
+                
+                // Animer l'indicateur
+                indicator.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    indicator.style.transform = 'scale(1)';
+                }, 150);
+            }
+        }
+
+        function updateScrollButtons() {
+            const upBtn = document.getElementById('scrollUpBtn');
+            const downBtn = document.getElementById('scrollDownBtn');
+            
+            if (upBtn) {
+                upBtn.disabled = currentScrollSection === 0;
+                upBtn.classList.toggle('scroll-arrow-animation', currentScrollSection > 0);
+            }
+            
+            if (downBtn) {
+                downBtn.disabled = currentScrollSection >= totalScrollSections - 1;
+                downBtn.classList.toggle('scroll-arrow-animation', currentScrollSection < totalScrollSections - 1);
+            }
+        }
+
+        function addTouchFeedback(element, direction) {
+            element.classList.add('touched');
+            
+            // Ajouter une animation directionnelle
+            const indicator = element.querySelector('.scrollable-zone-indicator');
+            if (indicator) {
+                indicator.style.background = direction === 'up' ? 
+                    'linear-gradient(to bottom, rgba(52, 152, 219, 0.8) 0%, rgba(52, 152, 219, 0.3) 100%)' :
+                    'linear-gradient(to bottom, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.8) 100%)';
+                
+                setTimeout(() => {
+                    indicator.style.background = 'linear-gradient(to bottom, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.6) 50%, rgba(52, 152, 219, 0.3) 100%)';
+                }, 200);
+            }
+            
+            setTimeout(() => {
+                element.classList.remove('touched');
+            }, 500);
+        }
+
+        // =====================================================
+        //  AMÉLIORATION DES ÉVÉNEMENTS TACTILES
+        // =====================================================
+        
+        function enhanceTouchEvents(sidebarContent) {
+            let startY = 0;
+            let startScrollTop = 0;
+            let isScrolling = false;
+            
+            // Événements tactiles améliorés
+            sidebarContent.addEventListener('touchstart', function(e) {
+                startY = e.touches[0].clientY;
+                startScrollTop = sidebarContent.scrollTop;
+                isScrolling = true;
+                
+                // Ajouter la classe de scroll actif
+                sidebarContent.classList.add('scrolling');
+                
+                // Feedback tactile leger
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }, { passive: true });
+            
+            sidebarContent.addEventListener('touchmove', function(e) {
+                if (!isScrolling) return;
+                
+                const currentY = e.touches[0].clientY;
+                const deltaY = startY - currentY;
+                
+                // Mettre à jour la position actuelle basée sur le scroll
+                const scrollPercent = sidebarContent.scrollTop / (sidebarContent.scrollHeight - sidebarContent.clientHeight);
+                currentScrollSection = Math.floor(scrollPercent * totalScrollSections);
+                
+                updateScrollIndicator();
+                updateScrollButtons();
+                
+                // Feedback visuel du scroll
+                const scrollIndicator = sidebarContent.querySelector('.scrollable-zone-indicator');
+                if (scrollIndicator) {
+                    scrollIndicator.style.opacity = '1';
+                }
+                
+            }, { passive: true });
+            
+            sidebarContent.addEventListener('touchend', function(e) {
+                isScrolling = false;
+                sidebarContent.classList.remove('scrolling');
+                
+                // Masquer l'indicateur après un délai
+                setTimeout(() => {
+                    const scrollIndicator = sidebarContent.querySelector('.scrollable-zone-indicator');
+                    if (scrollIndicator) {
+                        scrollIndicator.style.opacity = '0';
+                    }
+                }, 1000);
+                
+            }, { passive: true });
+            
+            // Gérer le scroll avec la molette (desktop/mobile avec souris)
+            sidebarContent.addEventListener('scroll', function(e) {
+                if (scrollAnimationInProgress) return;
+                
+                const scrollPercent = sidebarContent.scrollTop / (sidebarContent.scrollHeight - sidebarContent.clientHeight);
+                currentScrollSection = Math.floor(scrollPercent * totalScrollSections);
+                
+                updateScrollIndicator();
+                updateScrollButtons();
+            }, { passive: true });
+            
+            console.log('👆 Événements tactiles améliorés configurés');
+        }
+
+        // =====================================================
+        //  GESTION DE LA SIDEBAR MOBILE AMÉLIORÉE
+        // =====================================================
+        function toggleMobileSidebar() {
+            if (mobileSidebarOpen) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        }
+
+        function openMobileSidebar() {
+            const overlay = document.getElementById('sidebarMobileOverlay');
+            const sidebar = document.getElementById('sidebarMobile');
+            
+            overlay.classList.add('active');
+            sidebar.classList.add('active');
+            mobileSidebarOpen = true;
+            
+            // Prévenir le scroll du body
+            document.body.style.overflow = 'hidden';
+            
+            // Appliquer toutes les corrections après ouverture
+            setTimeout(() => {
+                ultimateMobileScrollFix();
+                setupScrollControls();
+                console.log('🔧 Sidebar mobile ouverte avec tous les correctifs');
+            }, 150);
+        }
+
+        function closeMobileSidebar() {
+            const overlay = document.getElementById('sidebarMobileOverlay');
+            const sidebar = document.getElementById('sidebarMobile');
+            const scrollControls = document.getElementById('sidebarScrollControls');
+            const scrollIndicator = document.getElementById('scrollIndicator');
+            
+            overlay.classList.remove('active');
+            sidebar.classList.remove('active');
+            mobileSidebarOpen = false;
+            
+            // Masquer les contrôles
+            if (scrollControls) scrollControls.classList.remove('visible');
+            if (scrollIndicator) scrollIndicator.classList.remove('visible');
+            isScrollControlsActive = false;
+            
+            // Reset scroll position
+            currentScrollSection = 0;
+            
+            // Restaurer le scroll du body
+            document.body.style.overflow = '';
         }
 
         // =====================================================
@@ -1734,6 +2236,13 @@
             
             // Appliquer la correction ultime du scroll
             ultimateMobileScrollFix();
+            
+            // Reconfigurer les contrôles si la sidebar est ouverte
+            if (mobileSidebarOpen && isMobile) {
+                setTimeout(() => {
+                    setupScrollControls();
+                }, 100);
+            }
             
             // Ajuster les contrôles de la carte
             adjustControlPositions();
