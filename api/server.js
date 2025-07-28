@@ -22,6 +22,9 @@ try {
     const paymentRoutes = require('./routes/payment')
     const contactRoutes = require('./routes/contact')
     const csvRoutes = require('./routes/csv')
+    const pricingRoutes = require('./routes/pricing')
+    const documentsRoutes = require('./routes/documents')
+    const adminRoutes = require('./routes/admin')
 
     // Utilisation des routes dans l'ordre
     app.use('/api/spatial', spatialRoutes)
@@ -30,8 +33,11 @@ try {
     app.use('/api/payment', paymentRoutes)
     app.use('/api/contact', contactRoutes)
     app.use('/api/csv', csvRoutes)
+    app.use('/api/pricing', pricingRoutes)
+    app.use('/api/documents', documentsRoutes)
+    app.use('/api/admin', adminRoutes)
     
-    console.log('✅ Toutes les routes principales chargées')
+    console.log('✅ Toutes les routes chargées (y compris pricing et documents)')
 } catch (error) {
     console.error('❌ Erreur chargement routes:', error.message)
     

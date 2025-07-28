@@ -6,23 +6,38 @@ class FlutterwaveService {
     
     static getSubscriptionPricing() {
         return {
-            client_mensuel_afrique: { amount: 5000, currency: 'XAF' },
-            client_annuel_afrique: { amount: 50000, currency: 'XAF' },
-            client_mensuel_hors_afrique: { amount: 50000, currency: 'XAF' },
-            client_annuel_hors_afrique: { amount: 500000, currency: 'XAF' }
+            client_mensuel_afrique: { amount: 5000, currency: 'XAF', description: 'Abonnement mensuel Afrique' },
+            client_annuel_afrique: { amount: 50000, currency: 'XAF', description: 'Abonnement annuel Afrique (2 mois gratuits)' },
+            client_mensuel_hors_afrique: { amount: 50000, currency: 'XAF', description: 'Abonnement mensuel hors Afrique' },
+            client_annuel_hors_afrique: { amount: 500000, currency: 'XAF', description: 'Abonnement annuel hors Afrique (2 mois gratuits)' }
         }
     }
 
     static calculateProprietairePrice(superficie) {
-        const basePriceFor500m2 = 500 // XAF
-        const annualDiscount = 0.9 // 10% de réduction pour l'annuel
-        
-        const monthlyPrice = (superficie / 500) * basePriceFor500m2
-        const annualPrice = monthlyPrice * 12 * annualDiscount
-        
+        const basePrice = 1000
+        let pricePerM2
+
+        // Nouveau système de paliers
+        if (superficie <= 1000) {
+            pricePerM2 = 2
+        } else if (superficie <= 5000) {
+            pricePerM2 = 1.5
+        } else if (superficie <= 10000) {
+            pricePerM2 = 1
+        } else {
+            pricePerM2 = 0.5
+        }
+
+        const monthlyPrice = basePrice + (superficie * pricePerM2)
+        const annualPrice = monthlyPrice * 12 * 0.9 // 10% de réduction
+
         return {
             monthly: Math.ceil(monthlyPrice),
-            annual: Math.ceil(annualPrice)
+            annual: Math.ceil(annualPrice),
+            basePrice,
+            pricePerM2,
+            superficie,
+            savings: Math.ceil(monthlyPrice * 12 - annualPrice)
         }
     }
 
