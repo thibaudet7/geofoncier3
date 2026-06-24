@@ -2,6 +2,12 @@
 const { supabase } = require('../supabase-config')
 
 class SpatialService {
+
+    static checkConnection() {
+        if (!supabase) {
+            throw new Error('Supabase non configuré. Vérifiez les variables d\'environnement (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY).')
+        }
+    }
     
     // ================================
     // MÉTHODES POUR LES RÉGIONS
@@ -185,8 +191,9 @@ class SpatialService {
 
 static async getArrondissements(regionId = null, departementId = null) {
     try {
+        this.checkConnection();
         console.log('🔄 getArrondissements appelé avec:', { regionId, departementId });
-        
+
         // Appel de la fonction qui marche parfaitement selon nos tests SQL
         const { data, error } = await supabase.rpc('get_all_arrondissements_with_geom', {});
 

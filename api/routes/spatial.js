@@ -171,7 +171,7 @@ router.get('/arrondissements', async (req, res) => {
     try {
         const { region_id, departement_id } = req.query
         const result = await SpatialService.getArrondissements(region_id, departement_id)
-        
+
         if (result.success) {
             res.json({ arrondissements: result.arrondissements })
         } else {
@@ -179,7 +179,7 @@ router.get('/arrondissements', async (req, res) => {
         }
     } catch (error) {
         console.error('Erreur route arrondissements:', error)
-        res.status(500).json({ error: 'Erreur serveur' })
+        res.status(500).json({ error: error.message || 'Erreur serveur' })
     }
 })
 

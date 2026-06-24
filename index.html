@@ -5284,13 +5284,17 @@
 
         
                 function updateCoordinatesInterface() {
-    const system = document.getElementById('systemeCoordonnes').value;
+    const systemEl = document.getElementById('systemeCoordonnes');
+    if (!systemEl) return;
+    const system = systemEl.value;
     currentCoordinateSystem = system;
-    
-    const headerX = document.getElementById('headerX');
-    const headerY = document.getElementById('headerY');
+
+    const headerX = document.getElementById('headerCoord1');
+    const headerY = document.getElementById('headerCoord2');
     const help = document.getElementById('coordinateHelp');
-    
+
+    if (!headerX || !headerY || !help) return;
+
     switch(system) {
         case 'wgs84':
             headerX.textContent = 'Longitude';
