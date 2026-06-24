@@ -22,7 +22,7 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     console.error('❌ JWT_SECRET manquant ou trop court (minimum 32 caractères) !')
     console.error('   Ajoutez JWT_SECRET=<votre_secret_de_32_caracteres_minimum> dans .env')
-    process.exit(1)
+    if (!process.env.VERCEL) process.exit(1)
 }
 
 // Configuration multer pour upload de fichiers
@@ -43,7 +43,7 @@ app.use((req, res, next) => {
 
 // Middleware CORS amélioré
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500', 'http://127.0.0.1:5500'],
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500', 'http://127.0.0.1:5500', 'https://www.geofoncier.shop', 'https://geofoncier.shop', 'https://geofoncier3.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -238,7 +238,8 @@ app.use((error, req, res, next) => {
     })
 })
 
-// Démarrage du serveur avec gestion d'erreur
+// Démarrage du serveur (uniquement hors Vercel)
+if (!process.env.VERCEL) {
 const server = app.listen(PORT, () => {
     console.log('')
     console.log('🚀 =====================================')
@@ -273,11 +274,12 @@ process.on('SIGINT', () => {
         process.exit(0)
     })
 })
+} // fin if (!process.env.VERCEL)
 
 // Gestion des erreurs non capturées
 process.on('uncaughtException', (error) => {
     console.error('❌ Erreur non capturée:', error)
-    process.exit(1)
+    if (!process.env.VERCEL) process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
