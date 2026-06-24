@@ -27,8 +27,12 @@ if (!supabaseServiceKey) missingVars.push('SUPABASE_SERVICE_KEY ou SUPABASE_SERV
 if (missingVars.length > 0) {
     console.error('❌ === ERREUR CONFIGURATION ===')
     console.error('Variables manquantes:', missingVars.join(', '))
-    console.error('📝 Vérifiez votre fichier .env')
-    throw new Error(`Variables d'environnement Supabase manquantes: ${missingVars.join(', ')}`)
+    console.error('📝 Vérifiez votre fichier .env ou les variables Vercel')
+    if (!process.env.VERCEL) {
+        throw new Error(`Variables d'environnement Supabase manquantes: ${missingVars.join(', ')}`)
+    }
+    module.exports = { supabase: null, supabaseAnon: null, config: { url: null, hasServiceKey: false, hasAnonKey: false, missingVars } }
+    return
 }
 
 console.log('✅ Toutes les variables Supabase sont présentes')
