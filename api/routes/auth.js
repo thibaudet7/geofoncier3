@@ -1,6 +1,7 @@
-// api/routes/auth.js - VERSION CORRIGÉE UTILISANT AuthService
+// api/routes/auth.js - VERSION SÉCURISÉE AVEC VALIDATION
 const express = require('express')
 const jwt = require('jsonwebtoken')
+const { body, validationResult } = require('express-validator')
 const router = express.Router()
 const { AuthService } = require('../services/AuthService')
 
@@ -26,46 +27,33 @@ router.get('/health', (req, res) => {
     })
 })
 
-// POST /api/auth/register - INSCRIPTION
-router.post('/register', async (req, res) => {
+// POST /api/auth/register - INSCRIPTION (avec validation et sanitisation)
+router.post('/register', [
+    body('email').isEmail().normalizeEmail().withMessage('Format email invalide'),
+    body('password').isLength({ min: 6 }).trim().withMessage('Le mot de passe doit contenir au moins 6 caractères'),
+    body('nom_complet').notEmpty().trim().escape().withMessage('Nom complet requis'),
+    body('telephone').notEmpty().trim().escape().withMessage('Téléphone requis'),
+    body('type_utilisateur').isIn(['client', 'proprietaire']).withMessage('Type utilisateur invalide'),
+    body('type_piece_identite').isIn(['CNI', 'PASSEPORT', 'TITRE_SEJOUR']).withMessage('Type de pièce invalide'),
+    body('numero_piece_identite').notEmpty().trim().escape().withMessage('Numéro de pièce requis'),
+    body('localisation').isIn(['Cameroun', 'Afrique', 'Hors_Afrique']).withMessage('Localisation invalide')
+], async (req, res) => {
     try {
         console.log('📝 === DÉBUT INSCRIPTION ===')
-        console.log('Email:', req.body.email)
-        
+
+        // Vérifier les erreurs de validation
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            const errorMessages = errors.array().map(e => e.msg)
+            console.log('❌ Erreurs de validation:', errorMessages)
+            return res.status(400).json({
+                success: false,
+                error: errorMessages.join('. ')
+            })
+        }
+
         const userData = req.body
-        
-        // Validation des champs obligatoires
-        const requiredFields = [
-            'type_utilisateur', 'nom_complet', 'email', 'telephone', 
-            'type_piece_identite', 'numero_piece_identite', 'localisation', 'password'
-        ]
-        
-        const missingFields = requiredFields.filter(field => !userData[field])
-        if (missingFields.length > 0) {
-            console.log('❌ Champs manquants:', missingFields)
-            return res.status(400).json({
-                success: false,
-                error: `Champs obligatoires manquants: ${missingFields.join(', ')}`
-            })
-        }
-        
-        // Validation email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(userData.email)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Format email invalide'
-            })
-        }
-        
-        // Validation mot de passe
-        if (userData.password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                error: 'Le mot de passe doit contenir au moins 6 caractères'
-            })
-        }
-        
+        console.log('Email:', userData.email)
         console.log('✅ Validation OK, appel AuthService...')
         
         // UTILISER AuthService au lieu de Supabase directement
@@ -119,42 +107,29 @@ router.post('/register', async (req, res) => {
     }
 })
 
-// POST /api/auth/login - CONNEXION
-router.post('/login', async (req, res) => {
+// POST /api/auth/login - CONNEXION (avec validation et sanitisation)
+router.post('/login', [
+    body('email').isEmail().normalizeEmail().withMessage('Format email invalide'),
+    body('password').notEmpty().trim().withMessage('Mot de passe requis')
+], async (req, res) => {
     try {
         console.log('🔐 === DÉBUT CONNEXION ===')
-        
+
+        // Vérifier les erreurs de validation
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            const errorMessages = errors.array().map(e => e.msg)
+            return res.status(400).json({
+                success: false,
+                error: errorMessages.join('. ')
+            })
+        }
+
         const { email, password } = req.body
-        
         console.log('Email de connexion:', email)
-        
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email et mot de passe requis'
-            })
-        }
-        
-        if (!email.trim() || !password.trim()) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email et mot de passe ne peuvent pas être vides'
-            })
-        }
-        
-        // Validation email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(email.trim())) {
-            return res.status(400).json({
-                success: false,
-                error: 'Format email invalide'
-            })
-        }
-        
         console.log('✅ Validation OK, appel AuthService...')
-        
-        // UTILISER AuthService au lieu de Supabase directement
-        const result = await AuthService.loginUser(email.trim(), password.trim())
+
+        const result = await AuthService.loginUser(email, password)
         
         console.log('📋 Résultat AuthService:', { 
             success: result.success, 
@@ -174,7 +149,11 @@ router.post('/login', async (req, res) => {
                 type: result.userData.type_utilisateur
             }
             
-            const jwtSecret = process.env.JWT_SECRET || 'fallback_secret_key'
+            const jwtSecret = process.env.JWT_SECRET
+            if (!jwtSecret) {
+                console.error('❌ JWT_SECRET non défini !')
+                return res.status(500).json({ success: false, error: 'Configuration serveur incomplète' })
+            }
             const token = jwt.sign(jwtPayload, jwtSecret, { expiresIn: '7d' })
             
             console.log('🔑 Token JWT généré')
@@ -242,7 +221,7 @@ router.get('/verify', async (req, res) => {
         
         try {
             // Vérifier avec JWT d'abord
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key')
+            const decoded = jwt.verify(token, process.env.JWT_SECRET)
             console.log('🔑 Token JWT vérifié pour:', decoded.userId)
             
             // Récupérer les données utilisateur mises à jour

@@ -1,8 +1,9 @@
-// api/server.js - VERSION CORRIGÉE ET ACTUALISÉE
+// api/server.js - VERSION CORRIGÉE ET SÉCURISÉE
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const multer = require('multer')
+const rateLimit = require('express-rate-limit')
 require('dotenv').config({ path: path.join(__dirname, '../.env') })
 
 const app = express()
@@ -16,6 +17,12 @@ console.log('- Anon Key:', process.env.SUPABASE_ANON_KEY ? '✅ Défini' : '❌ 
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
     console.error('❌ Variables d\'environnement Supabase manquantes ! Vérifiez votre fichier .env')
+}
+
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    console.error('❌ JWT_SECRET manquant ou trop court (minimum 32 caractères) !')
+    console.error('   Ajoutez JWT_SECRET=<votre_secret_de_32_caracteres_minimum> dans .env')
+    process.exit(1)
 }
 
 // Configuration multer pour upload de fichiers
@@ -42,6 +49,35 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }))
 
+// Rate limiting global - 200 requetes par minute par IP
+const globalLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 200,
+    message: { success: false, error: 'Trop de requêtes. Réessayez dans une minute.' },
+    standardHeaders: true,
+    legacyHeaders: false
+})
+app.use(globalLimiter)
+
+// Rate limiting strict pour l'authentification - 10 tentatives par 15 minutes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { success: false, error: 'Trop de tentatives. Réessayez dans 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true
+})
+
+// Rate limiting pour la création de compte - 5 par heure par IP
+const registerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: { success: false, error: 'Trop de créations de compte. Réessayez dans une heure.' },
+    standardHeaders: true,
+    legacyHeaders: false
+})
+
 // Middlewares de parsing
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
@@ -66,11 +102,13 @@ app.get('/api/health', (req, res) => {
 console.log('📁 Chargement des routes API...')
 
 try {
-    // Route auth (obligatoire)
+    // Route auth (obligatoire) avec rate limiting strict
     const authRoutes = require('./routes/auth')
     if (authRoutes && typeof authRoutes === 'function') {
+        app.use('/api/auth/login', authLimiter)
+        app.use('/api/auth/register', registerLimiter)
         app.use('/api/auth', authRoutes)
-        console.log('✅ Routes /api/auth chargées')
+        console.log('✅ Routes /api/auth chargées (avec rate limiting)')
     } else {
         console.error('❌ Erreur: ./routes/auth ne retourne pas un router valide')
         console.log('Type reçu:', typeof authRoutes)
