@@ -89,12 +89,20 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 // Route de santé en PREMIER (pour diagnostics)
 app.get('/api/health', (req, res) => {
     console.log('🏥 Health check appelé')
-    res.json({ 
+    res.json({
         success: true,
-        status: 'OK', 
+        status: 'OK',
         timestamp: new Date().toISOString(),
         version: '1.0.0',
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        config: {
+            SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
+            SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+            SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING',
+            SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'SET' : 'MISSING',
+            JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
+            VERCEL: process.env.VERCEL ? 'YES' : 'NO'
+        }
     })
 })
 
