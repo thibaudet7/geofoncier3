@@ -1,19 +1,11 @@
 {
   "version": 2,
-  "installCommand": "npm install",
-  "builds": [
-    {
-      "src": "api/server.js",
-      "use": "@vercel/node",
-      "config": { "includeFiles": ["api/**", "package.json"] }
-    },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/server.js" },
-    { "src": "/public/(.*)", "dest": "/public/$1" },
-    { "src": "/(.*\\.(ico|png|jpg|jpeg|svg|css|js|json|csv|woff|woff2|ttf))", "dest": "/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "functions": {
+    "api/server.js": {
+      "includeFiles": "api/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/server.js" }
   ]
 }
