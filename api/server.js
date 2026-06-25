@@ -89,13 +89,13 @@ function loadRoute(routePath, mountPath, name, limiterMiddleware) {
     }
 }
 
-loadRoute('../lib/routes/auth', '/api/auth', 'auth')
-loadRoute('../lib/routes/parcelles', '/api/parcelles', 'parcelles')
-loadRoute('../lib/routes/spatial', '/api/spatial', 'spatial')
-loadRoute('../lib/routes/payment', '/api/payment', 'payment')
-loadRoute('../lib/routes/contact', '/api/contact', 'contact')
-loadRoute('../lib/routes/csv', '/api/csv', 'csv')
-loadRoute('../lib/routes/admin', '/api/admin', 'admin')
+loadRoute('./routes/auth', '/api/auth', 'auth')
+loadRoute('./routes/parcelles', '/api/parcelles', 'parcelles')
+loadRoute('./routes/spatial', '/api/spatial', 'spatial')
+loadRoute('./routes/payment', '/api/payment', 'payment')
+loadRoute('./routes/contact', '/api/contact', 'contact')
+loadRoute('./routes/csv', '/api/csv', 'csv')
+loadRoute('./routes/admin', '/api/admin', 'admin')
 
 // Route de debug pour voir les erreurs de chargement
 app.get('/api/debug', (req, res) => {
