@@ -1,7 +1,7 @@
 // api/routes/payment.js
 const express = require('express')
 const router = express.Router()
-const { FlutterwaveService } = require('../services/FlutterwaveService')
+const { FlutterwaveService } = require('../_services/FlutterwaveService')
 
 // POST /api/payment/initiate
 router.post('/initiate', async (req, res) => {

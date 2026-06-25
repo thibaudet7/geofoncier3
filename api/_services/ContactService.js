@@ -1,5 +1,5 @@
 // api/services/ContactService.js
-const { supabase } = require('../supabase-config')
+const { supabase } = require('../_supabase-config')
 
 class ContactService {
     

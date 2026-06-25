@@ -1,11 +1,10 @@
 {
   "version": 2,
-  "functions": {
-    "api/server.js": {
-      "includeFiles": "api/**"
-    }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/server.js" }
+  "builds": [
+    { "src": "api/server.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/server.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

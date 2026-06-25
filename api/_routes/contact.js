@@ -1,7 +1,7 @@
 // api/routes/contact.js
 const express = require('express')
 const router = express.Router()
-const { ContactService } = require('../services/ContactService')
+const { ContactService } = require('../_services/ContactService')
 
 // POST /api/contact/initiate
 router.post('/initiate', async (req, res) => {

@@ -1,5 +1,5 @@
 // api/services/FlutterwaveService.js
-const { supabase } = require('../supabase-config')
+const { supabase } = require('../_supabase-config')
 const crypto = require('crypto')
 
 class FlutterwaveService {

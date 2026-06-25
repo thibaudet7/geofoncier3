@@ -1,0 +1,9 @@
+node_modules
+uploads
+.env
+.env.local
+notes
+*.md
+*.docx
+*.docx~
+~$*

@@ -1,8 +1,8 @@
 // api/routes/admin.js - MISE À JOUR AVEC RÉGIONS
 const express = require('express')
 const router = express.Router()
-const { supabase } = require('../supabase-config')
-const { SpatialService } = require('../services/SpatialService')
+const { supabase } = require('../_supabase-config')
+const { SpatialService } = require('../_services/SpatialService')
 
 // ================================
 // ROUTES EXISTANTES (INCHANGÉES)

@@ -1,5 +1,5 @@
 // api/services/AuthService.js - VERSION FINALE
-const { supabase, supabaseAnon } = require('../supabase-config')
+const { supabase, supabaseAnon } = require('../_supabase-config')
 
 class AuthService {
     

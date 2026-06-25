@@ -3,7 +3,7 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
 const router = express.Router()
-const { AuthService } = require('../services/AuthService')
+const { AuthService } = require('../_services/AuthService')
 
 console.log('🔧 Initialisation des routes auth...')
 
@@ -244,7 +244,7 @@ router.get('/verify', async (req, res) => {
             console.log('⚠️ Token JWT invalide, test avec Supabase...')
             
             // Fallback: vérifier avec Supabase
-            const { supabaseAnon } = require('../supabase-config')
+            const { supabaseAnon } = require('../_supabase-config')
             const { data: { user }, error } = await supabaseAnon.auth.getUser(token)
             
             if (error || !user) {

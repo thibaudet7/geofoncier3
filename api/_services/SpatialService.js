@@ -1,5 +1,5 @@
 // api/services/SpatialService.js - VERSION COMPLÈTE AVEC RÉGIONS
-const { supabase } = require('../supabase-config')
+const { supabase } = require('../_supabase-config')
 
 class SpatialService {
 
