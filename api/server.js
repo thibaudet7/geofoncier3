@@ -43,24 +43,29 @@ const registerLimiter = rateLimit({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Fichiers statiques (hors Vercel, Vercel les sert via vercel.json)
+// Fichiers statiques
+app.use(express.static(path.join(__dirname, '../'), {
+    index: 'index.html',
+    dotfiles: 'ignore',
+    extensions: ['html', 'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'ico', 'svg', 'csv']
+}))
+app.use('/public', express.static(path.join(__dirname, '../public')))
 if (!process.env.VERCEL) {
-    app.use(express.static(path.join(__dirname, '../')))
     app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 }
 
 // Route de diagnostic - doit TOUJOURS fonctionner
 app.get('/api/health', (req, res) => {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
     res.json({
         success: true,
         status: 'OK',
         timestamp: new Date().toISOString(),
-        version: '1.0.1',
+        version: '1.0.2',
         env: {
             SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
             SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
-            SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING',
-            SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'SET' : 'MISSING',
+            SUPABASE_SERVICE_KEY: serviceKey ? 'SET' : 'MISSING',
             JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
             VERCEL: process.env.VERCEL ? 'YES' : 'NO',
             NODE_VERSION: process.version
@@ -110,12 +115,10 @@ app.use('/api/*', (req, res) => {
     res.status(404).json({ success: false, error: `Route non trouvée: ${req.originalUrl}` })
 })
 
-// SPA fallback (hors Vercel - Vercel gère ça via vercel.json)
-if (!process.env.VERCEL) {
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../index.html'))
-    })
-}
+// SPA fallback - servir index.html pour toute route non-API
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../index.html'))
+})
 
 // Gestionnaire d'erreurs global
 app.use((error, req, res, next) => {
