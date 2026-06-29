@@ -43,13 +43,12 @@ const registerLimiter = rateLimit({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Fichiers statiques
+// Fichiers statiques (exclure api/ du static serving)
+app.use('/public', express.static(path.join(__dirname, '../public')))
 app.use(express.static(path.join(__dirname, '../'), {
     index: 'index.html',
-    dotfiles: 'ignore',
-    extensions: ['html', 'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'ico', 'svg', 'csv']
+    dotfiles: 'ignore'
 }))
-app.use('/public', express.static(path.join(__dirname, '../public')))
 if (!process.env.VERCEL) {
     app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 }
@@ -86,10 +85,10 @@ function loadRoute(routePath, mountPath, name, limiterMiddleware) {
             app.use(mountPath, router)
             console.log(`✅ ${name} chargé`)
         } else {
-            routeErrors.push(`${name}: not a valid router`)
+            routeErrors.push(`${name}: not a valid router (type: ${typeof router})`)
         }
     } catch (error) {
-        routeErrors.push(`${name}: ${error.message}`)
+        routeErrors.push(`${name}: ${error.message} | stack: ${error.stack ? error.stack.split('\n').slice(0, 3).join(' -> ') : 'none'}`)
         console.error(`❌ ${name}:`, error.message)
     }
 }
@@ -106,7 +105,10 @@ loadRoute('./routes/admin', '/api/admin', 'admin')
 app.get('/api/debug', (req, res) => {
     res.json({
         routeErrors,
-        loadedAt: new Date().toISOString()
+        routesLoaded: routeErrors.length === 0 ? 'ALL OK' : `${7 - routeErrors.length}/7`,
+        loadedAt: new Date().toISOString(),
+        cwd: process.cwd(),
+        dirname: __dirname
     })
 })
 
