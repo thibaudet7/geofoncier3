@@ -5,7 +5,14 @@
       "src": "api/server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["index.html", "public/**"]
+        "includeFiles": [
+          "../index.html",
+          "../public/**",
+          "routes/**",
+          "services/**",
+          "middleware/**",
+          "supabase-config.js"
+        ]
       }
     }
   ],

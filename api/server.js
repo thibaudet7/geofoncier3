@@ -72,34 +72,38 @@ app.get('/api/health', (req, res) => {
     })
 })
 
-// Chargement des routes avec protection totale
+// Chargement des routes - imports statiques pour le bundler Vercel
 const routeErrors = []
 
-function loadRoute(routePath, mountPath, name, limiterMiddleware) {
-    try {
-        const router = require(routePath)
-        if (router && typeof router === 'function') {
-            if (limiterMiddleware) {
-                app.use(mountPath, limiterMiddleware)
-            }
-            app.use(mountPath, router)
-            console.log(`✅ ${name} chargé`)
-        } else {
-            routeErrors.push(`${name}: not a valid router (type: ${typeof router})`)
-        }
-    } catch (error) {
-        routeErrors.push(`${name}: ${error.message} | stack: ${error.stack ? error.stack.split('\n').slice(0, 3).join(' -> ') : 'none'}`)
-        console.error(`❌ ${name}:`, error.message)
+function mountRoute(router, mountPath, name) {
+    if (router && typeof router === 'function') {
+        app.use(mountPath, router)
+        console.log(`✅ ${name} chargé`)
+    } else {
+        routeErrors.push(`${name}: not a valid router (type: ${typeof router})`)
     }
 }
 
-loadRoute('./routes/auth', '/api/auth', 'auth')
-loadRoute('./routes/parcelles', '/api/parcelles', 'parcelles')
-loadRoute('./routes/spatial', '/api/spatial', 'spatial')
-loadRoute('./routes/payment', '/api/payment', 'payment')
-loadRoute('./routes/contact', '/api/contact', 'contact')
-loadRoute('./routes/csv', '/api/csv', 'csv')
-loadRoute('./routes/admin', '/api/admin', 'admin')
+try { mountRoute(require('./routes/auth'), '/api/auth', 'auth') }
+catch (e) { routeErrors.push(`auth: ${e.message}`); console.error('❌ auth:', e.message) }
+
+try { mountRoute(require('./routes/parcelles'), '/api/parcelles', 'parcelles') }
+catch (e) { routeErrors.push(`parcelles: ${e.message}`); console.error('❌ parcelles:', e.message) }
+
+try { mountRoute(require('./routes/spatial'), '/api/spatial', 'spatial') }
+catch (e) { routeErrors.push(`spatial: ${e.message}`); console.error('❌ spatial:', e.message) }
+
+try { mountRoute(require('./routes/payment'), '/api/payment', 'payment') }
+catch (e) { routeErrors.push(`payment: ${e.message}`); console.error('❌ payment:', e.message) }
+
+try { mountRoute(require('./routes/contact'), '/api/contact', 'contact') }
+catch (e) { routeErrors.push(`contact: ${e.message}`); console.error('❌ contact:', e.message) }
+
+try { mountRoute(require('./routes/csv'), '/api/csv', 'csv') }
+catch (e) { routeErrors.push(`csv: ${e.message}`); console.error('❌ csv:', e.message) }
+
+try { mountRoute(require('./routes/admin'), '/api/admin', 'admin') }
+catch (e) { routeErrors.push(`admin: ${e.message}`); console.error('❌ admin:', e.message) }
 
 // Route de debug pour voir les erreurs de chargement
 app.get('/api/debug', (req, res) => {
