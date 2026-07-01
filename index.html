@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GéoFoncier - Gestion des Parcelles Foncières</title>
     
     <!-- Leaflet CSS -->
@@ -671,22 +671,23 @@
             background-color: #3498db;
         }
 
-        /* Bouton GPS - positionné en haut à gauche, au-dessus de la légende */
+        /* Bouton GPS - positionné en haut à gauche, visible sur tous les écrans */
         .gps-control {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: calc(12px + env(safe-area-inset-top, 0px));
+            left: calc(12px + env(safe-area-inset-left, 0px));
             z-index: 1000;
             background: white;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             overflow: hidden;
         }
 
         .gps-control .control-btn {
-            min-width: 40px;
-            min-height: 40px;
+            min-width: 44px;
+            min-height: 44px;
             border-bottom: none;
+            font-size: 1.1rem;
         }
 
         /* Bouton géolocalisation actif */
@@ -705,9 +706,9 @@
             background: #3498db;
             border: 3px solid white;
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
-            width: 16px;
-            height: 16px;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.7), 0 0 20px rgba(52, 152, 219, 0.3);
+            width: 18px;
+            height: 18px;
         }
 
         .geolocation-accuracy {
@@ -849,14 +850,14 @@
             }
 
             .gps-control {
-                top: 8px;
-                left: 8px;
+                top: calc(10px + env(safe-area-inset-top, 0px));
+                left: calc(10px + env(safe-area-inset-left, 0px));
             }
 
             .gps-control .control-btn {
-                min-width: 36px;
-                min-height: 36px;
-                font-size: 0.85rem;
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 1rem;
             }
 
             .modal-content {
@@ -960,15 +961,15 @@
             }
 
             .gps-control {
-                top: 5px;
-                left: 5px;
+                top: calc(10px + env(safe-area-inset-top, 0px));
+                left: calc(8px + env(safe-area-inset-left, 0px));
             }
 
             .gps-control .control-btn {
-                min-width: 34px;
-                min-height: 34px;
-                font-size: 0.8rem;
-                padding: 0.35rem;
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 1rem;
+                padding: 0.5rem;
             }
 
             .legend {
@@ -1093,15 +1094,15 @@
             }
 
             .gps-control {
-                top: 3px;
-                left: 3px;
+                top: calc(8px + env(safe-area-inset-top, 0px));
+                left: calc(6px + env(safe-area-inset-left, 0px));
             }
 
             .gps-control .control-btn {
-                min-width: 30px;
-                min-height: 30px;
-                font-size: 0.75rem;
-                padding: 0.3rem;
+                min-width: 40px;
+                min-height: 40px;
+                font-size: 0.9rem;
+                padding: 0.4rem;
             }
 
             .legend {
@@ -1169,13 +1170,23 @@
                 max-width: 280px;
             }
 
+            .gps-control {
+                top: calc(8px + env(safe-area-inset-top, 0px));
+                left: calc(8px + env(safe-area-inset-left, 0px));
+            }
+
+            .gps-control .control-btn {
+                min-width: 40px;
+                min-height: 40px;
+            }
+
             .leaflet-control-zoom {
                 bottom: 30px !important;
                 right: 5px !important;
                 top: auto !important;
                 left: auto !important;
             }
-            
+
             .leaflet-control-layers {
                 top: 140px !important;
                 right: 5px !important;
@@ -1186,7 +1197,6 @@
                 left: 5px;
             }
 
-            /* CORRECTION : Hauteur adaptée au mode paysage */
             .sidebar-content {
                 min-height: 0 !important;
                 overflow-y: auto !important;
@@ -4297,12 +4307,14 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
+                    const altitude = position.coords.altitude;
+                    const heading = position.coords.heading;
 
-                    updateGeolocationMarker(lat, lng, accuracy);
+                    updateGeolocationMarker(lat, lng, accuracy, altitude, heading);
 
-                    // Centrer la carte sur la position au premier fix
                     if (!geolocationMarker._hasCentered) {
-                        map.setView([lat, lng], 16);
+                        const zoomLevel = accuracy <= 10 ? 18 : accuracy <= 50 ? 17 : 16;
+                        map.setView([lat, lng], zoomLevel);
                         geolocationMarker._hasCentered = true;
                         showNotification(`Position trouvée (précision: ${Math.round(accuracy)}m)`, 'success');
                     }
@@ -4327,21 +4339,27 @@
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
+                    timeout: 30000,
+                    maximumAge: 2000
                 }
             );
         }
 
-        function updateGeolocationMarker(lat, lng, accuracy) {
+        function updateGeolocationMarker(lat, lng, accuracy, altitude, heading) {
             const latlng = L.latLng(lat, lng);
 
+            const popupContent = `<div style="text-align:center; font-size:0.85rem;">
+                <strong><i class="fas fa-crosshairs"></i> Ma position</strong><br>
+                Lat: ${lat.toFixed(6)}<br>
+                Lng: ${lng.toFixed(6)}<br>
+                Précision: ${Math.round(accuracy)}m${altitude !== null ? '<br>Altitude: ' + Math.round(altitude) + 'm' : ''}
+            </div>`;
+
             if (!geolocationMarker) {
-                // Créer le marqueur de position
                 const markerIcon = L.divIcon({
                     className: 'geolocation-marker',
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
                 });
 
                 geolocationMarker = L.marker(latlng, {
@@ -4351,15 +4369,8 @@
                 }).addTo(map);
 
                 geolocationMarker._hasCentered = false;
+                geolocationMarker.bindPopup(popupContent);
 
-                geolocationMarker.bindPopup(`<div style="text-align:center; font-size:0.85rem;">
-                    <strong><i class="fas fa-crosshairs"></i> Ma position</strong><br>
-                    Lat: ${lat.toFixed(6)}<br>
-                    Lng: ${lng.toFixed(6)}<br>
-                    Précision: ${Math.round(accuracy)}m
-                </div>`);
-
-                // Cercle de précision
                 geolocationAccuracyCircle = L.circle(latlng, {
                     radius: accuracy,
                     className: 'geolocation-accuracy',
@@ -4367,14 +4378,8 @@
                     interactive: false
                 }).addTo(map);
             } else {
-                // Mettre à jour la position
                 geolocationMarker.setLatLng(latlng);
-                geolocationMarker.setPopupContent(`<div style="text-align:center; font-size:0.85rem;">
-                    <strong><i class="fas fa-crosshairs"></i> Ma position</strong><br>
-                    Lat: ${lat.toFixed(6)}<br>
-                    Lng: ${lng.toFixed(6)}<br>
-                    Précision: ${Math.round(accuracy)}m
-                </div>`);
+                geolocationMarker.setPopupContent(popupContent);
                 geolocationAccuracyCircle.setLatLng(latlng);
                 geolocationAccuracyCircle.setRadius(accuracy);
             }
