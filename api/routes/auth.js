@@ -29,7 +29,7 @@ router.get('/health', (req, res) => {
 
 // POST /api/auth/register - INSCRIPTION (avec validation et sanitisation)
 router.post('/register', [
-    body('email').isEmail().normalizeEmail().withMessage('Format email invalide'),
+    body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }).withMessage('Format email invalide'),
     body('password').isLength({ min: 6 }).trim().withMessage('Le mot de passe doit contenir au moins 6 caractères'),
     body('nom_complet').notEmpty().trim().escape().withMessage('Nom complet requis'),
     body('telephone').notEmpty().trim().escape().withMessage('Téléphone requis'),
@@ -109,7 +109,7 @@ router.post('/register', [
 
 // POST /api/auth/login - CONNEXION (avec validation et sanitisation)
 router.post('/login', [
-    body('email').isEmail().normalizeEmail().withMessage('Format email invalide'),
+    body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }).withMessage('Format email invalide'),
     body('password').notEmpty().trim().withMessage('Mot de passe requis')
 ], async (req, res) => {
     try {
