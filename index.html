@@ -1797,18 +1797,36 @@
                 <div class="modal-title">Connexion</div>
                 <span class="close" onclick="closeModal('loginModal')" aria-label="Fermer">&times;</span>
             </div>
+            <!-- Formulaire de connexion -->
             <form id="loginForm">
                 <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" required>
+                    <label class="form-label">Email ou Téléphone</label>
+                    <input type="text" class="form-input" id="loginIdentifier" required placeholder="email@exemple.com ou +237 6XX XXX XXX">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Mot de passe</label>
-                    <input type="password" class="form-input" required>
+                    <input type="password" class="form-input" id="loginPassword" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-sign-in-alt"></i> Se connecter
                 </button>
+                <div style="text-align: center; margin-top: 0.75rem;">
+                    <a href="#" onclick="showForgotPassword(event)" style="color: #3498db; font-size: 0.85rem; text-decoration: none;">Mot de passe oublié ?</a>
+                </div>
+            </form>
+            <!-- Formulaire mot de passe oublié -->
+            <form id="forgotPasswordForm" style="display: none;">
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">Entrez votre adresse email pour recevoir un lien de réinitialisation.</p>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="forgotEmail" required placeholder="votre@email.com">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-envelope"></i> Envoyer le lien
+                </button>
+                <div style="text-align: center; margin-top: 0.75rem;">
+                    <a href="#" onclick="showLoginForm(event)" style="color: #3498db; font-size: 0.85rem; text-decoration: none;"><i class="fas fa-arrow-left"></i> Retour à la connexion</a>
+                </div>
             </form>
         </div>
     </div>
@@ -1983,71 +2001,65 @@
             <small style="color: #666; font-size: 0.8rem;">L'application convertira automatiquement vers WGS84</small>
         </div>
 
-        <!-- Interface coordonnées simplifiée -->
+        <!-- Interface coordonnées -->
         <div class="form-group">
             <label class="form-label">Coordonnées du polygone *</label>
-            
+
             <!-- Mode de saisie -->
-            <div style="margin-bottom: 0.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="showTextMode()" id="textModeBtn" style="margin-right: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                    <i class="fas fa-edit"></i> Texte
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="showTableMode()" id="tableModeBtn" style="margin-right: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+            <div style="margin-bottom: 0.5rem; display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" onclick="showTableMode()" id="tableModeBtn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
                     <i class="fas fa-table"></i> Tableau
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="showTextMode()" id="textModeBtn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                    <i class="fas fa-edit"></i> Texte libre
                 </button>
                 <button type="button" class="btn btn-secondary" onclick="pasteFromClipboard()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
                     <i class="fas fa-paste"></i> Coller
                 </button>
             </div>
-            
-            <!-- Interface texte (par défaut) -->
-            <div id="coordinateTextMode">
-                <textarea class="form-input" id="coordonnees" rows="6" required 
-                        placeholder="Saisir les coordonnées (une paire par ligne)&#10;Format selon le système choisi ci-dessus"></textarea>
+
+            <!-- Interface tableau (par défaut) -->
+            <div id="coordinateTableMode">
+                <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; max-height: 350px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #2c3e50; color: white;">
+                                <th style="padding: 0.5rem; font-size: 0.8rem; width: 50px;">N°</th>
+                                <th style="padding: 0.5rem; font-size: 0.8rem;" id="headerCoord1">X (Longitude)</th>
+                                <th style="padding: 0.5rem; font-size: 0.8rem;" id="headerCoord2">Y (Latitude)</th>
+                                <th style="padding: 0.5rem; width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="coordinateTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 0.5rem; display: flex; gap: 0.4rem;">
+                    <button type="button" class="btn btn-success" onclick="addTableRow()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                        <i class="fas fa-plus"></i> Ajouter un point
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interface texte (masquée par défaut) -->
+            <div id="coordinateTextMode" style="display: none;">
+                <textarea class="form-input" id="coordonnees" rows="6"
+                        placeholder="Saisir les coordonnées (une paire par ligne)&#10;Format: X,Y selon le système choisi"></textarea>
                 <div style="margin-top: 0.5rem;">
                     <button type="button" class="btn btn-info" onclick="showExamples()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
                         <i class="fas fa-info-circle"></i> Voir exemples
                     </button>
                 </div>
             </div>
-            
-            <!-- Interface tableau -->
-            <div id="coordinateTableMode" style="display: none;">
-                <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; max-height: 300px; overflow-y: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f8f9fa;">
-                                <th style="padding: 0.5rem; border-bottom: 1px solid #ddd; font-size: 0.85rem;">Point</th>
-                                <th style="padding: 0.5rem; border-bottom: 1px solid #ddd; font-size: 0.85rem;" id="headerCoord1">Coord 1</th>
-                                <th style="padding: 0.5rem; border-bottom: 1px solid #ddd; font-size: 0.85rem;" id="headerCoord2">Coord 2</th>
-                                <th style="padding: 0.5rem; border-bottom: 1px solid #ddd; width: 60px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="coordinateTableBody">
-                            <!-- Lignes générées dynamiquement -->
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 0.5rem;">
-                    <button type="button" class="btn btn-success" onclick="addTableRow()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                        <i class="fas fa-plus"></i> Ajouter point
-                    </button>
-                    <button type="button" class="btn btn-warning" onclick="syncTableToText()" style="margin-left: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                        <i class="fas fa-sync"></i> Vers texte
-                    </button>
-                </div>
-            </div>
-            
+
             <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 0.3rem;">
-                <span id="coordinateHelp">Minimum 3 points requis pour former un polygone.</span>
+                <span id="coordinateHelp">Minimum 3 points requis pour former un polygone. Remplissez X et Y pour chaque sommet.</span>
             </small>
-            
+
             <!-- Zone d'exemples -->
             <div id="coordinateExamples" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: #e3f2fd; border-radius: 4px; font-size: 0.8rem;">
                 <strong>Exemples selon le système choisi :</strong>
-                <div style="margin-top: 0.3rem;" id="exampleContent">
-                    <!-- Contenu généré dynamiquement -->
-                </div>
+                <div style="margin-top: 0.3rem;" id="exampleContent"></div>
                 <button type="button" onclick="hideExamples()" style="margin-top: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #2196f3; color: white; border: none; border-radius: 3px;">
                     Fermer
                 </button>
@@ -2180,31 +2192,31 @@
             const headerCoord1 = document.getElementById('headerCoord1');
             const headerCoord2 = document.getElementById('headerCoord2');
             const placeholder = document.getElementById('coordonnees');
-            
+
             switch(system) {
                 case 'wgs84':
-                    help.textContent = 'Format WGS84: latitude,longitude (ex: 4.0511,9.7679). Minimum 3 points.';
-                    headerCoord1.textContent = 'Latitude';
-                    headerCoord2.textContent = 'Longitude';
-                    placeholder.placeholder = '4.0511,9.7679\n4.0515,9.7679\n4.0515,9.7685\n4.0511,9.7685';
+                    help.textContent = 'Format WGS84 (GPS): remplissez X (longitude) et Y (latitude). Minimum 3 points.';
+                    headerCoord1.textContent = 'X (Longitude)';
+                    headerCoord2.textContent = 'Y (Latitude)';
+                    placeholder.placeholder = '9.7679,4.0511\n9.7679,4.0515\n9.7685,4.0515\n9.7685,4.0511';
                     break;
                 case 'utm32':
-                    help.textContent = 'Format UTM32: northing,easting en mètres (ex: 445123,567890). Minimum 3 points.';
-                    headerCoord1.textContent = 'Northing (Y)';
-                    headerCoord2.textContent = 'Easting (X)';
-                    placeholder.placeholder = '445123,567890\n445133,567890\n445133,567900\n445123,567900';
+                    help.textContent = 'Format UTM32: X (Easting) et Y (Northing) en mètres. Minimum 3 points.';
+                    headerCoord1.textContent = 'X (Easting)';
+                    headerCoord2.textContent = 'Y (Northing)';
+                    placeholder.placeholder = '567890,445123\n567890,445133\n567900,445133\n567900,445123';
                     break;
                 case 'utm33':
-                    help.textContent = 'Format UTM33: northing,easting en mètres (ex: 445123,234567). Minimum 3 points.';
-                    headerCoord1.textContent = 'Northing (Y)';
-                    headerCoord2.textContent = 'Easting (X)';
-                    placeholder.placeholder = '445123,234567\n445133,234567\n445133,234577\n445123,234577';
+                    help.textContent = 'Format UTM33: X (Easting) et Y (Northing) en mètres. Minimum 3 points.';
+                    headerCoord1.textContent = 'X (Easting)';
+                    headerCoord2.textContent = 'Y (Northing)';
+                    placeholder.placeholder = '234567,445123\n234567,445133\n234577,445133\n234577,445123';
                     break;
                 case 'douala':
-                    help.textContent = 'Format Douala 1948: Y,X selon système local ancien. Minimum 3 points.';
-                    headerCoord1.textContent = 'Y';
-                    headerCoord2.textContent = 'X';
-                    placeholder.placeholder = '456789,123456\n456799,123456\n456799,123466\n456789,123466';
+                    help.textContent = 'Format Douala 1948: X et Y selon système local ancien. Minimum 3 points.';
+                    headerCoord1.textContent = 'X';
+                    headerCoord2.textContent = 'Y';
+                    placeholder.placeholder = '123456,456789\n123456,456799\n123466,456799\n123466,456789';
                     break;
             }
         }
@@ -2216,6 +2228,7 @@
                 document.getElementById('textModeBtn').classList.add('active');
                 document.getElementById('tableModeBtn').classList.remove('active');
                 currentMode = 'text';
+                syncTableToText();
             }
 
             function showTableMode() {
@@ -2224,8 +2237,7 @@
                 document.getElementById('textModeBtn').classList.remove('active');
                 document.getElementById('tableModeBtn').classList.add('active');
                 currentMode = 'table';
-                
-                // Initialiser le tableau s'il est vide
+
                 if (coordinateRows.length === 0) {
                     for (let i = 0; i < 4; i++) {
                         addTableRow();
@@ -2363,7 +2375,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 if (document.getElementById('systemeCoordonnes')) {
                     updateCoordinatesHelp();
-                    showTextMode();
+                    showTableMode();
                 }
             });
 
@@ -4846,58 +4858,79 @@
         // =====================================================
         async function handleLogin(event) {
             event.preventDefault();
-            
-            const email = document.querySelector('#loginModal input[type="email"]').value.trim().toLowerCase();
-            const password = document.querySelector('#loginModal input[type="password"]').value;
-            
-            if (!email || !password) {
+
+            const identifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!identifier || !password) {
                 showNotification('Veuillez remplir tous les champs', 'error');
                 return;
             }
-            
+
             try {
-                console.log('🔐 Tentative de connexion pour:', email);
-                
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier, password })
                 });
-                
+
                 const result = await response.json();
-                console.log('📋 Réponse connexion complète:', result);
-                
+
                 if (response.ok && result.success) {
-                    // CORRECTION CRITIQUE : Stocker le token JWT
                     if (result.session && result.session.access_token) {
                         localStorage.setItem('authToken', result.session.access_token);
-                        console.log('✅ Token JWT stocké:', result.session.access_token.substring(0, 20) + '...');
-                    } else {
-                        console.warn('⚠️ Aucun token reçu dans la réponse');
                     }
-                    
-                    // CORRECTION : Utiliser userData qui contient les bonnes propriétés
+
                     currentUser = result.userData;
-                    
-                    // CORRECTION : Assurer la compatibilité avec l'ancien code
                     if (!currentUser.type && currentUser.type_utilisateur) {
                         currentUser.type = currentUser.type_utilisateur;
                     }
-                    
-                    console.log('👤 Utilisateur final stocké:', currentUser);
-                    
+
                     updateAuthUI();
                     closeModal('loginModal');
                     showNotification(`Bienvenue ${result.userData.nom_complet} !`, 'success');
                 } else {
                     showNotification(result.error || 'Erreur de connexion', 'error');
                 }
-                
+
             } catch (error) {
-                console.error('❌ Erreur connexion:', error);
-                showNotification('Erreur de connexion au serveur. Vérifiez que le serveur est démarré.', 'error');
+                showNotification('Erreur de connexion au serveur.', 'error');
+            }
+        }
+
+        function showForgotPassword(event) {
+            event.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+        }
+
+        function showLoginForm(event) {
+            event.preventDefault();
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        }
+
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+
+            if (!email) {
+                showNotification('Veuillez entrer votre email', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+                showNotification(result.message || 'Vérifiez votre boîte email.', 'success');
+                showLoginForm(event);
+            } catch (error) {
+                showNotification('Erreur serveur. Réessayez plus tard.', 'error');
             }
         }
 
@@ -5205,6 +5238,7 @@
 
             // Gestionnaires d'événements
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
             document.getElementById('registerForm').addEventListener('submit', handleRegister);
             document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
                 e.preventDefault();

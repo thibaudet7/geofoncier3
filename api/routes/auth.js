@@ -107,15 +107,14 @@ router.post('/register', [
     }
 })
 
-// POST /api/auth/login - CONNEXION (avec validation et sanitisation)
+// POST /api/auth/login - CONNEXION (email ou téléphone)
 router.post('/login', [
-    body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }).withMessage('Format email invalide'),
+    body('identifier').notEmpty().trim().withMessage('Email ou téléphone requis'),
     body('password').notEmpty().trim().withMessage('Mot de passe requis')
 ], async (req, res) => {
     try {
         console.log('🔐 === DÉBUT CONNEXION ===')
 
-        // Vérifier les erreurs de validation
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(e => e.msg)
@@ -125,57 +124,79 @@ router.post('/login', [
             })
         }
 
-        const { email, password } = req.body
-        console.log('Email de connexion:', email)
-        console.log('✅ Validation OK, appel AuthService...')
+        let { identifier, password, email } = req.body
+        // Compatibilité : si le frontend envoie "email" au lieu de "identifier"
+        if (!identifier && email) identifier = email
 
-        const result = await AuthService.loginUser(email, password)
-        
-        console.log('📋 Résultat AuthService:', { 
-            success: result.success, 
-            hasUser: !!result.user,
-            hasUserData: !!result.userData,
-            hasSession: !!result.session,
-            error: result.error 
-        })
-        
+        console.log('Identifiant de connexion:', identifier)
+
+        // Déterminer si c'est un email ou un téléphone
+        let loginEmail = identifier
+        const isPhone = /^[+\d][\d\s\-()]{6,}$/.test(identifier.replace(/\s/g, ''))
+
+        if (isPhone) {
+            // Chercher l'email associé à ce numéro de téléphone
+            const { supabase } = require('../supabase-config')
+            const phone = identifier.replace(/[\s\-()]/g, '')
+            const { data: userData, error: searchError } = await supabase
+                .from('users')
+                .select('email')
+                .eq('telephone', phone)
+                .single()
+
+            if (searchError || !userData) {
+                // Essayer avec le format original
+                const { data: userData2 } = await supabase
+                    .from('users')
+                    .select('email')
+                    .ilike('telephone', `%${phone.slice(-9)}%`)
+                    .single()
+
+                if (!userData2) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'Aucun compte associé à ce numéro de téléphone'
+                    })
+                }
+                loginEmail = userData2.email
+            } else {
+                loginEmail = userData.email
+            }
+            console.log('Téléphone résolu vers email:', loginEmail)
+        }
+
+        const result = await AuthService.loginUser(loginEmail, password)
+
         if (result.success) {
             console.log('🎉 Connexion réussie pour:', result.userData?.nom_complet)
-            
-            // Générer un token JWT pour compatibilité avec le frontend
+
             const jwtPayload = {
                 userId: result.user.id,
                 email: result.user.email,
                 type: result.userData.type_utilisateur
             }
-            
+
             const jwtSecret = process.env.JWT_SECRET
             if (!jwtSecret) {
-                console.error('❌ JWT_SECRET non défini !')
                 return res.status(500).json({ success: false, error: 'Configuration serveur incomplète' })
             }
             const token = jwt.sign(jwtPayload, jwtSecret, { expiresIn: '7d' })
-            
-            console.log('🔑 Token JWT généré')
-            
+
             res.json({
                 success: true,
                 message: result.message || 'Connexion réussie',
                 userData: result.userData,
                 session: {
                     ...result.session,
-                    access_token: token // Ajouter le token JWT pour le frontend
+                    access_token: token
                 }
             })
         } else {
-            console.log('❌ Échec connexion:', result.error)
-            
-            // Gestion des erreurs spécifiques
             let statusCode = 401
             let errorMessage = result.error
-            
+
             if (result.error.includes('Invalid login credentials')) {
-                errorMessage = 'Email ou mot de passe incorrect'
+                errorMessage = 'Identifiant ou mot de passe incorrect'
             } else if (result.error.includes('Email not confirmed')) {
                 errorMessage = 'Veuillez confirmer votre email'
                 statusCode = 403
@@ -183,23 +204,108 @@ router.post('/login', [
                 errorMessage = 'Trop de tentatives, patientez'
                 statusCode = 429
             }
-            
+
             res.status(statusCode).json({
                 success: false,
                 error: errorMessage
             })
         }
-        
+
     } catch (error) {
         console.error('❌ === ERREUR CONNEXION GLOBALE ===')
         console.error('Message:', error.message)
-        console.error('Stack:', error.stack)
-        
         res.status(500).json({
             success: false,
-            error: 'Erreur serveur lors de la connexion',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: 'Erreur serveur lors de la connexion'
         })
+    }
+})
+
+// POST /api/auth/forgot-password - DEMANDE DE RÉINITIALISATION
+router.post('/forgot-password', [
+    body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }).withMessage('Format email invalide')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, error: 'Format email invalide' })
+        }
+
+        const { email } = req.body
+        console.log('🔑 Demande reset password pour:', email)
+
+        const { supabaseAnon } = require('../supabase-config')
+        const redirectUrl = process.env.VERCEL
+            ? 'https://www.geofoncier.shop/reset-password'
+            : `http://localhost:${process.env.PORT || 3000}/reset-password`
+
+        const { error } = await supabaseAnon.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl
+        })
+
+        if (error) {
+            console.error('❌ Erreur reset password:', error.message)
+        }
+
+        // Toujours répondre succès pour ne pas révéler si l'email existe
+        res.json({
+            success: true,
+            message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.'
+        })
+    } catch (error) {
+        console.error('❌ Erreur forgot-password:', error.message)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
+    }
+})
+
+// POST /api/auth/reset-password - RÉINITIALISATION DU MOT DE PASSE
+router.post('/reset-password', [
+    body('password').isLength({ min: 6 }).withMessage('Minimum 6 caractères'),
+    body('token').notEmpty().withMessage('Token requis')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            const errorMessages = errors.array().map(e => e.msg)
+            return res.status(400).json({ success: false, error: errorMessages.join('. ') })
+        }
+
+        const { password, token } = req.body
+        console.log('🔑 Réinitialisation mot de passe...')
+
+        const { supabaseAnon } = require('../supabase-config')
+
+        // Vérifier la session avec le token de récupération
+        const { data: sessionData, error: sessionError } = await supabaseAnon.auth.verifyOtp({
+            token_hash: token,
+            type: 'recovery'
+        })
+
+        if (sessionError) {
+            return res.status(400).json({
+                success: false,
+                error: 'Lien de réinitialisation invalide ou expiré'
+            })
+        }
+
+        // Mettre à jour le mot de passe
+        const { supabase } = require('../supabase-config')
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+            sessionData.user.id,
+            { password: password }
+        )
+
+        if (updateError) {
+            return res.status(500).json({ success: false, error: 'Impossible de mettre à jour le mot de passe' })
+        }
+
+        res.json({
+            success: true,
+            message: 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.'
+        })
+    } catch (error) {
+        console.error('❌ Erreur reset-password:', error.message)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
     }
 })
 
