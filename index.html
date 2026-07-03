@@ -2101,11 +2101,6 @@
                         <small style="color: #666; font-size: 0.8rem;">CNI, Passeport ou titre de séjour (PDF, PNG, JPG)</small>
                     </div>
                     
-                    <div class="form-group" id="justificatifActeGroup" style="display: none;">
-                        <label class="form-label">Justificatifs des actes fonciers *</label>
-                        <input type="file" class="form-input" id="justificatifActe" accept=".pdf,.png,.jpg,.jpeg" multiple>
-                        <small style="color: #666; font-size: 0.8rem;">Joignez les justificatifs de vos actes fonciers (PDF, PNG, JPG)</small>
-                    </div>
                     
                     <div class="form-group">
                         <label class="form-label">Photos du terrain (optionnel)</label>
@@ -4438,7 +4433,6 @@
             const statut = document.getElementById('terrainStatut').value;
             const matriculeField = document.getElementById('matricule');
             const actesFonciersGroup = document.getElementById('actesFonciersGroup');
-            const justificatifActeGroup = document.getElementById('justificatifActeGroup');
 
             if (statut === 'non_titre') {
                 const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
@@ -4446,7 +4440,6 @@
                 matriculeField.readOnly = true;
 
                 actesFonciersGroup.style.display = 'none';
-                justificatifActeGroup.style.display = 'none';
                 actesFonciers = [];
                 document.getElementById('actesFonciersList').innerHTML = '';
 
@@ -4456,9 +4449,7 @@
                 matriculeField.placeholder = 'Saisir le matricule du titre foncier';
 
                 actesFonciersGroup.style.display = 'block';
-                justificatifActeGroup.style.display = 'block';
 
-                // Ajouter un premier acte par défaut
                 if (actesFonciers.length === 0) {
                     addActeFoncier();
                 }
@@ -4466,7 +4457,6 @@
                 matriculeField.value = '';
                 matriculeField.readOnly = false;
                 actesFonciersGroup.style.display = 'none';
-                justificatifActeGroup.style.display = 'none';
             }
         }
 
@@ -4480,7 +4470,7 @@
             acteDiv.style.cssText = 'border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; background: #f9f9f9;';
             acteDiv.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <strong style="font-size: 0.85rem;">Acte ${index + 1}</strong>
+                    <strong style="font-size: 0.85rem;"><i class="fas fa-file-alt" style="color: #2c3e50;"></i> Acte ${index + 1}</strong>
                     ${index > 0 ? `<button type="button" onclick="removeActeFoncier(${index})" style="background: #dc3545; color: white; border: none; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.75rem; cursor: pointer;"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
@@ -4505,6 +4495,10 @@
                 <div style="margin-top: 0.4rem;">
                     <label style="font-size: 0.8rem; color: #555;">Référence / N° de l'acte</label>
                     <input type="text" class="form-input" id="refActe_${index}" style="font-size: 0.85rem; padding: 0.4rem;" placeholder="Ex: TF N° 12345/W">
+                </div>
+                <div style="margin-top: 0.4rem;">
+                    <label style="font-size: 0.8rem; color: #555;"><i class="fas fa-paperclip"></i> Justificatif (PDF, image) *</label>
+                    <input type="file" class="form-input" id="fichierActe_${index}" accept=".pdf,.png,.jpg,.jpeg" style="font-size: 0.85rem; padding: 0.3rem;" required>
                 </div>
             `;
             container.appendChild(acteDiv);
@@ -4537,15 +4531,30 @@
                 const selectEl = acte.querySelector('select');
                 const dateEl = acte.querySelector('input[type="date"]');
                 const refEl = acte.querySelector('input[type="text"]');
+                const fileEl = acte.querySelector('input[type="file"]');
                 if (selectEl && selectEl.value && dateEl && dateEl.value) {
                     data.push({
                         type: selectEl.value,
                         date: dateEl.value,
-                        reference: refEl ? refEl.value : ''
+                        reference: refEl ? refEl.value : '',
+                        file: fileEl && fileEl.files.length > 0 ? fileEl.files[0] : null
                     });
                 }
             }
             return data;
+        }
+
+        function getActesFonciersFiles() {
+            const files = [];
+            const container = document.getElementById('actesFonciersList');
+            const actes = container.children;
+            for (let i = 0; i < actes.length; i++) {
+                const fileEl = actes[i].querySelector('input[type="file"]');
+                if (fileEl && fileEl.files.length > 0) {
+                    files.push(fileEl.files[0]);
+                }
+            }
+            return files;
         }
 
 
@@ -4593,12 +4602,15 @@
                     throw new Error('Veuillez renseigner au moins un acte foncier');
                 }
 
+                // Sérialiser sans les fichiers (envoyés séparément dans FormData)
+                const actesForJson = actesData.map(a => ({ type: a.type, date: a.date, reference: a.reference }));
+
                 const parcelleData = {
                     statut: statut,
                     matricule: document.getElementById('matricule').value,
-                    actes_fonciers: actesData,
-                    type_acte: actesData.length > 0 ? actesData[0].type : '',
-                    date_delivrance: actesData.length > 0 ? actesData[0].date : '',
+                    actes_fonciers: actesForJson,
+                    type_acte: actesForJson.length > 0 ? actesForJson[0].type : '',
+                    date_delivrance: actesForJson.length > 0 ? actesForJson[0].date : '',
                     date_mise_en_valeur: document.getElementById('dateMiseEnValeur').value,
                     quartier_village: document.getElementById('quartierVillage').value,
                     activite: document.getElementById('activite').value,
@@ -4668,13 +4680,14 @@
                     formData.append('documentIdentite', documentIdentite);
                     console.log('✅ Document identité:', documentIdentite.name);
                 }
-                
-                const justificatifActe = document.getElementById('justificatifActe').files[0];
-                if (justificatifActe) {
-                    formData.append('justificatifActe', justificatifActe);
-                    console.log('✅ Justificatif acte:', justificatifActe.name);
-                }
-                
+
+                // Ajouter les justificatifs des actes fonciers
+                const acteFiles = getActesFonciersFiles();
+                acteFiles.forEach((file, i) => {
+                    formData.append(`justificatifActe_${i}`, file);
+                    console.log(`✅ Justificatif acte ${i + 1}:`, file.name);
+                });
+
                 const photosTerrain = document.getElementById('photosTerrain').files;
                 if (photosTerrain.length > 0) {
                     for (let i = 0; i < Math.min(photosTerrain.length, 3); i++) {
