@@ -1956,23 +1956,14 @@
                         <small style="color: #666; font-size: 0.8rem;">Auto-généré pour les terrains non titrés</small>
                     </div>
                     
-                    <!-- Type d'acte pour terrains titrés -->
-                    <div class="form-group" id="typeActeGroup" style="display: none;">
-                        <label class="form-label">Type d'acte foncier *</label>
-                        <select class="form-input" id="typeActe">
-                            <option value="">Sélectionner...</option>
-                            <option value="titre_foncier">Titre foncier</option>
-                            <option value="attestation_propriete">Attestation de propriété</option>
-                            <option value="certificat_propriete">Certificat de propriété</option>
-                            <option value="acte_vente">Acte de vente</option>
-                            <option value="autre">Autre</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Dates -->
-                    <div class="form-group" id="dateDelivranceGroup" style="display: none;">
-                        <label class="form-label">Date de délivrance *</label>
-                        <input type="date" class="form-input" id="dateDelivrance">
+                    <!-- Actes fonciers pour terrains titrés (multiple) -->
+                    <div id="actesFonciersGroup" style="display: none;">
+                        <label class="form-label" style="margin-bottom: 0.5rem;">Actes fonciers *</label>
+                        <div id="actesFonciersList">
+                        </div>
+                        <button type="button" class="btn btn-success" onclick="addActeFoncier()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-top: 0.5rem;">
+                            <i class="fas fa-plus"></i> Ajouter un acte foncier
+                        </button>
                     </div>
                     
                     <div class="form-group">
@@ -2111,9 +2102,9 @@
                     </div>
                     
                     <div class="form-group" id="justificatifActeGroup" style="display: none;">
-                        <label class="form-label">Justificatif de l'acte foncier *</label>
-                        <input type="file" class="form-input" id="justificatifActe" accept=".pdf,.png,.jpg,.jpeg">
-                        <small style="color: #666; font-size: 0.8rem;">Obligatoire pour les terrains titrés (PDF, PNG, JPG)</small>
+                        <label class="form-label">Justificatifs des actes fonciers *</label>
+                        <input type="file" class="form-input" id="justificatifActe" accept=".pdf,.png,.jpg,.jpeg" multiple>
+                        <small style="color: #666; font-size: 0.8rem;">Joignez les justificatifs de vos actes fonciers (PDF, PNG, JPG)</small>
                     </div>
                     
                     <div class="form-group">
@@ -4441,55 +4432,120 @@
         }
 
         // Mettre à jour les champs du formulaire selon le statut
+        let actesFonciers = [];
+
         function updateFormFields() {
             const statut = document.getElementById('terrainStatut').value;
             const matriculeField = document.getElementById('matricule');
-            const typeActeGroup = document.getElementById('typeActeGroup');
-            const dateDelivranceGroup = document.getElementById('dateDelivranceGroup');
+            const actesFonciersGroup = document.getElementById('actesFonciersGroup');
             const justificatifActeGroup = document.getElementById('justificatifActeGroup');
-            const typeActeField = document.getElementById('typeActe');
-            const dateDelivranceField = document.getElementById('dateDelivrance');
-            const justificatifActeField = document.getElementById('justificatifActe');
-            
+
             if (statut === 'non_titre') {
-                // Terrain non titré
                 const randomNum = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
                 matriculeField.value = `NT-${randomNum}`;
                 matriculeField.readOnly = true;
-                
-                // Masquer les champs spécifiques aux terrains titrés
-                typeActeGroup.style.display = 'none';
-                dateDelivranceGroup.style.display = 'none';
+
+                actesFonciersGroup.style.display = 'none';
                 justificatifActeGroup.style.display = 'none';
-                
-                // Retirer l'obligation
-                typeActeField.required = false;
-                dateDelivranceField.required = false;
-                justificatifActeField.required = false;
-                
+                actesFonciers = [];
+                document.getElementById('actesFonciersList').innerHTML = '';
+
             } else if (statut === 'titre') {
-                // Terrain titré
                 matriculeField.value = '';
                 matriculeField.readOnly = false;
                 matriculeField.placeholder = 'Saisir le matricule du titre foncier';
-                
-                // Afficher les champs spécifiques aux terrains titrés
-                typeActeGroup.style.display = 'block';
-                dateDelivranceGroup.style.display = 'block';
+
+                actesFonciersGroup.style.display = 'block';
                 justificatifActeGroup.style.display = 'block';
-                
-                // Rendre obligatoire
-                typeActeField.required = true;
-                dateDelivranceField.required = true;
-                justificatifActeField.required = true;
+
+                // Ajouter un premier acte par défaut
+                if (actesFonciers.length === 0) {
+                    addActeFoncier();
+                }
             } else {
-                // Aucun statut sélectionné
                 matriculeField.value = '';
                 matriculeField.readOnly = false;
-                typeActeGroup.style.display = 'none';
-                dateDelivranceGroup.style.display = 'none';
+                actesFonciersGroup.style.display = 'none';
                 justificatifActeGroup.style.display = 'none';
             }
+        }
+
+        function addActeFoncier() {
+            const index = actesFonciers.length;
+            actesFonciers.push(index);
+
+            const container = document.getElementById('actesFonciersList');
+            const acteDiv = document.createElement('div');
+            acteDiv.id = `acteFoncier_${index}`;
+            acteDiv.style.cssText = 'border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; background: #f9f9f9;';
+            acteDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="font-size: 0.85rem;">Acte ${index + 1}</strong>
+                    ${index > 0 ? `<button type="button" onclick="removeActeFoncier(${index})" style="background: #dc3545; color: white; border: none; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.75rem; cursor: pointer;"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: #555;">Type d'acte *</label>
+                        <select class="form-input" id="typeActe_${index}" style="font-size: 0.85rem; padding: 0.4rem;" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="titre_foncier">Titre foncier</option>
+                            <option value="attestation_propriete">Attestation de propriété</option>
+                            <option value="certificat_propriete">Certificat de propriété</option>
+                            <option value="acte_vente">Acte de vente</option>
+                            <option value="bail">Bail</option>
+                            <option value="jugement">Jugement</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: #555;">Date de délivrance *</label>
+                        <input type="date" class="form-input" id="dateActe_${index}" style="font-size: 0.85rem; padding: 0.4rem;" required>
+                    </div>
+                </div>
+                <div style="margin-top: 0.4rem;">
+                    <label style="font-size: 0.8rem; color: #555;">Référence / N° de l'acte</label>
+                    <input type="text" class="form-input" id="refActe_${index}" style="font-size: 0.85rem; padding: 0.4rem;" placeholder="Ex: TF N° 12345/W">
+                </div>
+            `;
+            container.appendChild(acteDiv);
+        }
+
+        function removeActeFoncier(index) {
+            const element = document.getElementById(`acteFoncier_${index}`);
+            if (element) {
+                element.remove();
+                actesFonciers = actesFonciers.filter(i => i !== index);
+                updateActeNumbers();
+            }
+        }
+
+        function updateActeNumbers() {
+            const container = document.getElementById('actesFonciersList');
+            const actes = container.children;
+            for (let i = 0; i < actes.length; i++) {
+                const title = actes[i].querySelector('strong');
+                if (title) title.textContent = `Acte ${i + 1}`;
+            }
+        }
+
+        function getActesFonciersData() {
+            const data = [];
+            const container = document.getElementById('actesFonciersList');
+            const actes = container.children;
+            for (let i = 0; i < actes.length; i++) {
+                const acte = actes[i];
+                const selectEl = acte.querySelector('select');
+                const dateEl = acte.querySelector('input[type="date"]');
+                const refEl = acte.querySelector('input[type="text"]');
+                if (selectEl && selectEl.value && dateEl && dateEl.value) {
+                    data.push({
+                        type: selectEl.value,
+                        date: dateEl.value,
+                        reference: refEl ? refEl.value : ''
+                    });
+                }
+            }
+            return data;
         }
 
 
@@ -4530,12 +4586,19 @@
                 // Collecter les données du formulaire
                 const formData = new FormData();
                 
-                // CORRECTION : Utiliser l'ID correct de l'utilisateur
+                const statut = document.getElementById('terrainStatut').value;
+                const actesData = statut === 'titre' ? getActesFonciersData() : [];
+
+                if (statut === 'titre' && actesData.length === 0) {
+                    throw new Error('Veuillez renseigner au moins un acte foncier');
+                }
+
                 const parcelleData = {
-                    statut: document.getElementById('terrainStatut').value,
+                    statut: statut,
                     matricule: document.getElementById('matricule').value,
-                    type_acte: document.getElementById('typeActe').value,
-                    date_delivrance: document.getElementById('dateDelivrance').value,
+                    actes_fonciers: actesData,
+                    type_acte: actesData.length > 0 ? actesData[0].type : '',
+                    date_delivrance: actesData.length > 0 ? actesData[0].date : '',
                     date_mise_en_valeur: document.getElementById('dateMiseEnValeur').value,
                     quartier_village: document.getElementById('quartierVillage').value,
                     activite: document.getElementById('activite').value,
@@ -4543,7 +4606,7 @@
                     nom_proprietaire: document.getElementById('nomProprietaire').value,
                     telephone_proprietaire: document.getElementById('telephoneProprietaire').value,
                     prix_m2: document.getElementById('prixM2').value || 0,
-                    proprietaire_id: currentUser.id // CORRECTION : Utiliser currentUser.id
+                    proprietaire_id: currentUser.id
                 };
                 
                 console.log('📋 === DONNÉES FORMULAIRE ===');
@@ -4670,11 +4733,15 @@
                     
                     showNotification(message, 'success');
                     closeModal('addParcelleModal');
-                    
+
                     // Réinitialiser le formulaire
                     document.getElementById('addParcelleForm').reset();
                     updateFormFields();
-                    
+
+                    // Reset des actes fonciers
+                    actesFonciers = [];
+                    document.getElementById('actesFonciersList').innerHTML = '';
+
                     // Reset de l'interface coordonnées
                     document.getElementById('coordonnees').value = '';
                     if (typeof coordinateRows !== 'undefined') {
