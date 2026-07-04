@@ -182,6 +182,33 @@ Insertion manuelle dans `public.users` avec le rôle `client`.
 
 ---
 
+## 8. Limite fichiers, opacité parcelles, recherche par liste (2026-07-04)
+
+### Limite de taille des fichiers (2 Mo)
+- Validation côté frontend avant upload : CNI, actes fonciers, photos
+- Message d'erreur explicite indiquant le fichier fautif et sa taille
+- Indication "max 2 Mo" dans les labels des champs fichier
+
+### Slider d'opacité des parcelles
+- Curseur dans la section "Couches cartographiques" (desktop + mobile)
+- Valeur de 0% (contours seuls, transparent) à 100% (remplissage opaque)
+- Synchronisation entre les sliders desktop et mobile
+- Modifie le `fillOpacity` de chaque polygone en temps réel
+
+### Recherche par liste de matricules (autocomplete)
+- Remplacement de la simple barre de recherche par un champ avec dropdown
+- Au focus : affiche la liste complète des parcelles enregistrées
+- En saisie : filtre en temps réel par matricule
+- Clic sur un item : zoom sur la parcelle et affiche ses détails
+- Fonctionne sur desktop et mobile
+
+### Amélioration scroll sidebar mobile
+- Suppression du `min-height: calc(100vh - 120px)` rigide sur `.sidebar-content-wrapper`
+- Remplacé par `min-height: min-content` + `padding-bottom: 80px`
+- Meilleur comportement de scroll sur petits écrans sans espace vide inutile
+
+---
+
 ## Notes techniques
 
 - Le `.env` local contient les clés Supabase (non committé, normal)
