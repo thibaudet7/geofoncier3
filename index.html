@@ -286,10 +286,9 @@
             display: none;
         }
 
-        /* Conteneur pour forcer la hauteur minimale sur mobile */
         .sidebar-content-wrapper {
-            min-height: calc(100vh - 120px);
-            padding-bottom: 50px; /* Espace pour assurer le scroll */
+            min-height: min-content;
+            padding-bottom: 80px;
         }
 
         .search-section {
@@ -1598,6 +1597,35 @@
         .contact-status.rejected { background: #f8d7da; color: #721c24; }
         .contact-status.completed { background: #cce5ff; color: #004085; }
 
+        /* Matricule Dropdown */
+        .matricule-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0; right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .matricule-dropdown .matricule-item {
+            padding: 0.5rem 0.7rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f5f5f5;
+            transition: background 0.15s;
+        }
+        .matricule-dropdown .matricule-item:hover {
+            background: #eef6ff;
+        }
+        .matricule-dropdown .matricule-item small {
+            color: #888;
+            margin-left: 0.4rem;
+        }
+
         @media (max-width: 768px) {
             .notification-panel { right: 5px; width: calc(100vw - 10px); max-width: 340px; }
             .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -1646,8 +1674,12 @@
                 <div class="sidebar-content-wrapper">
                     <!-- Search Section -->
                     <div class="search-section scroll-snap-item">
-                        <input type="text" class="search-box" id="searchMatricule" 
-                               placeholder="Rechercher par matricule...">
+                        <div style="position:relative;">
+                            <input type="text" class="search-box" id="searchMatricule"
+                                   placeholder="Rechercher un matricule..."
+                                   onfocus="showMatriculeList(this)" oninput="filterMatriculeList(this.value)">
+                            <div id="matriculeDropdown" class="matricule-dropdown" style="display:none;"></div>
+                        </div>
                         <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelle()">
                             <i class="fas fa-search"></i> Rechercher
                         </button>
@@ -1656,7 +1688,7 @@
                     <!-- Layer Control Section -->
                     <div class="layer-section scroll-snap-item">
                         <div class="filter-title">Couches cartographiques</div>
-                        
+
                         <div class="layer-toggle active" onclick="toggleArrondissementLayer()">
                             <input type="checkbox" id="arrondissementLayerToggle" checked>
                             <label for="arrondissementLayerToggle">
@@ -1664,19 +1696,31 @@
                             </label>
                             <div id="arrondissementLoading" class="loading-spinner" style="display: none;"></div>
                         </div>
-                        
+
                         <div class="layer-toggle active" onclick="toggleParcelleLayer()">
                             <input type="checkbox" id="parcelleLayerToggle" checked>
                             <label for="parcelleLayerToggle">
                                 <i class="fas fa-square"></i> Parcelles
                             </label>
                         </div>
-                        
+
                         <div class="layer-toggle active" onclick="toggleOverlapLayer()">
                             <input type="checkbox" id="overlapLayerToggle" checked>
                             <label for="overlapLayerToggle">
                                 <i class="fas fa-exclamation-triangle"></i> Chevauchements
                             </label>
+                        </div>
+
+                        <div style="margin-top: 0.8rem; padding: 0.5rem 0;">
+                            <label style="font-size: 0.8rem; color: #555; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="fas fa-adjust"></i> Opacité parcelles
+                            </label>
+                            <input type="range" id="opacitySlider" min="0" max="100" value="30"
+                                   style="width: 100%; margin-top: 0.3rem; cursor: pointer;"
+                                   oninput="updateParcelleOpacity(this.value)">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #999;">
+                                <span>Contours</span><span>Opaque</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1764,8 +1808,12 @@
                 <div class="sidebar-content-wrapper">
                     <!-- Search Section Mobile -->
                     <div class="search-section scroll-snap-item">
-                        <input type="text" class="search-box" id="searchMatriculeMobile" 
-                               placeholder="Rechercher par matricule...">
+                        <div style="position:relative;">
+                            <input type="text" class="search-box" id="searchMatriculeMobile"
+                                   placeholder="Rechercher un matricule..."
+                                   onfocus="showMatriculeList(this, 'mobile')" oninput="filterMatriculeList(this.value, 'mobile')">
+                            <div id="matriculeDropdownMobile" class="matricule-dropdown" style="display:none;"></div>
+                        </div>
                         <button class="btn btn-primary" style="width: 100%;" onclick="searchParcelleMobile()">
                             <i class="fas fa-search"></i> Rechercher
                         </button>
@@ -1774,26 +1822,38 @@
                     <!-- Layer Control Section Mobile -->
                     <div class="layer-section scroll-snap-item">
                         <div class="filter-title">Couches cartographiques</div>
-                        
+
                         <div class="layer-toggle active" onclick="toggleArrondissementLayerMobile()">
                             <input type="checkbox" id="arrondissementLayerToggleMobile" checked>
                             <label for="arrondissementLayerToggleMobile">
                                 <i class="fas fa-map-marker-alt"></i> Arrondissements
                             </label>
                         </div>
-                        
+
                         <div class="layer-toggle active" onclick="toggleParcelleLayerMobile()">
                             <input type="checkbox" id="parcelleLayerToggleMobile" checked>
                             <label for="parcelleLayerToggleMobile">
                                 <i class="fas fa-square"></i> Parcelles
                             </label>
                         </div>
-                        
+
                         <div class="layer-toggle active" onclick="toggleOverlapLayerMobile()">
                             <input type="checkbox" id="overlapLayerToggleMobile" checked>
                             <label for="overlapLayerToggleMobile">
                                 <i class="fas fa-exclamation-triangle"></i> Chevauchements
                             </label>
+                        </div>
+
+                        <div style="margin-top: 0.8rem; padding: 0.5rem 0;">
+                            <label style="font-size: 0.8rem; color: #555; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="fas fa-adjust"></i> Opacité parcelles
+                            </label>
+                            <input type="range" id="opacitySliderMobile" min="0" max="100" value="30"
+                                   style="width: 100%; margin-top: 0.3rem; cursor: pointer;"
+                                   oninput="updateParcelleOpacity(this.value)">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #999;">
+                                <span>Contours</span><span>Opaque</span>
+                            </div>
                         </div>
                     </div>
 
@@ -2291,14 +2351,14 @@
                     <div class="form-group">
                         <label class="form-label">Document d'identité *</label>
                         <input type="file" class="form-input" id="documentIdentite" accept=".pdf,.png,.jpg,.jpeg" required>
-                        <small style="color: #666; font-size: 0.8rem;">CNI, Passeport ou titre de séjour (PDF, PNG, JPG)</small>
+                        <small style="color: #666; font-size: 0.8rem;">CNI, Passeport ou titre de séjour (PDF, PNG, JPG) - max 2 Mo</small>
                     </div>
                     
                     
                     <div class="form-group">
                         <label class="form-label">Photos du terrain (optionnel)</label>
                         <input type="file" class="form-input" id="photosTerrain" accept=".png,.jpg,.jpeg" multiple>
-                        <small style="color: #666; font-size: 0.8rem;">Maximum 3 photos</small>
+                        <small style="color: #666; font-size: 0.8rem;">Maximum 3 photos - max 2 Mo par fichier</small>
                     </div>
                     
                     <button type="submit" class="btn btn-success" style="width: 100%;">
@@ -4897,9 +4957,18 @@
                 const parcelleDataJson = JSON.stringify(parcelleData);
                 formData.append('parcelleData', parcelleDataJson);
                 
+                // Validation taille fichiers (max 2 Mo par fichier)
+                const MAX_FILE_SIZE = 2 * 1024 * 1024;
+                function checkFileSize(file, label) {
+                    if (file && file.size > MAX_FILE_SIZE) {
+                        throw new Error(`${label} dépasse 2 Mo (${(file.size / 1024 / 1024).toFixed(1)} Mo). Veuillez réduire la taille du fichier.`);
+                    }
+                }
+
                 // Ajouter les fichiers
                 const documentIdentite = document.getElementById('documentIdentite').files[0];
                 if (documentIdentite) {
+                    checkFileSize(documentIdentite, 'Document d\'identité');
                     formData.append('documentIdentite', documentIdentite);
                     console.log('✅ Document identité:', documentIdentite.name);
                 }
@@ -4907,6 +4976,7 @@
                 // Ajouter les justificatifs des actes fonciers
                 const acteFiles = getActesFonciersFiles();
                 acteFiles.forEach((file, i) => {
+                    checkFileSize(file, `Justificatif acte ${i + 1}`);
                     formData.append(`justificatifActe_${i}`, file);
                     console.log(`✅ Justificatif acte ${i + 1}:`, file.name);
                 });
@@ -4914,6 +4984,7 @@
                 const photosTerrain = document.getElementById('photosTerrain').files;
                 if (photosTerrain.length > 0) {
                     for (let i = 0; i < Math.min(photosTerrain.length, 3); i++) {
+                        checkFileSize(photosTerrain[i], `Photo ${i + 1}`);
                         formData.append('photos', photosTerrain[i]);
                         console.log('✅ Photo', i + 1, ':', photosTerrain[i].name);
                     }
@@ -5906,6 +5977,81 @@
                 }
             } catch (e) { showNotification('Erreur serveur', 'error'); }
         }
+
+        // --- Opacité des parcelles ---
+        function updateParcelleOpacity(value) {
+            const opacity = value / 100;
+            if (parcelleLayer) {
+                parcelleLayer.eachLayer(function(layer) {
+                    if (layer.setStyle) {
+                        layer.setStyle({ fillOpacity: opacity });
+                    }
+                });
+            }
+            // Synchroniser les deux sliders
+            const desktop = document.getElementById('opacitySlider');
+            const mobile = document.getElementById('opacitySliderMobile');
+            if (desktop) desktop.value = value;
+            if (mobile) mobile.value = value;
+        }
+
+        // --- Liste des matricules (autocomplete) ---
+        function showMatriculeList(input, variant) {
+            const dropdown = variant === 'mobile'
+                ? document.getElementById('matriculeDropdownMobile')
+                : document.getElementById('matriculeDropdown');
+            renderMatriculeList(dropdown, input.value);
+            dropdown.style.display = 'block';
+        }
+
+        function filterMatriculeList(value, variant) {
+            const dropdown = variant === 'mobile'
+                ? document.getElementById('matriculeDropdownMobile')
+                : document.getElementById('matriculeDropdown');
+            renderMatriculeList(dropdown, value);
+        }
+
+        function renderMatriculeList(dropdown, filter) {
+            const filtered = sampleParcelles.filter(p =>
+                !filter || p.matricule.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="matricule-item" style="color:#999;">Aucune parcelle</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            dropdown.innerHTML = filtered.map(p => `
+                <div class="matricule-item" onclick="selectMatricule('${p.matricule}')">
+                    <strong>${p.matricule}</strong><small>${p.quartier || ''}</small>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function selectMatricule(matricule) {
+            document.getElementById('searchMatricule').value = matricule;
+            const mobileInput = document.getElementById('searchMatriculeMobile');
+            if (mobileInput) mobileInput.value = matricule;
+            // Cacher les dropdowns
+            document.getElementById('matriculeDropdown').style.display = 'none';
+            const mobileDD = document.getElementById('matriculeDropdownMobile');
+            if (mobileDD) mobileDD.style.display = 'none';
+            searchParcelle();
+        }
+
+        // Fermer dropdown au clic extérieur
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchMatricule') && !e.target.closest('#matriculeDropdown')) {
+                const dd = document.getElementById('matriculeDropdown');
+                if (dd) dd.style.display = 'none';
+            }
+            if (!e.target.closest('#searchMatriculeMobile') && !e.target.closest('#matriculeDropdownMobile')) {
+                const dd = document.getElementById('matriculeDropdownMobile');
+                if (dd) dd.style.display = 'none';
+            }
+        });
 
         // Polling notifications toutes les 30 secondes
         setInterval(() => { if (currentUser) loadNotificationCount(); }, 30000);
