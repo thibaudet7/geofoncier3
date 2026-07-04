@@ -1,26 +1,24 @@
-// api/routes/contact.js
 const express = require('express')
 const router = express.Router()
 const { ContactService } = require('../services/ContactService')
+const { authenticateUser, requireAdmin } = require('../middleware/auth')
 
-// POST /api/contact/initiate
-router.post('/initiate', async (req, res) => {
+// POST /api/contact/initiate - Client demande contact
+router.post('/initiate', authenticateUser, async (req, res) => {
     try {
-        const contactData = req.body
-        
-        if (!contactData.client_id || !contactData.parcelle_id) {
-            return res.status(400).json({
-                error: 'Client ID et Parcelle ID requis'
-            })
+        const { parcelle_id } = req.body
+
+        if (!parcelle_id) {
+            return res.status(400).json({ error: 'parcelle_id requis' })
         }
 
-        const result = await ContactService.initiateContact(contactData)
-        
+        const result = await ContactService.initiateContact({
+            client_id: req.user.id,
+            parcelle_id
+        })
+
         if (result.success) {
-            res.status(201).json({ 
-                message: 'Demande de contact envoyée',
-                contact: result.contact 
-            })
+            res.status(201).json({ message: result.message })
         } else {
             res.status(400).json({ error: result.error })
         }
@@ -30,24 +28,19 @@ router.post('/initiate', async (req, res) => {
     }
 })
 
-// POST /api/contact/approve
-router.post('/approve', async (req, res) => {
+// POST /api/contact/approve - Admin approuve
+router.post('/approve', authenticateUser, requireAdmin, async (req, res) => {
     try {
         const { contact_id } = req.body
-        
+
         if (!contact_id) {
-            return res.status(400).json({
-                error: 'Contact ID requis'
-            })
+            return res.status(400).json({ error: 'contact_id requis' })
         }
 
         const result = await ContactService.approveContact(contact_id)
-        
+
         if (result.success) {
-            res.json({ 
-                message: 'Contact approuvé',
-                contact: result.contact 
-            })
+            res.json({ message: 'Contact approuvé', contact: result.contact })
         } else {
             res.status(400).json({ error: result.error })
         }
@@ -56,13 +49,50 @@ router.post('/approve', async (req, res) => {
     }
 })
 
-// GET /api/contact/history/:userId
-router.get('/history/:userId', async (req, res) => {
+// POST /api/contact/reject - Admin rejette
+router.post('/reject', authenticateUser, requireAdmin, async (req, res) => {
+    try {
+        const { contact_id, admin_notes } = req.body
+
+        if (!contact_id) {
+            return res.status(400).json({ error: 'contact_id requis' })
+        }
+
+        const result = await ContactService.rejectContact(contact_id, admin_notes || '')
+
+        if (result.success) {
+            res.json({ message: 'Contact rejeté', contact: result.contact })
+        } else {
+            res.status(400).json({ error: result.error })
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' })
+    }
+})
+
+// GET /api/contact/history/:userId - Historique (filtré selon rôle)
+router.get('/history/:userId', authenticateUser, async (req, res) => {
     try {
         const { userId } = req.params
-        
-        const result = await ContactService.getContactHistory(userId)
-        
+        const isAdmin = req.user.id !== userId
+
+        // Vérifier que le user demande ses propres contacts ou est admin
+        const { supabase } = require('../supabase-config')
+        let isAdminUser = false
+        if (req.user.id !== userId) {
+            const { data: userData } = await supabase
+                .from('users')
+                .select('type_utilisateur')
+                .eq('id', req.user.id)
+                .single()
+            isAdminUser = userData?.type_utilisateur === 'admin'
+            if (!isAdminUser) {
+                return res.status(403).json({ error: 'Accès non autorisé' })
+            }
+        }
+
+        const result = await ContactService.getContactHistory(userId, isAdminUser)
+
         if (result.success) {
             res.json({ contacts: result.contacts })
         } else {

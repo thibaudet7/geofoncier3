@@ -53,6 +53,30 @@ if (!process.env.VERCEL) {
     app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 }
 
+// Visit tracking (fire-and-forget on page load)
+app.use((req, res, next) => {
+    if (req.method === 'GET' && (req.path === '/' || req.path === '/index.html')) {
+        const { supabase: sb } = require('./supabase-config')
+        sb.from('site_visits').insert([{
+            visitor_ip: req.headers['x-forwarded-for'] || req.ip,
+            user_agent: req.headers['user-agent'],
+            path: req.path
+        }]).then(() => {}).catch(() => {})
+    }
+    next()
+})
+
+// POST /api/visits/track - explicit visit tracking from frontend
+app.post('/api/visits/track', (req, res) => {
+    const { supabase: sb } = require('./supabase-config')
+    sb.from('site_visits').insert([{
+        visitor_ip: req.headers['x-forwarded-for'] || req.ip,
+        user_agent: req.headers['user-agent'],
+        path: req.body?.path || '/'
+    }]).then(() => {}).catch(() => {})
+    res.json({ success: true })
+})
+
 // Route de diagnostic - doit TOUJOURS fonctionner
 app.get('/api/health', (req, res) => {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
@@ -104,6 +128,12 @@ catch (e) { routeErrors.push(`csv: ${e.message}`); console.error('❌ csv:', e.m
 
 try { mountRoute(require('./routes/admin'), '/api/admin', 'admin') }
 catch (e) { routeErrors.push(`admin: ${e.message}`); console.error('❌ admin:', e.message) }
+
+try { mountRoute(require('./routes/notifications'), '/api/notifications', 'notifications') }
+catch (e) { routeErrors.push(`notifications: ${e.message}`); console.error('❌ notifications:', e.message) }
+
+try { mountRoute(require('./routes/favorites'), '/api/favorites', 'favorites') }
+catch (e) { routeErrors.push(`favorites: ${e.message}`); console.error('❌ favorites:', e.message) }
 
 // Route de debug pour voir les erreurs de chargement
 app.get('/api/debug', (req, res) => {

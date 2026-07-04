@@ -1470,6 +1470,138 @@
         .sidebar-content.scrolling .scrollable-zone-indicator {
             opacity: 1;
         }
+
+        /* Notification Bell */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 0.4rem 0.5rem;
+            margin-right: 0.5rem;
+        }
+        .notification-bell i { font-size: 1.1rem; color: white; }
+        .notif-badge {
+            position: absolute;
+            top: -2px; right: -2px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            min-width: 16px; height: 16px;
+            font-size: 0.6rem;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 55px; right: 15px;
+            width: 340px; max-height: 420px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            z-index: 3001;
+            overflow: hidden;
+            display: none;
+        }
+        .notif-panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+        .notif-panel-header h4 { margin: 0; font-size: 0.95rem; }
+        .notif-panel-header button {
+            background: none; border: none;
+            color: #3498db; cursor: pointer; font-size: 0.8rem;
+        }
+        .notif-list {
+            max-height: 360px;
+            overflow-y: auto;
+        }
+        .notif-item {
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notif-item:hover { background: #f8f9fa; }
+        .notif-item.unread { background: #eef6ff; border-left: 3px solid #3498db; }
+        .notif-item .notif-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; }
+        .notif-item .notif-msg { font-size: 0.78rem; color: #666; }
+        .notif-item .notif-time { font-size: 0.7rem; color: #999; margin-top: 3px; }
+
+        /* Dashboard Tabs */
+        .dashboard-tabs {
+            display: flex; gap: 0;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 1rem;
+        }
+        .tab-btn {
+            padding: 0.6rem 1.2rem;
+            border: none; background: none;
+            cursor: pointer; font-size: 0.85rem;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { border-bottom-color: #3498db; color: #3498db; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Admin Stats Cards */
+        .admin-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-card.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .stat-card.orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-card.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-card .stat-number { font-size: 1.8rem; font-weight: bold; }
+        .stat-card .stat-label { font-size: 0.75rem; opacity: 0.9; }
+
+        /* Favorite Button */
+        .btn-favorite {
+            background: none; border: none;
+            cursor: pointer; font-size: 1.2rem;
+            padding: 0.3rem;
+            transition: transform 0.2s;
+        }
+        .btn-favorite:hover { transform: scale(1.2); }
+        .btn-favorite .fa-heart { transition: color 0.2s; }
+
+        /* Contact Card in Admin */
+        .contact-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            background: #fafafa;
+        }
+        .contact-card .contact-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .contact-status.pending { background: #fff3cd; color: #856404; }
+        .contact-status.accepted { background: #d4edda; color: #155724; }
+        .contact-status.rejected { background: #f8d7da; color: #721c24; }
+        .contact-status.completed { background: #cce5ff; color: #004085; }
+
+        @media (max-width: 768px) {
+            .notification-panel { right: 5px; width: calc(100vw - 10px); max-width: 340px; }
+            .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -1928,6 +2060,67 @@
             </div>
             <div id="parcelleInfo">
                 <!-- Les informations de la parcelle apparaîtront ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel (dropdown) -->
+    <div id="notificationPanel" class="notification-panel">
+        <div class="notif-panel-header">
+            <h4>Notifications</h4>
+            <button onclick="markAllNotificationsRead()">Tout marquer lu</button>
+        </div>
+        <div id="notifList" class="notif-list">
+            <p style="padding: 1rem; text-align: center; color: #999;">Aucune notification</p>
+        </div>
+    </div>
+
+    <!-- Modal Client Dashboard -->
+    <div id="clientDashboardModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <div class="modal-title">Mon Espace</div>
+                <span class="close" onclick="closeModal('clientDashboardModal')">&times;</span>
+            </div>
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" onclick="showClientTab('favorites')">Mes Favoris</button>
+                <button class="tab-btn" onclick="showClientTab('contacts')">Mes Demandes</button>
+            </div>
+            <div id="clientFavoritesTab" class="tab-content active">
+                <p style="text-align:center; color:#999;">Chargement...</p>
+            </div>
+            <div id="clientContactsTab" class="tab-content">
+                <p style="text-align:center; color:#999;">Chargement...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Admin Dashboard -->
+    <div id="adminDashboardModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <div class="modal-title">Tableau de Bord Administrateur</div>
+                <span class="close" onclick="closeModal('adminDashboardModal')">&times;</span>
+            </div>
+            <div class="admin-stats-row" id="adminStatsRow">
+                <div class="stat-card"><div class="stat-number" id="statVisits">-</div><div class="stat-label">Visites/semaine</div></div>
+                <div class="stat-card green"><div class="stat-number" id="statParcelles">-</div><div class="stat-label">Parcelles</div></div>
+                <div class="stat-card orange"><div class="stat-number" id="statContacts">-</div><div class="stat-label">Demandes</div></div>
+                <div class="stat-card blue"><div class="stat-number" id="statUsers">-</div><div class="stat-label">Utilisateurs</div></div>
+            </div>
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" onclick="showAdminTab('contacts')">Demandes</button>
+                <button class="tab-btn" onclick="showAdminTab('parcelles')">Parcelles</button>
+                <button class="tab-btn" onclick="showAdminTab('transactions')">Transactions</button>
+            </div>
+            <div id="adminContactsTab" class="tab-content active">
+                <p style="text-align:center; color:#999;">Chargement...</p>
+            </div>
+            <div id="adminParcellesTab" class="tab-content">
+                <p style="text-align:center; color:#999;">Chargement...</p>
+            </div>
+            <div id="adminTransactionsTab" class="tab-content">
+                <p style="text-align:center; color:#999;">Chargement...</p>
             </div>
         </div>
     </div>
@@ -3949,9 +4142,16 @@
 
             info.innerHTML = `
                 <div class="parcelle-info">
-                    <div class="parcelle-title">${parcelle.matricule}</div>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <div class="parcelle-title" style="flex:1;">${parcelle.matricule}</div>
+                        ${currentUser ? `
+                            <button class="btn-favorite" onclick="toggleFavorite('${parcelle.id}', this)">
+                                <i class="fas fa-heart" style="color: ${isFavorite(parcelle.id) ? '#e74c3c' : '#ccc'};"></i>
+                            </button>
+                        ` : ''}
+                    </div>
                     <span class="status-indicator ${statusClass}">${statusText}</span>
-                    
+
                     <div class="parcelle-details" style="margin-top: 0.75rem;">
                         <span><strong>Quartier/Village:</strong> ${parcelle.quartier}</span>
                         <span><strong>Activité:</strong> ${activityLabels[parcelle.activite] || parcelle.activite}</span>
@@ -3960,13 +4160,13 @@
                         ${parcelle.prix_m2 ? `<span><strong>Prix au m²:</strong> ${parcelle.prix_m2.toLocaleString()} XAF</span>` : ''}
                         ${parcelle.prix_m2 ? `<span><strong>Prix total:</strong> ${(parcelle.prix_m2 * parcelle.superficie).toLocaleString()} XAF</span>` : ''}
                     </div>
-                    
+
                     ${currentUser && parcelle.prix_m2 ? `
-                        <button class="btn btn-success contact-btn" onclick="contactOwner(${parcelle.id})">
-                            <i class="fas fa-phone"></i> Contacter le propriétaire
+                        <button class="btn btn-success contact-btn" onclick="contactOwner('${parcelle.id}')">
+                            <i class="fas fa-envelope"></i> Demander un contact
                         </button>
                     ` : ''}
-                    
+
                     ${!currentUser && parcelle.prix_m2 ? `
                         <p style="color: #e74c3c; margin-top: 1rem; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">
                             <i class="fas fa-lock"></i> Connectez-vous pour contacter le propriétaire
@@ -3982,16 +4182,39 @@
         //  FONCTIONS UTILITAIRES ET INTERACTIONS
         // =====================================================
 
-        // Contacter le propriétaire
-        function contactOwner(parcelleId) {
+        // Contacter le propriétaire - envoie une demande à l'admin
+        async function contactOwner(parcelleId) {
             if (!currentUser) {
                 showNotification('Veuillez vous connecter pour contacter le propriétaire', 'error');
                 return;
             }
-            
-            const parcelle = sampleParcelles.find(p => p.id === parcelleId);
-            if (parcelle) {
-                showNotification(`Contact établi avec ${parcelle.proprietaire}. Téléphone: ${parcelle.telephone}`, 'success');
+
+            const isAdmin = currentUser.type_utilisateur === 'admin' || currentUser.type === 'admin';
+            if (isAdmin) {
+                showNotification('Consultez le tableau de bord admin pour gérer les contacts', 'info');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/contact/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ parcelle_id: parcelleId })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification(result.message || 'Demande envoyée ! L\'administrateur vous recontactera.', 'success');
+                } else {
+                    showNotification(result.error || 'Erreur lors de l\'envoi de la demande', 'error');
+                }
+            } catch (error) {
+                showNotification('Erreur de connexion au serveur', 'error');
             }
         }
 
@@ -5173,14 +5396,32 @@
 
         function updateAuthUI() {
             const authButtons = document.getElementById('authButtons');
-            
+
             if (currentUser) {
+                const isAdmin = currentUser.type_utilisateur === 'admin' || currentUser.type === 'admin';
+                const isClient = currentUser.type_utilisateur === 'client' || currentUser.type === 'client';
+
+                let dashboardBtn = '';
+                if (isAdmin) {
+                    dashboardBtn = `<button class="btn btn-warning" onclick="openAdminDashboard()" style="font-size:0.8rem;padding:0.3rem 0.6rem;"><i class="fas fa-tachometer-alt"></i> Admin</button>`;
+                } else if (isClient) {
+                    dashboardBtn = `<button class="btn btn-primary" onclick="openClientDashboard()" style="font-size:0.8rem;padding:0.3rem 0.6rem;"><i class="fas fa-user"></i> Mon Espace</button>`;
+                }
+
                 authButtons.innerHTML = `
-                    <span style="margin-right: 1rem;">Bonjour, ${currentUser.nom_complet}</span>
-                    <button class="btn btn-secondary" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    <div class="notification-bell" onclick="toggleNotificationPanel()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                    </div>
+                    ${dashboardBtn}
+                    <span style="margin-right: 0.5rem; font-size: 0.8rem;">${currentUser.nom_complet}</span>
+                    <button class="btn btn-secondary" onclick="logout()" style="font-size:0.8rem;padding:0.3rem 0.6rem;">
+                        <i class="fas fa-sign-out-alt"></i>
                     </button>
                 `;
+
+                loadNotificationCount();
+                loadFavorites();
             } else {
                 authButtons.innerHTML = `
                     <button class="btn btn-secondary" onclick="openModal('loginModal')">
@@ -5204,9 +5445,475 @@
         }
 
         // =====================================================
+        //  NOTIFICATIONS, FAVORIS ET DASHBOARDS
+        // =====================================================
+
+        let userFavorites = [];
+        let notifPanelOpen = false;
+
+        // --- Notifications ---
+        async function loadNotificationCount() {
+            if (!currentUser) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/notifications/unread-count', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (e) { /* silent */ }
+        }
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            notifPanelOpen = !notifPanelOpen;
+            panel.style.display = notifPanelOpen ? 'block' : 'none';
+            if (notifPanelOpen) loadNotifications();
+        }
+
+        async function loadNotifications() {
+            const list = document.getElementById('notifList');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/notifications?limit=20', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const notifs = data.notifications || [];
+
+                if (notifs.length === 0) {
+                    list.innerHTML = '<p style="padding:1rem;text-align:center;color:#999;">Aucune notification</p>';
+                    return;
+                }
+
+                list.innerHTML = notifs.map(n => `
+                    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}', this)">
+                        <div class="notif-title">${n.title}</div>
+                        <div class="notif-msg">${n.message}</div>
+                        <div class="notif-time">${timeAgo(n.created_at)}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = '<p style="padding:1rem;text-align:center;color:#e74c3c;">Erreur de chargement</p>';
+            }
+        }
+
+        async function markNotificationRead(id, el) {
+            try {
+                const token = localStorage.getItem('authToken');
+                await fetch(`/api/notifications/${id}/read`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (el) el.classList.remove('unread');
+                loadNotificationCount();
+            } catch (e) { /* silent */ }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                const token = localStorage.getItem('authToken');
+                await fetch('/api/notifications/read-all', {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                loadNotifications();
+                loadNotificationCount();
+            } catch (e) { /* silent */ }
+        }
+
+        function timeAgo(dateStr) {
+            const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+            if (diff < 60) return 'maintenant';
+            if (diff < 3600) return Math.floor(diff / 60) + ' min';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+            return Math.floor(diff / 86400) + ' j';
+        }
+
+        // Close notification panel on outside click
+        document.addEventListener('click', function(e) {
+            if (notifPanelOpen && !e.target.closest('.notification-bell') && !e.target.closest('.notification-panel')) {
+                document.getElementById('notificationPanel').style.display = 'none';
+                notifPanelOpen = false;
+            }
+        });
+
+        // --- Favoris ---
+        async function loadFavorites() {
+            if (!currentUser) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/favorites', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                userFavorites = (data.favorites || []).map(f => f.parcelle?.id || f.parcelle_id);
+            } catch (e) { userFavorites = []; }
+        }
+
+        function isFavorite(parcelleId) {
+            return userFavorites.includes(parcelleId);
+        }
+
+        async function toggleFavorite(parcelleId, btn) {
+            if (!currentUser) {
+                showNotification('Connectez-vous pour ajouter aux favoris', 'error');
+                return;
+            }
+            const token = localStorage.getItem('authToken');
+            const icon = btn.querySelector('i');
+            try {
+                if (isFavorite(parcelleId)) {
+                    await fetch(`/api/favorites/${parcelleId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    userFavorites = userFavorites.filter(id => id !== parcelleId);
+                    if (icon) icon.style.color = '#ccc';
+                    showNotification('Retiré des favoris', 'info');
+                } else {
+                    await fetch('/api/favorites', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ parcelle_id: parcelleId })
+                    });
+                    userFavorites.push(parcelleId);
+                    if (icon) icon.style.color = '#e74c3c';
+                    showNotification('Ajouté aux favoris', 'success');
+                }
+            } catch (e) {
+                showNotification('Erreur', 'error');
+            }
+        }
+
+        // --- Client Dashboard ---
+        function openClientDashboard() {
+            openModal('clientDashboardModal');
+            showClientTab('favorites');
+            loadClientFavorites();
+        }
+
+        function showClientTab(tab) {
+            document.querySelectorAll('#clientDashboardModal .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#clientDashboardModal .tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            if (tab === 'favorites') {
+                document.getElementById('clientFavoritesTab').classList.add('active');
+                loadClientFavorites();
+            } else {
+                document.getElementById('clientContactsTab').classList.add('active');
+                loadClientContactHistory();
+            }
+        }
+
+        async function loadClientFavorites() {
+            const container = document.getElementById('clientFavoritesTab');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/favorites', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const favs = data.favorites || [];
+
+                if (favs.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;">Aucun favori. Cliquez sur le coeur sur une parcelle pour l\'ajouter.</p>';
+                    return;
+                }
+
+                container.innerHTML = favs.map(f => {
+                    const p = f.parcelle || {};
+                    return `
+                        <div class="contact-card">
+                            <strong>${p.matricule || 'Parcelle'}</strong> - ${p.quartier_village || ''}
+                            <br><small>${p.superficie || ''} m² | ${p.prix_m2 ? p.prix_m2.toLocaleString() + ' XAF/m²' : 'Prix non défini'}</small>
+                            <br><button class="btn btn-secondary" style="font-size:0.75rem;padding:0.2rem 0.5rem;margin-top:0.4rem;" onclick="toggleFavorite('${p.id}', this); loadClientFavorites();">
+                                <i class="fas fa-heart-broken"></i> Retirer
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        async function loadClientContactHistory() {
+            const container = document.getElementById('clientContactsTab');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/contact/history/${currentUser.id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const contacts = data.contacts || [];
+
+                if (contacts.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;">Aucune demande de contact.</p>';
+                    return;
+                }
+
+                container.innerHTML = contacts.map(c => `
+                    <div class="contact-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <strong>${c.parcelle?.matricule || 'Parcelle'}</strong>
+                            <span class="contact-status ${c.statut}">${c.statut === 'pending' ? 'En attente' : c.statut === 'accepted' ? 'Approuvée' : c.statut === 'rejected' ? 'Refusée' : c.statut}</span>
+                        </div>
+                        <small>${c.parcelle?.quartier_village || ''} | ${new Date(c.date_contact).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        // --- Admin Dashboard ---
+        async function openAdminDashboard() {
+            openModal('adminDashboardModal');
+            showAdminTab('contacts');
+            loadAdminStats();
+            loadAdminContacts();
+        }
+
+        function showAdminTab(tab) {
+            document.querySelectorAll('#adminDashboardModal .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#adminDashboardModal .tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            const tabEl = document.getElementById(`admin${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`);
+            if (tabEl) tabEl.classList.add('active');
+            if (tab === 'contacts') loadAdminContacts();
+            else if (tab === 'parcelles') loadAdminParcelles();
+            else if (tab === 'transactions') loadAdminTransactions();
+        }
+
+        async function loadAdminStats() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const [statsRes, visitsRes] = await Promise.all([
+                    fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/admin/visits/weekly', { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                const statsData = await statsRes.json();
+                const visitsData = await visitsRes.json();
+
+                const stats = statsData.stats || {};
+                document.getElementById('statParcelles').textContent = stats.parcelles?.total || 0;
+                document.getElementById('statContacts').textContent = stats.contacts?.total || 0;
+                document.getElementById('statUsers').textContent = stats.users?.total || 0;
+
+                const weekly = visitsData.weekly || [];
+                const thisWeek = weekly.length > 0 ? weekly[0].count : 0;
+                document.getElementById('statVisits').textContent = thisWeek;
+            } catch (e) { /* silent */ }
+        }
+
+        async function loadAdminContacts() {
+            const container = document.getElementById('adminContactsTab');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/admin/contacts', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const contacts = data.contacts || [];
+
+                if (contacts.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#999;">Aucune demande.</p>';
+                    return;
+                }
+
+                container.innerHTML = contacts.map(c => `
+                    <div class="contact-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                            <span class="contact-status ${c.statut}">${c.statut === 'pending' ? 'En attente' : c.statut === 'accepted' ? 'Approuvée' : c.statut === 'rejected' ? 'Refusée' : c.statut === 'completed' ? 'Terminée' : c.statut}</span>
+                            <small>${new Date(c.date_contact).toLocaleDateString()}</small>
+                        </div>
+                        <p style="margin:0.2rem 0;font-size:0.85rem;"><strong>Client:</strong> ${c.client?.nom_complet || '-'} | ${c.client?.telephone || ''} | ${c.client?.email || ''}</p>
+                        <p style="margin:0.2rem 0;font-size:0.85rem;"><strong>Propriétaire:</strong> ${c.proprietaire?.nom_complet || '-'} | ${c.proprietaire?.telephone || ''} | ${c.proprietaire?.email || ''}</p>
+                        <p style="margin:0.2rem 0;font-size:0.85rem;"><strong>Parcelle:</strong> ${c.parcelle?.matricule || '-'} (${c.parcelle?.quartier_village || ''})</p>
+                        ${c.statut === 'pending' ? `
+                            <div style="margin-top:0.5rem;display:flex;gap:0.4rem;">
+                                <button class="btn btn-success" style="font-size:0.75rem;padding:0.2rem 0.6rem;" onclick="adminApproveContact('${c.id}')">Approuver</button>
+                                <button class="btn btn-secondary" style="font-size:0.75rem;padding:0.2rem 0.6rem;" onclick="adminRejectContact('${c.id}')">Rejeter</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        async function adminApproveContact(contactId) {
+            if (!confirm('Approuver cette demande de contact ?')) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/contact/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ contact_id: contactId })
+                });
+                if (res.ok) {
+                    showNotification('Contact approuvé', 'success');
+                    loadAdminContacts();
+                } else {
+                    const data = await res.json();
+                    showNotification(data.error || 'Erreur', 'error');
+                }
+            } catch (e) { showNotification('Erreur serveur', 'error'); }
+        }
+
+        async function adminRejectContact(contactId) {
+            const notes = prompt('Motif du rejet (optionnel):');
+            if (notes === null) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/contact/reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ contact_id: contactId, admin_notes: notes })
+                });
+                if (res.ok) {
+                    showNotification('Contact rejeté', 'info');
+                    loadAdminContacts();
+                } else {
+                    const data = await res.json();
+                    showNotification(data.error || 'Erreur', 'error');
+                }
+            } catch (e) { showNotification('Erreur serveur', 'error'); }
+        }
+
+        async function loadAdminParcelles() {
+            const container = document.getElementById('adminParcellesTab');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/parcelles', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const parcelles = data.parcelles || data || [];
+
+                if (parcelles.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#999;">Aucune parcelle.</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="max-height:400px;overflow-y:auto;">
+                    ${parcelles.slice(0, 50).map(p => `
+                        <div class="contact-card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <strong>${p.matricule || 'N/A'}</strong>
+                                <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.15rem 0.4rem;" onclick="openEditParcelle('${p.id}')">
+                                    <i class="fas fa-edit"></i> Éditer
+                                </button>
+                            </div>
+                            <small>${p.quartier_village || ''} | ${p.superficie || ''} m² | ${p.statut || ''}</small>
+                        </div>
+                    `).join('')}
+                    </div>
+                `;
+            } catch (e) {
+                container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        async function openEditParcelle(parcelleId) {
+            const newPrix = prompt('Nouveau prix au m² (XAF):');
+            if (newPrix === null) return;
+            const prix = parseFloat(newPrix);
+            if (isNaN(prix)) { showNotification('Prix invalide', 'error'); return; }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/admin/parcelles/${parcelleId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ prix_m2: prix })
+                });
+                if (res.ok) {
+                    showNotification('Parcelle mise à jour', 'success');
+                    loadAdminParcelles();
+                } else {
+                    showNotification('Erreur lors de la mise à jour', 'error');
+                }
+            } catch (e) { showNotification('Erreur serveur', 'error'); }
+        }
+
+        async function loadAdminTransactions() {
+            const container = document.getElementById('adminTransactionsTab');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/admin/transactions', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const transactions = data.transactions || [];
+
+                let html = `
+                    <div style="margin-bottom:1rem;">
+                        <button class="btn btn-success" style="font-size:0.8rem;" onclick="openTransferForm()">
+                            <i class="fas fa-exchange-alt"></i> Nouveau transfert
+                        </button>
+                    </div>
+                `;
+
+                if (transactions.length === 0) {
+                    html += '<p style="text-align:center;color:#999;">Aucune transaction enregistrée.</p>';
+                } else {
+                    html += transactions.map(t => `
+                        <div class="contact-card">
+                            <small>${new Date(t.created_at).toLocaleDateString()}</small>
+                            <br><strong>Parcelle:</strong> ${t.contact?.parcelle?.matricule || t.parcelle_id || '-'}
+                            <br><small>Vendeur: ${t.contact?.proprietaire?.nom_complet || '-'} → Acheteur: ${t.contact?.client?.nom_complet || '-'}</small>
+                        </div>
+                    `).join('');
+                }
+
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        function openTransferForm() {
+            const parcelleId = prompt('ID de la parcelle vendue:');
+            if (!parcelleId) return;
+            const buyerId = prompt('ID du client acheteur:');
+            if (!buyerId) return;
+            const contactId = prompt('ID du contact associé (optionnel):') || '';
+            confirmTransfer(parcelleId, buyerId, contactId);
+        }
+
+        async function confirmTransfer(parcelleId, buyerId, contactId) {
+            if (!confirm('Confirmer le transfert de propriété ?')) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const body = { parcelle_id: parcelleId, buyer_id: buyerId };
+                if (contactId) body.contact_id = contactId;
+
+                const res = await fetch('/api/admin/transactions/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    showNotification('Transfert de propriété effectué !', 'success');
+                    loadAdminTransactions();
+                } else {
+                    const data = await res.json();
+                    showNotification(data.error || 'Erreur lors du transfert', 'error');
+                }
+            } catch (e) { showNotification('Erreur serveur', 'error'); }
+        }
+
+        // Polling notifications toutes les 30 secondes
+        setInterval(() => { if (currentUser) loadNotificationCount(); }, 30000);
+
+        // =====================================================
         //  GESTION DE LA SESSION PERSISTANTE
         // =====================================================
-        
+
         // Vérifier et restaurer la session au chargement de la page
         async function checkAndRestoreSession() {
             const authToken = localStorage.getItem('authToken');
@@ -5291,7 +5998,14 @@
         // =====================================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Initialisation de GéoFoncier - Version Corrigée Scroll Mobile');
-            
+
+            // Track visit (fire and forget)
+            fetch('/api/visits/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: window.location.pathname })
+            }).catch(() => {});
+
             // CORRECTION : Vérifier et restaurer la session au chargement
             checkAndRestoreSession();
             

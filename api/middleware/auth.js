@@ -1,61 +1,77 @@
-// api/middleware/auth.js - Middleware d'authentification
-const { supabaseAnon } = require('../supabase-config')
+const { supabaseAnon, supabase } = require('../supabase-config')
 
-/**
- * Middleware pour vérifier l'authentification de l'utilisateur
- * @param {Request} req - La requête Express
- * @param {Response} res - La réponse Express
- * @param {Function} next - Fonction pour passer au middleware suivant
- */
 async function authenticateUser(req, res, next) {
     try {
-        console.log('🔐 Vérification authentification utilisateur')
-        
-        // Récupérer le token d'authentification
         const authHeader = req.headers.authorization
         if (!authHeader) {
-            console.error('❌ Aucun header d\'authentification fourni')
-            return res.status(401).json({
-                success: false,
-                error: 'Authentification requise'
-            })
+            return res.status(401).json({ success: false, error: 'Authentification requise' })
         }
-        
-        // Vérifier que le header commence par "Bearer "
+
         const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
         if (!token) {
-            console.error('❌ Format de token invalide')
-            return res.status(401).json({
-                success: false,
-                error: 'Format de token invalide'
-            })
+            return res.status(401).json({ success: false, error: 'Format de token invalide' })
         }
-        
-        console.log('🔍 Vérification token...')
-        
-        // Vérifier le token avec Supabase
+
         const { data: { user }, error } = await supabaseAnon.auth.getUser(token)
-        
+
         if (error || !user) {
-            console.error('❌ Token invalide:', error ? error.message : 'Utilisateur non trouvé')
-            return res.status(401).json({
-                success: false,
-                error: 'Token invalide ou expiré'
-            })
+            return res.status(401).json({ success: false, error: 'Token invalide ou expiré' })
         }
-        
-        console.log('✅ Utilisateur authentifié:', user.id)
-        
-        // Ajouter l'utilisateur à la requête pour utilisation dans les routes suivantes
+
         req.user = user
         next()
     } catch (error) {
-        console.error('❌ Erreur middleware authentification:', error)
-        res.status(500).json({
-            success: false,
-            error: 'Erreur serveur lors de l\'authentification'
-        })
+        console.error('Erreur middleware authentification:', error)
+        res.status(500).json({ success: false, error: 'Erreur serveur lors de l\'authentification' })
     }
 }
 
-module.exports = { authenticateUser }
+async function requireAdmin(req, res, next) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, error: 'Authentification requise' })
+        }
+
+        const { data: userData, error } = await supabase
+            .from('users')
+            .select('type_utilisateur')
+            .eq('id', req.user.id)
+            .single()
+
+        if (error || !userData || userData.type_utilisateur !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Accès réservé aux administrateurs' })
+        }
+
+        next()
+    } catch (error) {
+        console.error('Erreur middleware requireAdmin:', error)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
+    }
+}
+
+function requireRole(...roles) {
+    return async (req, res, next) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({ success: false, error: 'Authentification requise' })
+            }
+
+            const { data: userData, error } = await supabase
+                .from('users')
+                .select('type_utilisateur')
+                .eq('id', req.user.id)
+                .single()
+
+            if (error || !userData || !roles.includes(userData.type_utilisateur)) {
+                return res.status(403).json({ success: false, error: 'Accès non autorisé' })
+            }
+
+            req.userRole = userData.type_utilisateur
+            next()
+        } catch (error) {
+            res.status(500).json({ success: false, error: 'Erreur serveur' })
+        }
+    }
+}
+
+module.exports = { authenticateUser, requireAdmin, requireRole }
