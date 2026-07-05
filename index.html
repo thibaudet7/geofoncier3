@@ -2328,11 +2328,6 @@
                         </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Description de l'activité *</label>
-                        <textarea class="form-input" id="descriptionActivite" rows="3" required placeholder="Décrivez précisément l'activité liée à ce terrain"></textarea>
-                    </div>
-                    
                     <!-- Informations propriétaire -->
                     <div class="form-group">
                         <label class="form-label">Nom du propriétaire *</label>
@@ -5206,7 +5201,6 @@
                     date_mise_en_valeur: document.getElementById('dateMiseEnValeur').value,
                     quartier_village: document.getElementById('quartierVillage').value,
                     activite: document.getElementById('activite').value,
-                    description_activite: document.getElementById('descriptionActivite').value,
                     nom_proprietaire: document.getElementById('nomProprietaire').value,
                     telephone_proprietaire: document.getElementById('telephoneProprietaire').value,
                     prix_m2: document.getElementById('prixM2').value || 0,
@@ -5845,11 +5839,13 @@
         // --- Notifications ---
         async function loadNotificationCount() {
             if (!currentUser) return;
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
             try {
-                const token = localStorage.getItem('authToken');
                 const res = await fetch('/api/notifications/unread-count', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!res.ok) return;
                 const data = await res.json();
                 const badge = document.getElementById('notifBadge');
                 if (badge) {
@@ -5874,9 +5870,11 @@
             const list = document.getElementById('notifList');
             try {
                 const token = localStorage.getItem('authToken');
+                if (!token) return;
                 const res = await fetch('/api/notifications?limit=20', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!res.ok) return;
                 const data = await res.json();
                 const notifs = data.notifications || [];
 

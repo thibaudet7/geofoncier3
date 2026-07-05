@@ -112,7 +112,7 @@ class ParcelleService {
                 date_mise_en_valeur: parcelleData.date_mise_en_valeur,
                 quartier_village: parcelleData.quartier_village,
                 activite: mappedActivite,
-                description_activite: parcelleData.description_activite,
+                description_activite: parcelleData.description_activite || null,
                 prix_m2: parseFloat(parcelleData.prix_m2) || 0,
                 nom_proprietaire: parcelleData.nom_proprietaire,
                 telephone_proprietaire: parcelleData.telephone_proprietaire,
