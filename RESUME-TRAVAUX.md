@@ -209,6 +209,63 @@ Insertion manuelle dans `public.users` avec le rôle `client`.
 
 ---
 
+## 9. Intégration paiement Flutterwave + abonnement obligatoire (2026-07-05)
+
+### Système de paiement intégré (frontend + backend)
+- Chargement du SDK Flutterwave (`checkout.flutterwave.com/v3.js`) dans index.html
+- Modal de choix d'abonnement (mensuel / annuel) avec calcul automatique du prix
+- Paiement inline via `FlutterwaveCheckout()` (carte, Mobile Money, USSD)
+- Callback de retour `/api/payment/callback` : active l'abonnement si paiement réussi
+- Gestion du retour utilisateur avec notification (succès / annulé / erreur)
+
+### Abonnement obligatoire pour les propriétaires
+- **Avant** : un propriétaire pouvait enregistrer des parcelles sans payer
+- **Après** : vérification d'abonnement actif dans `POST /api/parcelles` → retourne `403 SUBSCRIPTION_REQUIRED` si pas d'abonnement
+- Le frontend intercepte cette erreur et redirige vers le modal de paiement
+- Après paiement réussi, le formulaire d'ajout de parcelle s'ouvre automatiquement
+
+### Abonnement client
+- Bouton "Abonnement" ajouté dans le header pour les clients connectés
+- Vérification si abonnement déjà actif avant de proposer le paiement
+- Grille tarifaire selon la localisation (Afrique : 5 000/50 000 XAF, Hors Afrique : 50 000/500 000 XAF)
+
+### Historique abonnements admin
+- Nouvel onglet "Abonnements" dans le tableau de bord administrateur
+- Statistiques : actifs, en attente, expirés, revenus totaux
+- Liste complète avec infos utilisateur (nom, email, téléphone, type)
+- Détails : montant, devise, date début/fin, statut (badge couleur)
+
+### Sécurisation des routes paiement
+- `POST /api/payment/initiate` protégé par `authenticateUser` (user_id dérivé du token)
+- `GET /api/payment/subscription-status` : vérifie abonnement actif de l'utilisateur
+- `GET /api/payment/my-subscriptions` : historique personnel
+- `GET /api/payment/callback` : gestion du retour Flutterwave (redirect)
+
+### Nouvelles routes admin
+- `GET /api/admin/subscriptions` : historique complet avec jointure utilisateur
+- `GET /api/admin/subscriptions/stats` : statistiques agrégées
+
+### Migration SQL exécutée
+- Conversion des colonnes `type_abonnement` et `statut` d'enum vers TEXT avec contraintes CHECK
+- Drop et recréation de la vue `stats_generales` (dépendance sur la colonne `statut`)
+- Index ajoutés pour les requêtes fréquentes (user_id, statut, tx_ref)
+- Fichier : `api/migrations/002_subscriptions.sql`
+
+### Fichiers modifiés
+| Fichier | Modification |
+|---------|-------------|
+| `index.html` | SDK Flutterwave, fonctions paiement, modal choix abonnement, onglet admin abonnements, bouton client |
+| `api/routes/payment.js` | Auth middleware, routes subscription-status/my-subscriptions/callback |
+| `api/routes/parcelles.js` | Vérification abonnement actif avant création parcelle |
+| `api/routes/admin.js` | Routes GET /subscriptions et /subscriptions/stats |
+| `api/migrations/002_subscriptions.sql` | Migration table subscriptions |
+| `package.json` | Ajout dépendance `pg` |
+
+### Commit
+- `03a0dc5` - feat: intégration paiement Flutterwave + abonnement obligatoire avant enregistrement parcelle
+
+---
+
 ## Notes techniques
 
 - Le `.env` local contient les clés Supabase (non committé, normal)
