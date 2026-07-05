@@ -4,6 +4,7 @@ const path = require('path')
 const router = express.Router()
 const { ParcelleService } = require('../services/ParcelleService')
 const { authenticateUser } = require('../middleware/auth')
+const { supabase } = require('../supabase-config')
 
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -79,9 +80,29 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-// POST /api/parcelles - Créer une parcelle (authentifié)
+// POST /api/parcelles - Créer une parcelle (authentifié + abonnement actif requis)
 router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
     try {
+        // Vérifier que le propriétaire a un abonnement actif
+        const { data: activeSub, error: subError } = await supabase
+            .from('subscriptions')
+            .select('id, date_fin')
+            .eq('user_id', req.user.id)
+            .eq('statut', 'active')
+            .gte('date_fin', new Date().toISOString().split('T')[0])
+            .limit(1)
+
+        if (subError) throw subError
+
+        if (!activeSub || activeSub.length === 0) {
+            return res.status(403).json({
+                success: false,
+                error: 'Abonnement requis',
+                code: 'SUBSCRIPTION_REQUIRED',
+                message: 'Vous devez souscrire à un abonnement avant d\'enregistrer une parcelle. Veuillez effectuer le paiement.'
+            })
+        }
+
         const parcelleData = req.body
         if (parcelleData.coordinates && typeof parcelleData.coordinates === 'string') {
             parcelleData.coordinates = JSON.parse(parcelleData.coordinates)

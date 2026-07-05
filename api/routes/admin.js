@@ -247,6 +247,64 @@ router.post('/transactions/transfer', async (req, res) => {
 })
 
 // ================================
+// ABONNEMENTS (historique complet)
+// ================================
+
+// GET /api/admin/subscriptions - Historique de tous les abonnements
+router.get('/subscriptions', async (req, res) => {
+    try {
+        const { type, statut } = req.query
+        let query = supabase
+            .from('subscriptions')
+            .select(`
+                *,
+                user:user_id(nom_complet, email, telephone, type_utilisateur)
+            `)
+            .order('created_at', { ascending: false })
+
+        if (type) query = query.eq('type_abonnement', type)
+        if (statut) query = query.eq('statut', statut)
+
+        const { data, error } = await query
+
+        if (error) throw error
+        res.json({ subscriptions: data || [] })
+    } catch (error) {
+        console.error('Erreur admin subscriptions:', error)
+        res.status(500).json({ error: 'Erreur serveur' })
+    }
+})
+
+// GET /api/admin/subscriptions/stats - Statistiques abonnements
+router.get('/subscriptions/stats', async (req, res) => {
+    try {
+        const { data: allSubs, error } = await supabase
+            .from('subscriptions')
+            .select('type_abonnement, statut, montant')
+
+        if (error) throw error
+
+        const stats = {
+            total: allSubs.length,
+            active: allSubs.filter(s => s.statut === 'active').length,
+            pending: allSubs.filter(s => s.statut === 'pending').length,
+            expired: allSubs.filter(s => s.statut === 'expired').length,
+            cancelled: allSubs.filter(s => s.statut === 'cancelled').length,
+            revenue_total: allSubs.filter(s => s.statut === 'active').reduce((sum, s) => sum + (s.montant || 0), 0),
+            by_type: {
+                client: allSubs.filter(s => s.type_abonnement === 'client').length,
+                proprietaire: allSubs.filter(s => s.type_abonnement === 'proprietaire').length
+            }
+        }
+
+        res.json({ stats })
+    } catch (error) {
+        console.error('Erreur admin subscriptions stats:', error)
+        res.status(500).json({ error: 'Erreur serveur' })
+    }
+})
+
+// ================================
 // ROUTES GÉOGRAPHIQUES (EXISTANTES)
 // ================================
 
