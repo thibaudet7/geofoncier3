@@ -96,19 +96,35 @@ router.post('/webhook', async (req, res) => {
     }
 })
 
-// GET /api/payment/verify/:transactionId
-router.get('/verify/:transactionId', async (req, res) => {
+// GET /api/payment/verify/:transactionId - vérifie ET active l'abonnement (flux inline)
+router.get('/verify/:transactionId', authenticateUser, async (req, res) => {
     try {
         const { transactionId } = req.params
-        
+        const txRef = req.query.tx_ref || null
+
         const result = await FlutterwaveService.verifyPayment(transactionId)
-        
+
         if (result.success) {
+            // Retrouver l'abonnement via le tx_ref (stocké dans flutterwave_transaction_id à l'initiation)
+            const ref = txRef || (result.data && result.data.tx_ref)
+            if (ref) {
+                const { error: updErr } = await supabase
+                    .from('subscriptions')
+                    .update({
+                        statut: 'active',
+                        flutterwave_transaction_id: String(transactionId),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('flutterwave_transaction_id', ref)
+                    .eq('user_id', req.user.id)
+                if (updErr) console.error('⚠️ Activation abonnement échouée:', updErr)
+            }
             res.json({ verified: true, data: result.data })
         } else {
             res.json({ verified: false, error: result.error })
         }
     } catch (error) {
+        console.error('Erreur verify paiement:', error)
         res.status(500).json({ error: 'Erreur serveur' })
     }
 })

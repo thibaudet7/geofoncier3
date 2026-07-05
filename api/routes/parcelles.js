@@ -3,6 +3,7 @@ const multer = require('multer')
 const path = require('path')
 const router = express.Router()
 const { ParcelleService } = require('../services/ParcelleService')
+const { FlutterwaveService } = require('../services/FlutterwaveService')
 const { authenticateUser } = require('../middleware/auth')
 const { supabase } = require('../supabase-config')
 
@@ -82,6 +83,20 @@ router.get('/:id', async (req, res) => {
 // POST /api/parcelles - Créer une parcelle (authentifié + abonnement actif requis)
 router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
     try {
+        // Les données parcelle arrivent sérialisées dans le champ 'parcelleData'
+        const parcelleData = req.body.parcelleData
+            ? JSON.parse(req.body.parcelleData)
+            : req.body
+        if (parcelleData.coordinates && typeof parcelleData.coordinates === 'string') {
+            parcelleData.coordinates = JSON.parse(parcelleData.coordinates)
+        }
+
+        // Superficie calculée automatiquement à partir du polygone (pour la tarification)
+        const superficie = ParcelleService.computeAreaM2(
+            parcelleData.coordinates || [],
+            parcelleData.coordinate_system || 'wgs84'
+        )
+
         // Vérifier que le propriétaire a un abonnement actif
         const { data: activeSub, error: subError } = await supabase
             .from('subscriptions')
@@ -94,17 +109,16 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
         if (subError) throw subError
 
         if (!activeSub || activeSub.length === 0) {
+            const price = FlutterwaveService.calculateProprietairePrice(superficie)
             return res.status(403).json({
                 success: false,
                 error: 'Abonnement requis',
                 code: 'SUBSCRIPTION_REQUIRED',
-                message: 'Vous devez souscrire à un abonnement avant d\'enregistrer une parcelle. Veuillez effectuer le paiement.'
+                superficie: Math.round(superficie),
+                amount: price.annual,
+                currency: price.currency,
+                message: `Superficie calculée : ${Math.round(superficie).toLocaleString('fr-FR')} m². Abonnement annuel requis : ${price.annual.toLocaleString('fr-FR')} ${price.currency}.`
             })
-        }
-
-        const parcelleData = req.body
-        if (parcelleData.coordinates && typeof parcelleData.coordinates === 'string') {
-            parcelleData.coordinates = JSON.parse(parcelleData.coordinates)
         }
         if (parcelleData.actes_fonciers && typeof parcelleData.actes_fonciers === 'string') {
             try { parcelleData.actes_fonciers = JSON.parse(parcelleData.actes_fonciers) } catch (e) { parcelleData.actes_fonciers = [] }

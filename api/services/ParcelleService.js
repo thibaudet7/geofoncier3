@@ -267,6 +267,48 @@ class ParcelleService {
         }
     }
 
+    // Calcul de la superficie (m²) d'un polygone, sans dépendance externe.
+    // - wgs84 : formule planimétrique géodésique sur [lat, lng] (précise ~0,5%)
+    // - utm32/utm33 : coordonnées déjà en mètres [northing, easting] → shoelace direct
+    // - autre/inconnu : heuristique (grandes valeurs = mètres, sinon degrés)
+    static computeAreaM2(coordinates, coordinateSystem = 'wgs84') {
+        if (!Array.isArray(coordinates) || coordinates.length < 3) return 0;
+
+        // Retirer le point de fermeture éventuel (premier == dernier)
+        let pts = coordinates.slice();
+        const f = pts[0], l = pts[pts.length - 1];
+        if (f && l && f[0] === l[0] && f[1] === l[1]) pts = pts.slice(0, -1);
+        if (pts.length < 3) return 0;
+
+        const sys = (coordinateSystem || 'wgs84').toLowerCase();
+        const isProjected = sys === 'utm32' || sys === 'utm33';
+
+        // Heuristique pour systèmes inconnus : des valeurs > 1000 = mètres projetés
+        const looksProjected = pts.some(p => Math.abs(p[0]) > 1000 || Math.abs(p[1]) > 1000);
+
+        if (isProjected || (sys !== 'wgs84' && looksProjected)) {
+            // Shoelace en mètres (coordonnées planes)
+            let area = 0;
+            for (let i = 0; i < pts.length; i++) {
+                const j = (i + 1) % pts.length;
+                area += pts[i][1] * pts[j][0]; // easting_i * northing_j
+                area -= pts[j][1] * pts[i][0];
+            }
+            return Math.abs(area) / 2;
+        }
+
+        // Formule planimétrique géodésique (sphère), coordonnées [lat, lng]
+        const R = 6378137; // rayon terrestre (m)
+        const toRad = d => (d * Math.PI) / 180;
+        let total = 0;
+        for (let i = 0; i < pts.length; i++) {
+            const [lat1, lng1] = pts[i];
+            const [lat2, lng2] = pts[(i + 1) % pts.length];
+            total += toRad(lng2 - lng1) * (2 + Math.sin(toRad(lat1)) + Math.sin(toRad(lat2)));
+        }
+        return Math.abs((total * R * R) / 2);
+    }
+
     // Méthodes utilitaires (inchangées)
     static validateWGS84Coordinates(coordinates) {
         if (!Array.isArray(coordinates)) {
