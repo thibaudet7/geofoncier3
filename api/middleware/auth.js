@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken')
 const { supabaseAnon, supabase } = require('../supabase-config')
 
 async function authenticateUser(req, res, next) {
@@ -12,6 +13,18 @@ async function authenticateUser(req, res, next) {
             return res.status(401).json({ success: false, error: 'Format de token invalide' })
         }
 
+        // 1) Le token émis par POST /api/auth/login est un JWT applicatif signé
+        //    avec JWT_SECRET (voir api/routes/auth.js). On le vérifie en priorité,
+        //    comme le fait déjà GET /api/auth/verify.
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET)
+            req.user = { id: decoded.userId, email: decoded.email, type: decoded.type }
+            return next()
+        } catch (jwtError) {
+            // Pas un JWT applicatif valide : on retente avec un token de session Supabase natif
+        }
+
+        // 2) Fallback : token de session Supabase Auth natif
         const { data: { user }, error } = await supabaseAnon.auth.getUser(token)
 
         if (error || !user) {

@@ -13,16 +13,35 @@ class FlutterwaveService {
         }
     }
 
+    // Grille tarifaire officielle propriétaire (tarif ANNUEL uniquement, il n'existe pas
+    // de tarif mensuel pour ce type d'abonnement) :
+    //   ≤ 500 m²            : 5 000 XAF
+    //   501 m² à 5 000 m²   : 7 000 XAF / tranche de 1 000 m² entamée
+    //   5 001 m² à 1 ha     : 45 000 XAF
+    //   1,01 ha à 10 ha     : 60 000 XAF
+    //   > 10 ha             : 60 000 XAF + 65 000 XAF par tranche de 10 ha entamée au-delà de 10 ha
     static calculateProprietairePrice(superficie) {
-        const basePriceFor500m2 = 500 // XAF
-        const annualDiscount = 0.9 // 10% de réduction pour l'annuel
-        
-        const monthlyPrice = (superficie / 500) * basePriceFor500m2
-        const annualPrice = monthlyPrice * 12 * annualDiscount
-        
+        const M2_PAR_HA = 10000
+        let annual
+
+        if (superficie <= 500) {
+            annual = 5000
+        } else if (superficie <= 5000) {
+            const tranches = Math.ceil(superficie / 1000)
+            annual = tranches * 7000
+        } else if (superficie <= M2_PAR_HA) {
+            annual = 45000
+        } else if (superficie <= 10 * M2_PAR_HA) {
+            annual = 60000
+        } else {
+            const surplus = superficie - 10 * M2_PAR_HA
+            const tranchesSupplementaires = Math.ceil(surplus / (10 * M2_PAR_HA))
+            annual = 60000 + tranchesSupplementaires * 65000
+        }
+
         return {
-            monthly: Math.ceil(monthlyPrice),
-            annual: Math.ceil(annualPrice)
+            annual,
+            currency: 'XAF'
         }
     }
 

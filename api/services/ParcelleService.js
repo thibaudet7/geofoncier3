@@ -187,20 +187,28 @@ class ParcelleService {
                     }
                 }
 
-                // Upload justificatif acte (obligatoire pour terrains titrés)
-                if (files.justificatifActe && isTerrainTitre) {
-                    console.log('📤 Upload justificatif acte...');
-                    const acteResult = await this.uploadDocument(
-                        parcelleId, 
-                        files.justificatifActe, 
-                        'acte_foncier',
-                        'Justificatif acte foncier',
-                        dbClient
-                    );
-                    if (acteResult.success) {
-                        documentsUploaded.push('acte_foncier');
-                    } else {
-                        uploadErrors.push(`Acte: ${acteResult.error}`);
+                // Upload des justificatifs d'actes fonciers (un ou plusieurs, obligatoire pour terrains titrés)
+                if (files.actesFoncierFiles && files.actesFoncierFiles.length > 0 && isTerrainTitre) {
+                    const actesMeta = Array.isArray(parcelleData.actes_fonciers) ? parcelleData.actes_fonciers : [];
+                    console.log(`📤 Upload de ${files.actesFoncierFiles.length} justificatif(s) d'acte...`);
+
+                    for (let i = 0; i < files.actesFoncierFiles.length; i++) {
+                        const meta = actesMeta[i] || {};
+                        const label = ['Justificatif acte foncier', meta.type, meta.reference]
+                            .filter(Boolean)
+                            .join(' - ');
+                        const acteResult = await this.uploadDocument(
+                            parcelleId,
+                            files.actesFoncierFiles[i],
+                            'acte_foncier',
+                            label || `Justificatif acte foncier ${i + 1}`,
+                            dbClient
+                        );
+                        if (acteResult.success) {
+                            documentsUploaded.push(`acte_foncier_${i + 1}`);
+                        } else {
+                            uploadErrors.push(`Acte ${i + 1}: ${acteResult.error}`);
+                        }
                     }
                 }
 
@@ -218,14 +226,15 @@ class ParcelleService {
                 }
 
                 // Mettre à jour le statut des documents
-                const documentsComplete = documentsUploaded.includes('identite') && 
-                    (!isTerrainTitre || documentsUploaded.includes('acte_foncier'));
+                const hasActeFoncier = documentsUploaded.some(d => d.startsWith('acte_foncier'));
+                const documentsComplete = documentsUploaded.includes('identite') &&
+                    (!isTerrainTitre || hasActeFoncier);
 
                 await dbClient
                     .from('parcelles')
                     .update({ 
                         documents_complete: documentsComplete,
-                        acte_foncier_verified: isTerrainTitre && documentsUploaded.includes('acte_foncier')
+                        acte_foncier_verified: isTerrainTitre && hasActeFoncier
                     })
                     .eq('id', parcelleId);
 

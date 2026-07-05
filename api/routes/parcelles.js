@@ -17,11 +17,10 @@ const upload = multer({
     }
 })
 
-const parcelleUpload = upload.fields([
-    { name: 'document_identite', maxCount: 1 },
-    { name: 'justificatif_acte', maxCount: 1 },
-    { name: 'photos_terrain', maxCount: 3 }
-])
+// Le frontend envoie des noms de champs dynamiques (documentIdentite, justificatifActe_0,
+// justificatifActe_1, ..., photos) qui ne correspondent à aucune liste fixe : on utilise donc
+// upload.any() et on trie les fichiers par fieldname dans le handler (voir ci-dessous).
+const parcelleUpload = upload.any()
 
 // GET /api/parcelles - Liste des parcelles avec filtres
 router.get('/', async (req, res) => {
@@ -107,7 +106,21 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
         if (parcelleData.coordinates && typeof parcelleData.coordinates === 'string') {
             parcelleData.coordinates = JSON.parse(parcelleData.coordinates)
         }
-        const files = req.files || {}
+        if (parcelleData.actes_fonciers && typeof parcelleData.actes_fonciers === 'string') {
+            try { parcelleData.actes_fonciers = JSON.parse(parcelleData.actes_fonciers) } catch (e) { parcelleData.actes_fonciers = [] }
+        }
+
+        // req.files est un tableau plat (upload.any()) : on le trie par fieldname
+        const filesArr = req.files || []
+        const files = {
+            documentIdentite: filesArr.find(f => f.fieldname === 'documentIdentite'),
+            // Un fichier par acte foncier, dans l'ordre d'envoi (justificatifActe_0, _1, ...)
+            actesFoncierFiles: filesArr
+                .filter(f => f.fieldname.startsWith('justificatifActe'))
+                .sort((a, b) => a.fieldname.localeCompare(b.fieldname, undefined, { numeric: true })),
+            photos: filesArr.filter(f => f.fieldname === 'photos')
+        }
+
         const result = await ParcelleService.createParcelle(parcelleData, files, req.user.id)
         if (result.success) {
             res.status(201).json({ success: true, parcelle: result.parcelle })
