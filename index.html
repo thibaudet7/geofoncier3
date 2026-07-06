@@ -5255,10 +5255,12 @@
                 console.log('Proprietaire ID utilisé:', parcelleData.proprietaire_id);
                 console.log('CurrentUser:', currentUser);
                 
-                // Traitement des coordonnées (code existant)
+                // Synchroniser le tableau vers le textarea avant lecture
+                if (typeof syncTableToText === 'function') syncTableToText();
+
                 const coordonneesText = document.getElementById('coordonnees').value.trim();
                 const systemeSource = document.getElementById('systemeCoordonnes').value;
-                
+
                 if (!coordonneesText) {
                     throw new Error('Les coordonnées sont obligatoires');
                 }
@@ -6843,31 +6845,42 @@ function updateRowNumbers() {
 }
 
 function syncTableToText() {
-    const coordinates = collectTableCoordinates();
+    const coordinates = [];
+
+    for (let i = 0; i < coordinateRows.length; i++) {
+        const c1 = document.getElementById(`coord1_${i}`) || document.getElementById(`coordX_${i}`);
+        const c2 = document.getElementById(`coord2_${i}`) || document.getElementById(`coordY_${i}`);
+
+        if (c1 && c2 && c1.value && c2.value) {
+            const v1 = parseFloat(c1.value);
+            const v2 = parseFloat(c2.value);
+            if (!isNaN(v1) && !isNaN(v2)) {
+                coordinates.push(`${v1},${v2}`);
+            }
+        }
+    }
+
     if (coordinates.length > 0) {
-        const coordText = coordinates.map(coord => `${coord[0]},${coord[1]}`).join('\n');
-        document.getElementById('coordonnees').value = coordText;
+        document.getElementById('coordonnees').value = coordinates.join('\n');
     }
 }
 
 function collectTableCoordinates() {
     const coordinates = [];
-    
+
     for (let i = 0; i < coordinateRows.length; i++) {
-        const xInput = document.getElementById(`coordX_${i}`);
-        const yInput = document.getElementById(`coordY_${i}`);
-        
-        if (xInput && yInput && xInput.value && yInput.value) {
-            const x = parseFloat(xInput.value);
-            const y = parseFloat(yInput.value);
-            
-            if (!isNaN(x) && !isNaN(y)) {
-                // Format: [latitude, longitude] pour cohérence avec le reste
-                coordinates.push([y, x]);
+        const c1 = document.getElementById(`coord1_${i}`) || document.getElementById(`coordX_${i}`);
+        const c2 = document.getElementById(`coord2_${i}`) || document.getElementById(`coordY_${i}`);
+
+        if (c1 && c2 && c1.value && c2.value) {
+            const v1 = parseFloat(c1.value);
+            const v2 = parseFloat(c2.value);
+            if (!isNaN(v1) && !isNaN(v2)) {
+                coordinates.push([v1, v2]);
             }
         }
     }
-    
+
     return coordinates;
 }
 
