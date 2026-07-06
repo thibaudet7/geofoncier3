@@ -4721,9 +4721,10 @@
             return null;
         }
 
-        // Modale de confirmation affichée à l'enregistrement d'une parcelle quand
-        // aucun abonnement actif n'existe. Le montant est déjà calculé par le serveur
-        // à partir de la superficie du polygone.
+        // FormData sauvegardé lors d'une tentative de soumission sans abonnement.
+        // Permet de ré-envoyer exactement les mêmes données (y compris fichiers) après paiement.
+        let _pendingParcelleFormData = null;
+
         function showParcellePaymentConfirm(superficie, amount, currency) {
             const superficieTxt = Number(superficie).toLocaleString('fr-FR');
             const amountTxt = Number(amount).toLocaleString('fr-FR');
@@ -4757,9 +4758,9 @@
         }
 
         function cancelParcellePayment() {
+            _pendingParcelleFormData = null;
             closeModal('parcellePaymentModal');
             showNotification('Paiement annulé — la parcelle n\'a pas été enregistrée. Vos informations sont conservées.', 'info');
-            // Rouvrir le formulaire : les champs (y compris fichiers) restent remplis
             openModal('addParcelleModal');
         }
 
@@ -4771,8 +4772,7 @@
                 period: 'annuel',
                 onSuccess: function() {
                     showNotification('Abonnement activé. Enregistrement de la parcelle en cours…', 'success');
-                    // Re-soumettre le formulaire encore rempli (fichiers inclus)
-                    setTimeout(() => handleAddParcelle({ preventDefault: function(){} }), 800);
+                    submitPendingParcelle();
                 },
                 onCancel: function() {
                     showNotification('Paiement annulé — la parcelle n\'a pas été enregistrée.', 'info');
@@ -4781,9 +4781,52 @@
             });
         }
 
+        async function submitPendingParcelle() {
+            const formData = _pendingParcelleFormData;
+            _pendingParcelleFormData = null;
+            if (!formData) {
+                showNotification('Erreur : données de parcelle perdues. Veuillez resoumettre le formulaire.', 'error');
+                openModal('addParcelleModal');
+                return;
+            }
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) throw new Error('Token manquant');
+
+                const response = await fetch('/api/parcelles', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    showNotification('Parcelle enregistrée avec succès !', 'success');
+                    closeModal('addParcelleModal');
+                    document.getElementById('addParcelleForm').reset();
+                    updateFormFields();
+                    actesFonciers = [];
+                    document.getElementById('actesFonciersList').innerHTML = '';
+                    document.getElementById('coordonnees').value = '';
+                    if (typeof coordinateRows !== 'undefined') coordinateRows = [];
+                    const tableBody = document.getElementById('coordinateTableBody');
+                    if (tableBody) tableBody.innerHTML = '';
+                    document.getElementById('systemeCoordonnes').value = 'wgs84';
+                    if (typeof updateCoordinatesHelp === 'function') updateCoordinatesHelp();
+                    if (typeof showTextMode === 'function') showTextMode();
+                    loadParcelles();
+                } else {
+                    throw new Error(result.error || 'Erreur serveur');
+                }
+            } catch (err) {
+                showNotification('Erreur lors de l\'enregistrement : ' + err.message, 'error');
+                openModal('addParcelleModal');
+            }
+        }
+
         function openPaymentModal(options) {
             const { amount, subscriptionType, period, onSuccess, onCancel } = options;
             const token = localStorage.getItem('authToken');
+            let paymentSucceeded = false;
 
             const endDate = new Date();
             if (period === 'annuel') {
@@ -4821,6 +4864,7 @@
                         customizations: data.payment_config.customizations,
                         callback: function(response) {
                             if (response.status === 'successful') {
+                                paymentSucceeded = true;
                                 const ref = response.tx_ref || data.payment_config.tx_ref;
                                 fetch(`/api/payment/verify/${response.transaction_id}?tx_ref=${encodeURIComponent(ref)}`, {
                                     headers: { 'Authorization': `Bearer ${token}` }
@@ -4838,7 +4882,7 @@
                             }
                         },
                         onclose: function() {
-                            if (onCancel) onCancel();
+                            if (!paymentSucceeded && onCancel) onCancel();
                         }
                     });
                 } else {
@@ -5294,18 +5338,21 @@
                 }
                 
                 console.log('📤 === ENVOI REQUÊTE ===');
-                
+
                 // CORRECTION CRITIQUE : Récupérer le token JWT depuis localStorage
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) {
                     throw new Error('Token d\'authentification manquant. Veuillez vous reconnecter.');
                 }
                 console.log('🔑 Token récupéré:', authToken.substring(0, 20) + '...');
-                
+
+                // Sauvegarder le FormData pour re-soumission après paiement si nécessaire
+                _pendingParcelleFormData = formData;
+
                 // CORRECTION : Améliorer la gestion du timeout et des erreurs
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondes timeout
-                
+
                 const response = await fetch('/api/parcelles', {
                     method: 'POST',
                     headers: {
@@ -5333,14 +5380,15 @@
                 }
                 
                 if (response.ok && result.success) {
+                    _pendingParcelleFormData = null;
                     console.log('🎉 === SUCCÈS ===');
                     console.log('Parcelle créée:', result.parcelle?.id);
-                    
+
                     let message = 'Parcelle ajoutée avec succès !';
                     if (result.coordinatesTransformed) {
                         message += ` (Coordonnées converties de ${systemeSource.toUpperCase()} vers WGS84)`;
                     }
-                    
+
                     showNotification(message, 'success');
                     closeModal('addParcelleModal');
 
@@ -5938,11 +5986,13 @@
         // --- Favoris ---
         async function loadFavorites() {
             if (!currentUser) return;
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
             try {
-                const token = localStorage.getItem('authToken');
                 const res = await fetch('/api/favorites', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!res.ok) return;
                 const data = await res.json();
                 userFavorites = (data.favorites || []).map(f => f.parcelle?.id || f.parcelle_id);
             } catch (e) { userFavorites = []; }
@@ -6591,12 +6641,7 @@
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
             document.getElementById('registerForm').addEventListener('submit', handleRegister);
-            document.getElementById('addParcelleForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                showNotification('Parcelle ajoutée avec succès', 'success');
-                closeModal('addParcelleModal');
-            });
-
+           document.getElementById('addParcelleForm').addEventListener('submit', handleAddParcelle);
             document.getElementById('searchMatricule').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchParcelle();

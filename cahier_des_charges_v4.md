@@ -762,4 +762,3 @@ L'application adopte une approche mobile-first avec 4 points de rupture :
 | Node.js minimum | 16.0.0 |
 
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJveXlwdHF5Ym5zaXdua2RwZmJsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODEyNzQ1MiwiZXhwIjoyMDYzNzAzNDUyfQ.LhUbu9JnZJpN2kN5HOKZth_Y-ZYMmZBuP1kkNm7x3oE
