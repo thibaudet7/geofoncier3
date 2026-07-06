@@ -47,8 +47,10 @@ class FlutterwaveService {
 
     static async initiatePayment(paymentData) {
         try {
+            if (!supabase) throw new Error('Client Supabase non initialisé (SUPABASE_SERVICE_KEY manquante)')
+
             const tx_ref = `geofoncier_${Date.now()}`
-            
+
             const flutterwaveConfig = {
                 public_key: process.env.FLUTTERWAVE_PUBLIC_KEY,
                 tx_ref: tx_ref,

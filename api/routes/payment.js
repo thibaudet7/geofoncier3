@@ -8,6 +8,11 @@ const { supabase } = require('../supabase-config')
 // POST /api/payment/initiate (authentifié)
 router.post('/initiate', authenticateUser, async (req, res) => {
     try {
+        if (!process.env.FLUTTERWAVE_PUBLIC_KEY || !process.env.FLUTTERWAVE_SECRET_KEY) {
+            console.error('❌ Variables FLUTTERWAVE_PUBLIC_KEY / FLUTTERWAVE_SECRET_KEY manquantes')
+            return res.status(500).json({ error: 'Configuration paiement manquante sur le serveur' })
+        }
+
         const paymentData = req.body
         paymentData.user_id = req.user.id
 
@@ -25,11 +30,12 @@ router.post('/initiate', authenticateUser, async (req, res) => {
                 subscription_id: result.subscription_id
             })
         } else {
+            console.error('Erreur initiatePayment:', result.error)
             res.status(400).json({ error: result.error })
         }
     } catch (error) {
         console.error('Erreur initiation paiement:', error)
-        res.status(500).json({ error: 'Erreur serveur' })
+        res.status(500).json({ error: error.message || 'Erreur serveur' })
     }
 })
 
