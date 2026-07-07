@@ -152,7 +152,7 @@ class ParcelleService {
                 } else if (insertError.code === '22P02') { // Données invalides
                     throw new Error('Format de données invalide: ' + insertError.message);
                 } else if (insertError.message.includes('activite')) {
-                    throw new Error(`Type d'activité invalide: "${parcelleData.activite}". Valeurs acceptées: propriete_privee, vente_terrain, location_construction, location_agriculture, autres`);
+                    throw new Error(`Type d'activité invalide: "${mappedActivite}" (original: "${parcelleData.activite}"). Détail DB: ${insertError.message}`);
                 } else {
                     throw new Error(`Erreur base de données: ${insertError.message}`);
                 }
