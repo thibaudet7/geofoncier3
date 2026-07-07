@@ -120,6 +120,9 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
                 message: `Superficie calculée : ${Math.round(superficie).toLocaleString('fr-FR')} m². Abonnement annuel requis : ${price.annual.toLocaleString('fr-FR')} ${price.currency}.`
             })
         }
+        // Stocker la superficie calculée pour l'insertion en DB
+        parcelleData.superficie = Math.round(superficie)
+
         if (parcelleData.actes_fonciers && typeof parcelleData.actes_fonciers === 'string') {
             try { parcelleData.actes_fonciers = JSON.parse(parcelleData.actes_fonciers) } catch (e) { parcelleData.actes_fonciers = [] }
         }

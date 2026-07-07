@@ -2435,28 +2435,28 @@
 
             switch(system) {
                 case 'wgs84':
-                    help.textContent = 'Format WGS84 (GPS): remplissez X (longitude) et Y (latitude). Minimum 3 points.';
-                    headerCoord1.textContent = 'X (Longitude)';
-                    headerCoord2.textContent = 'Y (Latitude)';
-                    placeholder.placeholder = '9.7679,4.0511\n9.7679,4.0515\n9.7685,4.0515\n9.7685,4.0511';
+                    help.textContent = 'Format WGS84 (GPS): Latitude, Longitude. Minimum 3 points.';
+                    headerCoord1.textContent = 'Latitude';
+                    headerCoord2.textContent = 'Longitude';
+                    placeholder.placeholder = '4.0511,9.7679\n4.0515,9.7679\n4.0515,9.7685\n4.0511,9.7685';
                     break;
                 case 'utm32':
-                    help.textContent = 'Format UTM32: X (Easting) et Y (Northing) en mètres. Minimum 3 points.';
-                    headerCoord1.textContent = 'X (Easting)';
-                    headerCoord2.textContent = 'Y (Northing)';
-                    placeholder.placeholder = '567890,445123\n567890,445133\n567900,445133\n567900,445123';
+                    help.textContent = 'Format UTM32: Northing, Easting en mètres. Minimum 3 points.';
+                    headerCoord1.textContent = 'Northing (Y)';
+                    headerCoord2.textContent = 'Easting (X)';
+                    placeholder.placeholder = '445123,567890\n445133,567890\n445133,567900\n445123,567900';
                     break;
                 case 'utm33':
-                    help.textContent = 'Format UTM33: X (Easting) et Y (Northing) en mètres. Minimum 3 points.';
-                    headerCoord1.textContent = 'X (Easting)';
-                    headerCoord2.textContent = 'Y (Northing)';
-                    placeholder.placeholder = '234567,445123\n234567,445133\n234577,445133\n234577,445123';
+                    help.textContent = 'Format UTM33: Northing, Easting en mètres. Minimum 3 points.';
+                    headerCoord1.textContent = 'Northing (Y)';
+                    headerCoord2.textContent = 'Easting (X)';
+                    placeholder.placeholder = '445123,234567\n445133,234567\n445133,234577\n445123,234577';
                     break;
                 case 'douala':
-                    help.textContent = 'Format Douala 1948: X et Y selon système local ancien. Minimum 3 points.';
-                    headerCoord1.textContent = 'X';
-                    headerCoord2.textContent = 'Y';
-                    placeholder.placeholder = '123456,456789\n123456,456799\n123466,456799\n123466,456789';
+                    help.textContent = 'Format Douala 1948: Y (Northing), X (Easting). Minimum 3 points.';
+                    headerCoord1.textContent = 'Y';
+                    headerCoord2.textContent = 'X';
+                    placeholder.placeholder = '456789,123456\n456799,123456\n456799,123466\n456789,123466';
                     break;
             }
         }
@@ -6243,11 +6243,16 @@
                         <div class="contact-card">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <strong>${p.matricule || 'N/A'}</strong>
-                                <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.15rem 0.4rem;" onclick="openEditParcelle('${p.id}')">
-                                    <i class="fas fa-edit"></i> Éditer
-                                </button>
+                                <div style="display:flex;gap:0.3rem;">
+                                    <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.15rem 0.4rem;" onclick="openEditParcelle('${p.id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn" style="font-size:0.7rem;padding:0.15rem 0.4rem;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;" onclick="deleteAdminParcelle('${p.id}','${(p.matricule||'').replace(/'/g,"\\'")}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <small>${p.quartier_village || ''} | ${p.superficie || ''} m² | ${p.statut || ''}</small>
+                            <small>${p.quartier_village || ''} | ${p.superficie || 0} m² | ${p.activite || ''}</small>
                         </div>
                     `).join('')}
                     </div>
@@ -6275,6 +6280,25 @@
                     loadAdminParcelles();
                 } else {
                     showNotification('Erreur lors de la mise à jour', 'error');
+                }
+            } catch (e) { showNotification('Erreur serveur', 'error'); }
+        }
+
+        async function deleteAdminParcelle(parcelleId, matricule) {
+            if (!confirm(`Supprimer définitivement la parcelle ${matricule} ? Cette action est irréversible.`)) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/admin/parcelles/${parcelleId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    showNotification('Parcelle supprimée', 'success');
+                    loadAdminParcelles();
+                    loadParcelles();
+                } else {
+                    const data = await res.json();
+                    showNotification(data.error || 'Erreur lors de la suppression', 'error');
                 }
             } catch (e) { showNotification('Erreur serveur', 'error'); }
         }
@@ -6715,24 +6739,24 @@
 
     switch(system) {
         case 'wgs84':
-            headerX.textContent = 'Longitude';
-            headerY.textContent = 'Latitude';
+            headerX.textContent = 'Latitude';
+            headerY.textContent = 'Longitude';
             help.textContent = 'Format WGS84: latitude,longitude (ex: 4.0511,9.7679)';
             break;
         case 'utm32':
-            headerX.textContent = 'X (Easting)';
-            headerY.textContent = 'Y (Northing)';
-            help.textContent = 'Format UTM32: latitude,longitude où lat=Northing, lng=Easting (ex: 567890,445123)';
+            headerX.textContent = 'Northing (Y)';
+            headerY.textContent = 'Easting (X)';
+            help.textContent = 'Format UTM32: Northing,Easting en mètres (ex: 445123,567890)';
             break;
         case 'utm33':
-            headerX.textContent = 'X (Easting)';
-            headerY.textContent = 'Y (Northing)';
-            help.textContent = 'Format UTM33: latitude,longitude où lat=Northing, lng=Easting (ex: 567890,234567)';
+            headerX.textContent = 'Northing (Y)';
+            headerY.textContent = 'Easting (X)';
+            help.textContent = 'Format UTM33: Northing,Easting en mètres (ex: 445123,234567)';
             break;
         case 'douala':
-            headerX.textContent = 'X';
-            headerY.textContent = 'Y';
-            help.textContent = 'Format Douala 1948: latitude,longitude (système local)';
+            headerX.textContent = 'Y';
+            headerY.textContent = 'X';
+            help.textContent = 'Format Douala 1948: Y,X (système local)';
             break;
     }
 }

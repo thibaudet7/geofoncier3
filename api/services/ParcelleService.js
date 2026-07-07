@@ -111,9 +111,10 @@ class ParcelleService {
             // CORRECTION CRITIQUE : Préparer les données pour l'insertion
             const insertData = {
                 matricule: parcelleData.matricule,
-                proprietaire_id: userId, // Utiliser l'ID de l'utilisateur authentifié
+                proprietaire_id: userId,
                 geom: geomGeoJSON,
                 is_terrain_titre: isTerrainTitre,
+                superficie: parcelleData.superficie || 0,
                 date_delivrance: parcelleData.date_delivrance || null,
                 date_mise_en_valeur: parcelleData.date_mise_en_valeur,
                 quartier_village: parcelleData.quartier_village,

@@ -173,6 +173,31 @@ router.put('/parcelles/:id', async (req, res) => {
     }
 })
 
+// DELETE /api/admin/parcelles/:id - Supprimer une parcelle
+router.delete('/parcelles/:id', async (req, res) => {
+    try {
+        const { id } = req.params
+
+        // Supprimer les documents associés
+        await supabase.from('parcelle_documents').delete().eq('parcelle_id', id)
+        await supabase.from('parcelle_images').delete().eq('parcelle_id', id)
+        await supabase.from('favorites').delete().eq('parcelle_id', id)
+
+        // Supprimer la parcelle
+        const { error } = await supabase
+            .from('parcelles')
+            .delete()
+            .eq('id', id)
+
+        if (error) throw error
+
+        res.json({ message: 'Parcelle supprimée' })
+    } catch (error) {
+        console.error('Erreur admin delete parcelle:', error)
+        res.status(500).json({ error: error.message || 'Erreur serveur' })
+    }
+})
+
 // POST /api/admin/transactions/transfer - Transfert de propriété
 router.post('/transactions/transfer', async (req, res) => {
     try {
