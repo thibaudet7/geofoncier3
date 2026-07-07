@@ -114,7 +114,7 @@ class ParcelleService {
                 proprietaire_id: userId,
                 geom: geomGeoJSON,
                 is_terrain_titre: isTerrainTitre,
-                superficie: parcelleData.superficie || 0,
+                superficie_calculee: parcelleData.superficie || 0,
                 date_delivrance: parcelleData.date_delivrance || null,
                 date_mise_en_valeur: parcelleData.date_mise_en_valeur,
                 quartier_village: parcelleData.quartier_village,
