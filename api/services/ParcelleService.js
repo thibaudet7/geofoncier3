@@ -112,7 +112,7 @@ class ParcelleService {
                 date_mise_en_valeur: parcelleData.date_mise_en_valeur,
                 quartier_village: parcelleData.quartier_village,
                 activite: mappedActivite,
-                description_activite: parcelleData.description_activite || null,
+                description_activite: parcelleData.description_activite || '',
                 prix_m2: parseFloat(parcelleData.prix_m2) || 0,
                 nom_proprietaire: parcelleData.nom_proprietaire,
                 telephone_proprietaire: parcelleData.telephone_proprietaire,
@@ -152,7 +152,7 @@ class ParcelleService {
                 } else if (insertError.code === '22P02') { // Données invalides
                     throw new Error('Format de données invalide: ' + insertError.message);
                 } else if (insertError.message.includes('activite')) {
-                    throw new Error(`Type d'activité invalide: "${mappedActivite}" (original: "${parcelleData.activite}"). Détail DB: ${insertError.message}`);
+                    throw new Error(`Erreur champ activité: ${insertError.message}`);
                 } else {
                     throw new Error(`Erreur base de données: ${insertError.message}`);
                 }
