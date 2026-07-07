@@ -56,6 +56,7 @@ class FlutterwaveService {
                 tx_ref: tx_ref,
                 amount: paymentData.amount,
                 currency: paymentData.currency || 'XAF',
+                country: 'CM',
                 payment_options: 'card,mobilemoney,ussd',
                 customer: {
                     email: paymentData.customer.email,

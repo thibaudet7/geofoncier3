@@ -6,6 +6,8 @@ const { supabase } = require('../supabase-config')
 // GET /api/favorites - liste des favoris avec détails parcelle
 router.get('/', authenticateUser, async (req, res) => {
     try {
+        if (!supabase) return res.json({ favorites: [] })
+
         const { data, error } = await supabase
             .from('favorites')
             .select(`
@@ -22,7 +24,7 @@ router.get('/', authenticateUser, async (req, res) => {
         res.json({ favorites: data })
     } catch (error) {
         console.error('Erreur get favorites:', error)
-        res.status(500).json({ error: 'Erreur serveur' })
+        res.status(500).json({ error: error.message || 'Erreur serveur' })
     }
 })
 

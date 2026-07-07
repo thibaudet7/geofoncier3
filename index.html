@@ -4793,12 +4793,15 @@
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) throw new Error('Token manquant');
 
+                console.log('📤 Re-soumission parcelle après paiement…');
                 const response = await fetch('/api/parcelles', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${authToken}` },
                     body: formData
                 });
                 const result = await response.json();
+                console.log('📡 Réponse re-soumission:', response.status, result);
+
                 if (response.ok && result.success) {
                     showNotification('Parcelle enregistrée avec succès !', 'success');
                     closeModal('addParcelleModal');
@@ -4814,10 +4817,14 @@
                     if (typeof updateCoordinatesHelp === 'function') updateCoordinatesHelp();
                     if (typeof showTextMode === 'function') showTextMode();
                     loadParcelles();
+                } else if (result.code === 'SUBSCRIPTION_REQUIRED') {
+                    showNotification('L\'abonnement n\'a pas été activé correctement. Veuillez réessayer ou contacter le support.', 'error');
+                    openModal('addParcelleModal');
                 } else {
                     throw new Error(result.error || 'Erreur serveur');
                 }
             } catch (err) {
+                console.error('❌ Erreur re-soumission parcelle:', err);
                 showNotification('Erreur lors de l\'enregistrement : ' + err.message, 'error');
                 openModal('addParcelleModal');
             }
