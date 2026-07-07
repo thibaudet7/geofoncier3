@@ -3531,66 +3531,66 @@
         }
 
         // Parser la géométrie PostGIS
-        function parsePostGISGeometry(geomString) {
-            if (!geomString) return [];
-            
+        function parsePostGISGeometry(geom) {
+            if (!geom) return [];
+
             try {
+                // GeoJSON object (Supabase retourne souvent ce format)
+                if (typeof geom === 'object' && geom.type) {
+                    let coords = [];
+                    if (geom.type === 'Polygon' && geom.coordinates) {
+                        coords = geom.coordinates[0];
+                    } else if (geom.type === 'MultiPolygon' && geom.coordinates) {
+                        coords = geom.coordinates[0][0];
+                    }
+                    return coords.map(c => [c[1], c[0]]).filter(([lat, lng]) =>
+                        !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+                    );
+                }
+
+                // GeoJSON string
+                if (typeof geom === 'string' && (geom.startsWith('{') || geom.startsWith('['))) {
+                    try {
+                        const parsed = JSON.parse(geom);
+                        return parsePostGISGeometry(parsed);
+                    } catch (e) { /* pas du JSON, continuer */ }
+                }
+
+                // WKT string
+                const geomString = String(geom);
+
                 if (geomString.includes('POLYGON')) {
-                    const coordsMatch = geomString.match(/POLYGON\(\(([^)]+)\)\)/);
+                    const coordsMatch = geomString.match(/POLYGON\s*\(\(([^)]+)\)\)/);
                     if (!coordsMatch) return [];
-                    
-                    const coordsString = coordsMatch[1];
-                    const pairs = coordsString.split(',');
-                    
-                    const coordinates = pairs.map(pair => {
+
+                    return coordsMatch[1].split(',').map(pair => {
                         const coords = pair.trim().split(/\s+/);
-                        if (coords.length >= 2) {
-                            const lng = parseFloat(coords[0]);
-                            const lat = parseFloat(coords[1]);
-                            return [lat, lng]; // Leaflet utilise [lat, lng]
-                        }
+                        if (coords.length >= 2) return [parseFloat(coords[1]), parseFloat(coords[0])];
                         return null;
                     }).filter(coord => {
                         if (!coord) return false;
                         const [lat, lng] = coord;
-                        const isValid = !isNaN(lat) && !isNaN(lng) && 
-                                       lat >= -90 && lat <= 90 && 
-                                       lng >= -180 && lng <= 180;
-                        return isValid;
+                        return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
                     });
-                    
-                    return coordinates;
                 }
-                
+
                 if (geomString.includes('MULTIPOLYGON')) {
-                    const polygonsMatch = geomString.match(/MULTIPOLYGON\(\(\(([^)]+)\)\)\)/);
+                    const polygonsMatch = geomString.match(/MULTIPOLYGON\s*\(\(\(([^)]+)\)\)\)/);
                     if (!polygonsMatch) return [];
-                    
-                    const coordsString = polygonsMatch[1];
-                    const pairs = coordsString.split(',');
-                    
-                    const coordinates = pairs.map(pair => {
+
+                    return polygonsMatch[1].split(',').map(pair => {
                         const coords = pair.trim().split(/\s+/);
-                        if (coords.length >= 2) {
-                            const lng = parseFloat(coords[0]);
-                            const lat = parseFloat(coords[1]);
-                            return [lat, lng];
-                        }
+                        if (coords.length >= 2) return [parseFloat(coords[1]), parseFloat(coords[0])];
                         return null;
                     }).filter(coord => {
                         if (!coord) return false;
                         const [lat, lng] = coord;
-                        const isValid = !isNaN(lat) && !isNaN(lng) && 
-                                       lat >= -90 && lat <= 90 && 
-                                       lng >= -180 && lng <= 180;
-                        return isValid;
+                        return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
                     });
-                    
-                    return coordinates;
                 }
-                
+
                 return [];
-                
+
             } catch (error) {
                 console.error('❌ Erreur parsing géométrie:', error);
                 return [];
@@ -3602,71 +3602,61 @@
         // =====================================================
         
         // Données de démonstration avec chevauchement réaliste
-        const sampleParcelles = [
-            {
-                id: 1,
-                matricule: "TF-001234",
-                coordinates: [[4.0511, 9.7679], [4.0515, 9.7679], [4.0515, 9.7685], [4.0511, 9.7685]],
-                statut: "titre",
-                is_terrain_titre: true,
-                quartier: "Bonanjo",
-                activite: "vente_terrain",
-                proprietaire: "Jean Dupont",
-                proprietaire_id: "prop_001",
-                telephone: "+237677123456",
-                superficie: 500,
-                prix_m2: 15000,
-                description: "Terrain résidentiel avec vue sur le fleuve"
-            },
-            {
-                id: 2,
-                matricule: "NT-0012345",
-                coordinates: [[4.0513, 9.7681], [4.0517, 9.7681], [4.0517, 9.7687], [4.0513, 9.7687]],
-                statut: "non_titre",
-                is_terrain_titre: false,
-                quartier: "Bonanjo",
-                activite: "location_construction",
-                proprietaire: "Marie Kamga",
-                proprietaire_id: "prop_002",
-                telephone: "+237678234567",
-                superficie: 300,
-                prix_m2: 8000,
-                description: "Terrain pour construction d'immeuble"
-            },
-            {
-                id: 3,
-                matricule: "TF-001235",
-                coordinates: [[4.0520, 9.7690], [4.0525, 9.7690], [4.0525, 9.7695], [4.0520, 9.7695]],
-                statut: "titre",
-                is_terrain_titre: true,
-                quartier: "Akwa",
-                activite: "propriete_privee",
-                proprietaire: "Paul Mbarga",
-                proprietaire_id: "prop_003",
-                telephone: "+237679345678",
-                superficie: 400,
-                prix_m2: 0,
-                description: "Résidence privée familiale"
-            }
-        ];
+        let sampleParcelles = [];
 
-        // Charger les parcelles avec optimisations mobiles
-        function loadParcelles() {
-            console.log('🔄 Chargement des parcelles...');
-            
+        async function loadParcelles() {
+            console.log('🔄 Chargement des parcelles depuis l\'API...');
+
             if (!parcelleLayer) {
                 console.error('❌ ParcelleLayer n\'existe pas !');
                 return;
             }
-            
+
             parcelleLayer.clearLayers();
-            
+
+            try {
+                const res = await fetch('/api/parcelles');
+                const data = await res.json();
+                if (!data.success || !data.parcelles) {
+                    console.error('❌ Échec chargement parcelles:', data.error);
+                    return;
+                }
+
+                sampleParcelles = data.parcelles.map(p => {
+                    let coordinates = [];
+                    if (p.geom) {
+                        coordinates = parsePostGISGeometry(p.geom);
+                    }
+                    return {
+                        id: p.id,
+                        matricule: p.matricule,
+                        coordinates: coordinates,
+                        statut: p.is_terrain_titre ? 'titre' : 'non_titre',
+                        is_terrain_titre: p.is_terrain_titre,
+                        quartier: p.quartier_village,
+                        quartier_village: p.quartier_village,
+                        activite: p.activite,
+                        proprietaire: p.nom_proprietaire || (p.users && p.users.nom_complet) || '',
+                        proprietaire_id: p.proprietaire_id,
+                        telephone: p.telephone_proprietaire || (p.users && p.users.telephone) || '',
+                        superficie: p.superficie || 0,
+                        prix_m2: p.prix_m2 || 0,
+                        description: p.description_activite || '',
+                        created_at: p.created_at
+                    };
+                }).filter(p => p.coordinates.length >= 3);
+
+                console.log(`📦 ${sampleParcelles.length} parcelles récupérées depuis l'API`);
+
+            } catch (err) {
+                console.error('❌ Erreur fetch parcelles:', err);
+                return;
+            }
+
             sampleParcelles.forEach((parcelle, index) => {
-                console.log(`📍 Traitement parcelle ${index + 1}: ${parcelle.matricule}`);
-                
                 try {
                     const color = getParcelleColor(parcelle);
-                    
+
                     const polygon = L.polygon(parcelle.coordinates, {
                         color: color,
                         weight: isMobile ? 1.5 : 2,
@@ -3678,46 +3668,43 @@
                         bubblingMouseEvents: false
                     });
 
-                    // Popup responsive pour parcelles
                     const popupContent = createParcellePopup(parcelle);
                     polygon.bindPopup(popupContent, {
                         maxWidth: isMobile ? Math.min(280, window.innerWidth - 40) : 300,
                         className: isMobile ? 'mobile-popup' : 'desktop-popup'
                     });
-                    
+
                     polygon.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
                         map.closePopup();
                         showParcelleDetails(parcelle);
                         return false;
                     });
-                    
+
                     polygon.on('mouseover touchstart', function(e) {
-                        this.setStyle({ 
+                        this.setStyle({
                             weight: isMobile ? 2.5 : 3,
                             fillOpacity: 0.5,
                             opacity: 1
                         });
                     });
-                    
+
                     polygon.on('mouseout touchend', function(e) {
-                        this.setStyle({ 
+                        this.setStyle({
                             weight: isMobile ? 1.5 : 2,
                             fillOpacity: 0.3,
                             opacity: 0.8
                         });
                     });
-                    
+
                     parcelleLayer.addLayer(polygon);
-                    console.log(`✅ Parcelle ${parcelle.matricule} ajoutée`);
-                    
                 } catch (error) {
                     console.error(`❌ Erreur parcelle ${parcelle.matricule}:`, error);
                 }
             });
-            
-            console.log(`🎉 ${parcelleLayer.getLayers().length} parcelles chargées`);
-            
+
+            console.log(`🎉 ${parcelleLayer.getLayers().length} parcelles chargées sur la carte`);
+
             if (!map.hasLayer(parcelleLayer)) {
                 map.addLayer(parcelleLayer);
             }

@@ -89,11 +89,17 @@ class ParcelleService {
                 throw new Error(`Coordonnées invalides après transformation: ${validationResult.error}`);
             }
 
-            // Formatter les coordonnées pour PostGIS (WGS84)
-            const coordinates = finalCoordinates
-                .map(coord => `${coord[1]} ${coord[0]}`) // lng lat pour PostGIS
-                .join(', ');
-            const geomWKT = `POLYGON((${coordinates}))`;
+            // Formatter les coordonnées en GeoJSON pour PostGIS via Supabase
+            const geoJsonCoords = finalCoordinates.map(coord => [coord[1], coord[0]]); // [lng, lat]
+            // Fermer le ring si nécessaire
+            const first = geoJsonCoords[0], last = geoJsonCoords[geoJsonCoords.length - 1];
+            if (first[0] !== last[0] || first[1] !== last[1]) {
+                geoJsonCoords.push([first[0], first[1]]);
+            }
+            const geomGeoJSON = {
+                type: 'Polygon',
+                coordinates: [geoJsonCoords]
+            };
 
             // Déterminer is_terrain_titre
             const isTerrainTitre = parcelleData.statut === 'titre';
@@ -106,7 +112,7 @@ class ParcelleService {
             const insertData = {
                 matricule: parcelleData.matricule,
                 proprietaire_id: userId, // Utiliser l'ID de l'utilisateur authentifié
-                geom: geomWKT,
+                geom: geomGeoJSON,
                 is_terrain_titre: isTerrainTitre,
                 date_delivrance: parcelleData.date_delivrance || null,
                 date_mise_en_valeur: parcelleData.date_mise_en_valeur,
@@ -125,7 +131,7 @@ class ParcelleService {
                 matricule: insertData.matricule,
                 proprietaire_id: insertData.proprietaire_id,
                 activite: insertData.activite,
-                geom: geomWKT.substring(0, 50) + '...'
+                geom: JSON.stringify(geomGeoJSON).substring(0, 50) + '...'
             });
 
             // CORRECTION : Insérer avec le bon client et gestion d'erreur améliorée
