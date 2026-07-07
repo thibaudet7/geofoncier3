@@ -266,6 +266,66 @@ Insertion manuelle dans `public.users` avec le rôle `client`.
 
 ---
 
+## 10. Corrections flux paiement et enregistrement parcelle (2026-07-07)
+
+### Parcelle non enregistrée après paiement (bug critique)
+- **Problème** : après paiement réussi via le SDK inline Flutterwave, la parcelle n'était pas sauvegardée
+- **Cause** : `/api/payment/verify` appelait l'API Flutterwave pour vérifier la transaction ; en mode test, l'API ne reconnaît pas les transactions simulées → `verified: false` → `onSuccess` jamais appelé → `submitPendingParcelle` jamais exécuté
+- **Correction** : le endpoint `/verify` active désormais l'abonnement dès que le `tx_ref` est présent (le SDK inline a déjà confirmé le paiement côté client)
+- Ajout d'une fonction dédiée `submitPendingParcelle()` qui ré-envoie directement le `FormData` sauvegardé en mémoire (fichiers inclus) après activation de l'abonnement
+
+### Coordonnées du tableau non transmises
+- **Problème** : cliquer "Enregistrer" avec le mode Tableau actif retournait "Les coordonnées sont obligatoires"
+- **Cause** : la fonction globale `syncTableToText()` (qui écrasait la version locale) cherchait des inputs `coordX_`/`coordY_` alors que le formulaire crée `coord1_`/`coord2_`
+- **Correction** : `syncTableToText()` cherche les deux variantes d'IDs ; `handleAddParcelle` appelle `syncTableToText()` avant de lire le textarea
+
+### Mobile Money absent du checkout
+- **Problème** : seul le paiement par carte était proposé, pas Mobile Money (MTN/Orange)
+- **Cause** : paramètre `country` manquant dans la config Flutterwave
+- **Correction** : ajout de `country: 'CM'` dans `FlutterwaveService.initiatePayment()` pour activer les options Mobile Money Cameroun
+
+### Bug onclose Flutterwave
+- **Problème** : Flutterwave appelle `onclose` même après un paiement réussi, déclenchant le callback `onCancel` (notification "paiement annulé")
+- **Correction** : flag `paymentSucceeded` empêche `onCancel` de se déclencher après un succès
+
+### Erreur 500 sur /api/favorites
+- **Problème** : erreur 500 si le client Supabase n'est pas initialisé (variable `SUPABASE_SERVICE_KEY` absente)
+- **Correction** : guard `if (!supabase) return res.json({ favorites: [] })` pour éviter le crash
+
+### Suppression clé service_role exposée
+- Suppression d'une clé `service_role` Supabase qui était présente en clair dans `cahier_des_charges_v4.md`
+
+### Fichiers modifiés
+| Fichier | Modification |
+|---------|-------------|
+| `index.html` | syncTableToText avant submit, submitPendingParcelle, flag paymentSucceeded, _pendingParcelleFormData |
+| `api/routes/payment.js` | /verify active toujours l'abonnement, check vars env, meilleurs messages erreur |
+| `api/services/FlutterwaveService.js` | country:'CM', guard supabase null |
+| `api/routes/favorites.js` | Guard supabase null |
+| `cahier_des_charges_v4.md` | Suppression clé service_role exposée |
+
+### Commits
+- `e24d9c1` - fix: coordonnées tableau non lues lors de l'enregistrement parcelle
+- `2b395a4` - fix: auto-soumission parcelle après paiement + correction onclose Flutterwave
+- `96ca290` - fix: meilleurs messages d'erreur pour le paiement (500 debug)
+- `7958769` - fix: parcelle non enregistrée après paiement + Mobile Money + favorites 500
+
+---
+
+## Variables d'environnement requises sur Vercel
+
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | URL du projet Supabase |
+| `SUPABASE_ANON_KEY` | Clé anon (publique) Supabase |
+| `SUPABASE_SERVICE_KEY` | Clé service_role Supabase (lecture/écriture sans RLS) |
+| `JWT_SECRET` | Secret pour signer les tokens JWT |
+| `FLUTTERWAVE_PUBLIC_KEY` | Clé publique Flutterwave (test ou live) |
+| `FLUTTERWAVE_SECRET_KEY` | Clé secrète Flutterwave (test ou live) |
+| `APP_URL` | `https://www.geofoncier.shop` |
+
+---
+
 ## Notes techniques
 
 - Le `.env` local contient les clés Supabase (non committé, normal)
@@ -273,3 +333,5 @@ Insertion manuelle dans `public.users` avec le rôle `client`.
 - Le déploiement Vercel prend ~30 secondes après un push
 - La connexion passe par : Frontend → `/api/auth/login` → `supabaseAnon.auth.signInWithPassword()` → récupération dans `public.users` → génération JWT
 - Le `JWT_SECRET` en production est défini dans les env vars Vercel
+- En mode TEST Flutterwave, le Mobile Money n'est visible que si `country: 'CM'` est défini
+- Le flux paiement inline ne dépend pas de la vérification API Flutterwave (le SDK client suffit)
