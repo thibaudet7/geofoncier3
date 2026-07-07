@@ -399,20 +399,37 @@ class ParcelleService {
     }
 
     // Upload documents avec client contextualisé
+    static async ensureBucketExists(client, bucketName) {
+        const { data, error } = await client.storage.getBucket(bucketName)
+        if (error || !data) {
+            console.log(`📦 Création du bucket "${bucketName}"...`)
+            const { error: createErr } = await client.storage.createBucket(bucketName, {
+                public: true,
+                fileSizeLimit: 10 * 1024 * 1024
+            })
+            if (createErr && !createErr.message.includes('already exists')) {
+                console.error(`❌ Impossible de créer le bucket ${bucketName}:`, createErr)
+                throw createErr
+            }
+        }
+    }
+
     static async uploadDocument(parcelleId, file, documentType, displayName = null, dbClient = null) {
         try {
             console.log(`📤 Upload document ${documentType} pour parcelle ${parcelleId}`);
-            
+
             const client = dbClient || supabase;
-            
+
             const validTypes = ['acte_foncier', 'titre_propriete', 'certificat_occupation', 'plan_cadastral', 'autre'];
             if (!validTypes.includes(documentType)) {
                 throw new Error(`Type de document invalide: ${documentType}`);
             }
-            
+
+            await this.ensureBucketExists(client, 'parcelle-documents');
+
             const fileExtension = file.originalname.split('.').pop().toLowerCase();
             const fileName = `parcelles/${parcelleId}/${documentType}_${Date.now()}.${fileExtension}`;
-            
+
             const { data: uploadData, error: uploadError } = await client.storage
                 .from('parcelle-documents')
                 .upload(fileName, file.buffer, {
@@ -425,14 +442,12 @@ class ParcelleService {
                 throw uploadError;
             }
 
-            // Obtenir l'URL publique
             const { data: { publicUrl } } = client.storage
                 .from('parcelle-documents')
                 .getPublicUrl(fileName);
 
             console.log('✅ Fichier uploadé, URL:', publicUrl);
 
-            // Insérer dans la table parcelle_documents
             const documentRecord = {
                 parcelle_id: parcelleId,
                 document_type: documentType,
@@ -452,12 +467,7 @@ class ParcelleService {
 
             if (documentError) {
                 console.error('❌ Erreur insertion document:', documentError);
-                
-                // Supprimer le fichier du storage en cas d'erreur d'insertion
-                await client.storage
-                    .from('parcelle-documents')
-                    .remove([fileName]);
-                
+                await client.storage.from('parcelle-documents').remove([fileName]);
                 throw documentError;
             }
 
@@ -473,9 +483,11 @@ class ParcelleService {
     static async uploadTerrainPhoto(parcelleId, file, ordre, dbClient = null) {
         try {
             console.log(`📷 Upload photo ${ordre} pour parcelle ${parcelleId}`);
-            
+
             const client = dbClient || supabase;
-            
+
+            await this.ensureBucketExists(client, 'parcelle-images');
+
             const fileExtension = file.originalname.split('.').pop().toLowerCase();
             const fileName = `parcelles/${parcelleId}/photo_${ordre}_${Date.now()}.${fileExtension}`;
             

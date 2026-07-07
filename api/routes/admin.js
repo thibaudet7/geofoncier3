@@ -131,6 +131,28 @@ router.get('/visits/weekly', async (req, res) => {
 // GESTION DES PARCELLES (ADMIN)
 // ================================
 
+// GET /api/admin/parcelles/:id - Détails complets d'une parcelle (avec documents)
+router.get('/parcelles/:id', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('parcelles')
+            .select(`
+                *,
+                users!parcelles_proprietaire_id_fkey(id, nom_complet, email, telephone, type_utilisateur),
+                parcelle_documents(id, document_type, document_name, document_url, file_size, mime_type, is_verified, uploaded_at),
+                parcelle_images(id, image_url, image_ordre)
+            `)
+            .eq('id', req.params.id)
+            .single()
+
+        if (error) throw error
+        res.json({ parcelle: data })
+    } catch (error) {
+        console.error('Erreur admin get parcelle:', error)
+        res.status(500).json({ error: error.message || 'Erreur serveur' })
+    }
+})
+
 // PUT /api/admin/parcelles/:id - Éditer une parcelle
 router.put('/parcelles/:id', async (req, res) => {
     try {

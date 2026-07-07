@@ -6240,10 +6240,10 @@
                 container.innerHTML = `
                     <div style="max-height:400px;overflow-y:auto;">
                     ${parcelles.slice(0, 50).map(p => `
-                        <div class="contact-card">
+                        <div class="contact-card" style="cursor:pointer;" onclick="viewAdminParcelle('${p.id}')">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <strong>${p.matricule || 'N/A'}</strong>
-                                <div style="display:flex;gap:0.3rem;">
+                                <div style="display:flex;gap:0.3rem;" onclick="event.stopPropagation()">
                                     <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.15rem 0.4rem;" onclick="openEditParcelle('${p.id}')">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -6252,13 +6252,108 @@
                                     </button>
                                 </div>
                             </div>
-                            <small>${p.quartier_village || ''} | ${p.superficie || 0} m² | ${p.activite || ''}</small>
+                            <small>${p.nom_proprietaire || ''} | ${p.quartier_village || ''} | ${p.superficie || 0} m² | ${p.activite || ''}</small>
                         </div>
                     `).join('')}
                     </div>
                 `;
             } catch (e) {
                 container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        async function viewAdminParcelle(parcelleId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/admin/parcelles/${parcelleId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) { showNotification('Erreur chargement parcelle', 'error'); return; }
+                const data = await res.json();
+                const p = data.parcelle;
+                if (!p) { showNotification('Parcelle introuvable', 'error'); return; }
+
+                const owner = p.users || {};
+                const docs = p.parcelle_documents || [];
+                const imgs = p.parcelle_images || [];
+
+                const docsHtml = docs.length > 0
+                    ? docs.map(d => `
+                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid #eee;">
+                            <i class="fas ${d.document_type === 'acte_foncier' ? 'fa-file-contract' : 'fa-id-card'}" style="color:#3498db;"></i>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:0.8rem;font-weight:500;">${d.document_name || d.document_type}</div>
+                                <div style="font-size:0.7rem;color:#999;">${d.document_type} | ${d.file_size ? (d.file_size/1024).toFixed(0) + ' Ko' : ''}</div>
+                            </div>
+                            <a href="${d.document_url}" target="_blank" style="font-size:0.75rem;color:#3498db;text-decoration:none;">
+                                <i class="fas fa-download"></i> Ouvrir
+                            </a>
+                        </div>
+                    `).join('')
+                    : '<p style="color:#999;font-size:0.8rem;">Aucun document uploadé</p>';
+
+                const imgsHtml = imgs.length > 0
+                    ? `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;">${imgs.map(img =>
+                        `<a href="${img.image_url}" target="_blank"><img src="${img.image_url}" style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;"></a>`
+                    ).join('')}</div>`
+                    : '';
+
+                const html = `
+                    <div style="padding:1rem;max-height:70vh;overflow-y:auto;">
+                        <h3 style="margin-bottom:0.8rem;"><i class="fas fa-map-marked-alt"></i> ${p.matricule}</h3>
+
+                        <div style="background:#f8f9fa;padding:0.6rem;border-radius:6px;margin-bottom:0.8rem;">
+                            <h4 style="font-size:0.85rem;margin-bottom:0.4rem;"><i class="fas fa-user"></i> Propriétaire</h4>
+                            <div style="font-size:0.8rem;">
+                                <p style="margin:0.15rem 0;"><strong>Nom :</strong> ${p.nom_proprietaire || owner.nom_complet || 'N/A'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Email :</strong> ${owner.email || 'N/A'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Téléphone :</strong> ${p.telephone_proprietaire || owner.telephone || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8f9fa;padding:0.6rem;border-radius:6px;margin-bottom:0.8rem;">
+                            <h4 style="font-size:0.85rem;margin-bottom:0.4rem;"><i class="fas fa-info-circle"></i> Informations parcelle</h4>
+                            <div style="font-size:0.8rem;">
+                                <p style="margin:0.15rem 0;"><strong>Quartier :</strong> ${p.quartier_village || 'N/A'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Superficie :</strong> ${p.superficie || 0} m²</p>
+                                <p style="margin:0.15rem 0;"><strong>Activité :</strong> ${p.activite || 'N/A'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Prix/m² :</strong> ${p.prix_m2 ? p.prix_m2.toLocaleString() + ' XAF' : 'Non défini'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Statut :</strong> ${p.is_terrain_titre ? 'Terrain titré' : 'Non titré'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Date mise en valeur :</strong> ${p.date_mise_en_valeur || 'N/A'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Enregistré le :</strong> ${p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8f9fa;padding:0.6rem;border-radius:6px;margin-bottom:0.8rem;">
+                            <h4 style="font-size:0.85rem;margin-bottom:0.4rem;"><i class="fas fa-folder-open"></i> Documents & Actes fonciers</h4>
+                            ${docsHtml}
+                        </div>
+
+                        ${imgsHtml ? `<div style="background:#f8f9fa;padding:0.6rem;border-radius:6px;margin-bottom:0.8rem;">
+                            <h4 style="font-size:0.85rem;margin-bottom:0.4rem;"><i class="fas fa-camera"></i> Photos du terrain</h4>
+                            ${imgsHtml}
+                        </div>` : ''}
+
+                        <div style="text-align:center;margin-top:0.8rem;">
+                            <button class="btn btn-secondary" onclick="closeModal('adminParcelleDetailModal')">Fermer</button>
+                        </div>
+                    </div>
+                `;
+
+                let modal = document.getElementById('adminParcelleDetailModal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'adminParcelleDetailModal';
+                    modal.className = 'modal';
+                    modal.innerHTML = `<div class="modal-content" style="max-width:550px;">${html}</div>`;
+                    document.body.appendChild(modal);
+                } else {
+                    modal.querySelector('.modal-content').innerHTML = html;
+                }
+                modal.style.display = 'flex';
+            } catch (e) {
+                console.error('Erreur viewAdminParcelle:', e);
+                showNotification('Erreur lors du chargement des détails', 'error');
             }
         }
 
