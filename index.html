@@ -5441,20 +5441,7 @@
                         return;
                     }
 
-                    // CORRECTION : Meilleure gestion des erreurs spécifiques
-                    let errorMessage = result.error || 'Erreur inconnue du serveur';
-
-                    if (result.error && result.error.includes('matricule')) {
-                        errorMessage = 'Ce matricule existe déjà. Veuillez en choisir un autre.';
-                    } else if (result.error && result.error.includes('activite')) {
-                        errorMessage = 'Type d\'activité invalide. Veuillez sélectionner une activité valide.';
-                    } else if (result.error && result.error.includes('coordinates')) {
-                        errorMessage = 'Erreur dans les coordonnées. Vérifiez le format et le système de coordonnées.';
-                    } else if (result.error && result.error.includes('proprietaire')) {
-                        errorMessage = 'Erreur d\'identification du propriétaire. Reconnectez-vous.';
-                    }
-
-                    throw new Error(errorMessage);
+                    throw new Error(result.error || 'Erreur inconnue du serveur');
                 }
                 
             } catch (error) {
