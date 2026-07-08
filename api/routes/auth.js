@@ -260,8 +260,7 @@ router.post('/forgot-password', [
 
 // POST /api/auth/reset-password - RÉINITIALISATION DU MOT DE PASSE
 router.post('/reset-password', [
-    body('password').isLength({ min: 6 }).withMessage('Minimum 6 caractères'),
-    body('token').notEmpty().withMessage('Token requis')
+    body('password').isLength({ min: 6 }).withMessage('Minimum 6 caractères')
 ], async (req, res) => {
     try {
         const errors = validationResult(req)
@@ -270,28 +269,38 @@ router.post('/reset-password', [
             return res.status(400).json({ success: false, error: errorMessages.join('. ') })
         }
 
-        const { password, token } = req.body
+        const { password, token, access_token } = req.body
+        if (!token && !access_token) {
+            return res.status(400).json({ success: false, error: 'Token de récupération manquant' })
+        }
         console.log('🔑 Réinitialisation mot de passe...')
 
-        const { supabaseAnon } = require('../supabase-config')
+        const { supabaseAnon, supabase } = require('../supabase-config')
+        let userId = null
 
-        // Vérifier la session avec le token de récupération
-        const { data: sessionData, error: sessionError } = await supabaseAnon.auth.verifyOtp({
-            token_hash: token,
-            type: 'recovery'
-        })
-
-        if (sessionError) {
-            return res.status(400).json({
-                success: false,
-                error: 'Lien de réinitialisation invalide ou expiré'
+        if (access_token) {
+            // Flux implicite : le lien e-mail a redirigé avec #access_token=...
+            // On identifie l'utilisateur via ce jeton de session.
+            const { data: { user }, error: userErr } = await supabaseAnon.auth.getUser(access_token)
+            if (userErr || !user) {
+                return res.status(400).json({ success: false, error: 'Lien de réinitialisation invalide ou expiré' })
+            }
+            userId = user.id
+        } else {
+            // Flux token_hash : vérification OTP de récupération
+            const { data: sessionData, error: sessionError } = await supabaseAnon.auth.verifyOtp({
+                token_hash: token,
+                type: 'recovery'
             })
+            if (sessionError || !sessionData?.user) {
+                return res.status(400).json({ success: false, error: 'Lien de réinitialisation invalide ou expiré' })
+            }
+            userId = sessionData.user.id
         }
 
-        // Mettre à jour le mot de passe
-        const { supabase } = require('../supabase-config')
+        // Mettre à jour le mot de passe (API admin, service role)
         const { error: updateError } = await supabase.auth.admin.updateUserById(
-            sessionData.user.id,
+            userId,
             { password: password }
         )
 

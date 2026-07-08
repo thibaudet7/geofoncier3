@@ -200,7 +200,22 @@ router.delete('/parcelles/:id', async (req, res) => {
     try {
         const { id } = req.params
 
-        // Supprimer les documents associés
+        // Récupérer les contacts liés à cette parcelle (FK NO ACTION → bloquent la suppression)
+        const { data: relatedContacts } = await supabase
+            .from('contacts')
+            .select('id')
+            .eq('parcelle_id', id)
+
+        if (relatedContacts && relatedContacts.length > 0) {
+            const contactIds = relatedContacts.map(c => c.id)
+            // Supprimer d'abord les transactions liées à ces contacts
+            await supabase.from('transactions').delete().in('contact_id', contactIds)
+            // Puis les contacts
+            await supabase.from('contacts').delete().eq('parcelle_id', id)
+        }
+
+        // documents / images / favorites sont en ON DELETE CASCADE, mais on les
+        // supprime explicitement par sécurité (au cas où le cascade ne serait pas défini)
         await supabase.from('parcelle_documents').delete().eq('parcelle_id', id)
         await supabase.from('parcelle_images').delete().eq('parcelle_id', id)
         await supabase.from('favorites').delete().eq('parcelle_id', id)
@@ -213,7 +228,7 @@ router.delete('/parcelles/:id', async (req, res) => {
 
         if (error) throw error
 
-        res.json({ message: 'Parcelle supprimée' })
+        res.json({ success: true, message: 'Parcelle supprimée' })
     } catch (error) {
         console.error('Erreur admin delete parcelle:', error)
         res.status(500).json({ error: error.message || 'Erreur serveur' })
@@ -319,6 +334,42 @@ router.get('/subscriptions', async (req, res) => {
     } catch (error) {
         console.error('Erreur admin subscriptions:', error)
         res.status(500).json({ error: 'Erreur serveur' })
+    }
+})
+
+// DELETE /api/admin/subscriptions/:id - Supprimer un abonnement/paiement
+router.delete('/subscriptions/:id', async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('subscriptions')
+            .delete()
+            .eq('id', req.params.id)
+
+        if (error) throw error
+        res.json({ success: true })
+    } catch (error) {
+        console.error('Erreur suppression abonnement:', error)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
+    }
+})
+
+// DELETE /api/admin/subscriptions?user_id=... - Supprimer tous les abonnements d'un utilisateur
+router.delete('/subscriptions', async (req, res) => {
+    try {
+        const { user_id } = req.query
+        if (!user_id) {
+            return res.status(400).json({ success: false, error: 'user_id requis' })
+        }
+        const { error } = await supabase
+            .from('subscriptions')
+            .delete()
+            .eq('user_id', user_id)
+
+        if (error) throw error
+        res.json({ success: true })
+    } catch (error) {
+        console.error('Erreur suppression abonnements utilisateur:', error)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
     }
 })
 

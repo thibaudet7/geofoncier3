@@ -1,61 +1,115 @@
-# Résumé des travaux - GéoFoncier
+# GéoFoncier — Résumé des travaux & État de l'application
 
-## Projet
-- **Application** : GéoFoncier - Gestion des Parcelles Foncières
-- **Stack** : Node.js/Express + Leaflet.js + Supabase (PostgreSQL/PostGIS)
-- **Déploiement** : Vercel (www.geofoncier.shop)
-- **Repo GitHub** : https://github.com/thibaudet7/geofoncier3
-- **Supabase Project ID** : `boyyptqybnsiwnkdpfbl`
+> Document destiné à être partagé avec un assistant IA (Claude) pour reprendre le développement sans perte de contexte.
+> Dernière mise à jour : 2026-07-08
 
 ---
 
-## 1. Amélioration GPS mobile (index.html)
+## 1. Vue d'ensemble du projet
 
-### Problème
-Le bouton de positionnement GPS était trop petit et pouvait être masqué par la barre d'état sur les téléphones.
+**GéoFoncier** est une application web de gestion de parcelles foncières au Cameroun. Elle permet aux propriétaires d'enregistrer leurs terrains (titrés ou non titrés) avec géolocalisation précise, et aux clients de consulter/rechercher des parcelles disponibles.
 
-### Corrections apportées
-- **Viewport** : ajout de `viewport-fit=cover` pour supporter les encoches iOS
-- **Safe areas** : utilisation de `env(safe-area-inset-top/left)` sur toutes les tailles d'écran
-- **Taille du bouton** : portée à 44x44px (recommandation Apple/Google pour cibles tactiles)
-- **Précision GPS** : timeout augmenté de 15s à 30s, `maximumAge: 2000` pour éviter les requêtes inutiles
-- **Zoom adaptatif** : zoom 18 si précision ≤10m, 17 si ≤50m, 16 sinon
-- **Altitude** : affichage dans le popup quand disponible
-- **Mode paysage** : support du bouton GPS ajouté
-- **Marqueur** : taille et ombre augmentées pour meilleure visibilité
+### Stack technique
 
----
+| Couche | Technologie |
+|--------|-------------|
+| Frontend | HTML/CSS/JS vanilla (SPA mono-fichier `index.html`) + Leaflet.js (carte) |
+| Backend | Node.js / Express (fichier d'entrée : `api/server.js`) |
+| Base de données | PostgreSQL + PostGIS via **Supabase** |
+| Stockage fichiers | Supabase Storage (buckets `parcelle-documents`, `parcelle-images`) |
+| Auth | Supabase Auth + JWT custom (7 jours) |
+| Paiement | **Flutterwave** inline checkout (clé publique live) |
+| Déploiement | **Vercel** (serverless Node) |
+| Coordonnées | **proj4** pour transformations UTM32/33/Douala → WGS84 |
 
-## 2. Fix connexion admin (401 - Unauthorized)
+### URLs
 
-### Problème
-Impossible de se connecter avec `geospatial.estate@gmail.com` - erreur 401.
-
-### Causes identifiées (2 problèmes)
-
-#### A) Compte admin inexistant
-Le compte `geospatial.estate@gmail.com` n'existait ni dans `auth.users` ni dans `public.users` de Supabase.
-
-**Solution** : Création du compte via l'API admin Supabase.
-
-#### B) normalizeEmail() supprimait les points Gmail
-`express-validator`'s `normalizeEmail()` transformait `geospatial.estate@gmail.com` en `geospatialestate@gmail.com` avant envoi à Supabase Auth.
-
-**Solution** : `normalizeEmail({ gmail_remove_dots: false })` dans `api/routes/auth.js` (lignes 31 et 112).
+| Ressource | URL |
+|-----------|-----|
+| Production | https://geofoncier.vercel.app |
+| GitHub | https://github.com/Thibaut-Music/geofoncier |
+| Supabase | https://boyyptqybnsiwnkdpfbl.supabase.co |
 
 ---
 
-## 3. Correction utilisateur manquant
+## 2. Architecture des fichiers
 
-### Problème
-`villagemarte@gmail.com` existait dans Supabase Auth mais pas dans la table `public.users`.
-
-### Solution
-Insertion manuelle dans `public.users` avec le rôle `client`.
+```
+geofoncier/
+├── index.html                 # Frontend complet (SPA ~7000 lignes)
+├── package.json               # Dépendances Node.js
+├── vercel.json                # Config Vercel (toutes routes → api/server.js)
+├── .env                       # Variables d'environnement (local)
+├── api/
+│   ├── server.js              # Point d'entrée Express (CORS, rate-limit, static)
+│   ├── supabase-config.js     # Client Supabase (anon + service_role)
+│   ├── middleware/
+│   │   └── auth.js            # authenticateUser, requireAdmin, requireRole
+│   ├── routes/
+│   │   ├── auth.js            # POST /login, /register, /logout, /forgot-password
+│   │   ├── parcelles.js       # CRUD parcelles (GET, POST, PUT, DELETE)
+│   │   ├── payment.js         # Initiate, verify, webhook, pricing, callback
+│   │   ├── admin.js           # Stats, contacts, parcelles CRUD, visits
+│   │   ├── favorites.js       # GET/POST/DELETE favoris utilisateur
+│   │   ├── contact.js         # Demandes de contact client→propriétaire
+│   │   ├── notifications.js   # Notifications utilisateur
+│   │   ├── spatial.js         # Arrondissements GeoJSON, overlaps
+│   │   └── csv.js             # Import CSV de parcelles
+│   └── services/
+│       ├── ParcelleService.js         # Création, upload docs, conversion coords
+│       ├── FlutterwaveService.js      # Pricing, initiate, verify, webhook
+│       ├── AuthService.js             # Register, login, password reset
+│       ├── SpatialService.js          # PostGIS queries, arrondissements
+│       ├── ContactService.js          # Gestion contacts
+│       ├── NotificationService.js     # CRUD notifications
+│       ├── CoordinateTransformService.js # Transformations (legacy, remplacé par proj4 dans ParcelleService)
+│       └── CSVImportService.js        # Import bulk via CSV
+└── public/                    # Assets statiques (images, etc.)
+```
 
 ---
 
-## Comptes utilisateurs
+## 3. Base de données (Supabase / PostgreSQL + PostGIS)
+
+### Tables principales
+
+| Table | Description |
+|-------|-------------|
+| `users` | Utilisateurs (id uuid FK vers auth.users, nom_complet, email, telephone, type_utilisateur, type_piece_identite, numero_piece_identite, localisation) |
+| `parcelles` | Parcelles foncières (id uuid, matricule, proprietaire_id, geom geometry(Polygon,4326), is_terrain_titre, superficie_calculee, activite enum, quartier_village, prix_m2, nom_proprietaire, telephone_proprietaire, is_active, ...) |
+| `parcelle_documents` | Documents liés (parcelle_id, document_type enum, document_url, is_verified, verified_by, ...) |
+| `parcelle_images` | Photos terrain (parcelle_id, image_url, image_ordre) |
+| `subscriptions` | Abonnements/paiements (user_id, type_abonnement, montant, statut, flutterwave_transaction_id, date_debut, date_fin) |
+| `contacts` | Demandes de contact (client_id, proprietaire_id, parcelle_id, statut, date_contact) |
+| `transactions` | Transactions financières (contact_id, montant, statut) |
+| `favorites` | Parcelles favorites (user_id, parcelle_id) |
+| `notifications` | Notifications in-app (user_id, type, title, message, is_read) |
+| `site_visits` | Tracking des visites (created_at, user_agent, ip) |
+| `arrondissements` | Limites administratives GeoJSON (nom, geom) |
+
+### Enums
+
+- `activite` : `propriete_privee`, `vente_terrain`, `location_construction`, `location_agriculture`, `autres`
+- `document_type` : `acte_foncier`, `titre_propriete`, `certificat_occupation`, `plan_cadastral`, `autre`
+
+### Buckets Storage
+
+- `parcelle-documents` : CNI, actes fonciers, justificatifs (public)
+- `parcelle-images` : Photos terrain (public)
+
+---
+
+## 4. Authentification & Rôles
+
+### 3 rôles utilisateur
+
+| Rôle | Droits |
+|------|--------|
+| `admin` | Tout : CRUD parcelles, voir docs/infos propriétaires, supprimer, stats |
+| `proprietaire` | Enregistrer ses parcelles (après paiement), voir ses parcelles |
+| `client` | Consulter parcelles, rechercher, contacter propriétaires (abonnement requis) |
+
+### Comptes existants
 
 | Email | Rôle | Mot de passe |
 |-------|------|-------------|
@@ -63,275 +117,207 @@ Insertion manuelle dans `public.users` avec le rôle `client`.
 | `ekanimeb@yahoo.fr` | proprietaire | (défini à l'inscription) |
 | `villagemarte@gmail.com` | client | (défini à l'inscription) |
 
----
+### Flux auth
 
-## Fichiers modifiés
-
-| Fichier | Modifications |
-|---------|--------------|
-| `index.html` | GPS mobile : safe-area, taille bouton, précision, altitude |
-| `api/routes/auth.js` | Fix `normalizeEmail({ gmail_remove_dots: false })` |
+1. Frontend → `POST /api/auth/login` (identifier = email ou téléphone)
+2. Backend résout téléphone→email si besoin, appelle `supabase.auth.signInWithPassword()`
+3. Retourne JWT custom (7j) stocké dans `localStorage.authToken`
+4. Middleware `authenticateUser` vérifie via `supabase.auth.getUser(token)`
 
 ---
 
-## Commits poussés
+## 5. Flux d'enregistrement d'une parcelle (propriétaire)
 
-1. `6e27304` - améliore GPS mobile: bouton visible au-dessus de la barre d'état, précision accrue
-2. `dddafc3` - fix: empêcher normalizeEmail de supprimer les points des adresses Gmail
+```
+1. Propriétaire connecté clique "+" sur la carte
+2. Remplit formulaire : statut, matricule, coordonnées, activité, documents
+3. Clique "Enregistrer la parcelle"
+4. Frontend envoie FormData à POST /api/parcelles
+5. Backend calcule superficie → vérifie abonnement actif
+6. Si pas d'abonnement actif → retourne 403 + montant requis
+7. Frontend affiche montant, ouvre FlutterwaveCheckout (inline SDK)
+8. Après paiement réussi (callback SDK status=successful) :
+   a. Frontend appelle GET /api/payment/verify/:transactionId?tx_ref=...
+   b. Backend active l'abonnement (statut→active)
+   c. Frontend ré-envoie le FormData à POST /api/parcelles
+   d. Backend trouve maintenant un abonnement actif → crée la parcelle
+   e. Backend upload les documents dans Supabase Storage
+   f. Backend consomme l'abonnement (statut→expired)
+9. Parcelle apparaît sur la carte
+```
 
----
+### Tarification propriétaire (par parcelle)
 
-## 4. Connexion email/téléphone + mot de passe oublié
-
-### Ajouts
-- Le champ de connexion accepte un email OU un numéro de téléphone
-- Si téléphone détecté, résolution vers l'email via table `public.users`
-- Bouton "Mot de passe oublié" avec envoi de lien via Supabase Auth
-- Page/route `reset-password` pour réinitialiser le mot de passe
-
----
-
-## 5. Tableau de coordonnées pour l'ajout de parcelle
-
-### Modification
-- Remplacement de l'input texte par un tableau avec colonnes X et Y
-- Interface avec boutons "Tableau / Texte libre / Coller"
-- Mode tableau est le mode par défaut
-
----
-
-## 6. Actes fonciers multiples avec fichier intégré
-
-### Ajout
-- Pour les terrains titrés, possibilité d'ajouter plusieurs actes fonciers
-- Chaque acte est une carte avec : type d'acte (sélection), date, référence, fichier joint
-- Upload via FormData avec fichiers multiples
+| Superficie | Montant annuel |
+|-----------|---------------|
+| ≤ 500 m² | 5 000 XAF |
+| 501 – 5 000 m² | 7 000 XAF / tranche de 1 000 m² entamée |
+| 5 001 – 10 000 m² | 45 000 XAF |
+| 1,01 – 10 ha | 60 000 XAF |
+| > 10 ha | 60 000 + 65 000 XAF / tranche de 10 ha au-delà |
 
 ---
 
-## 7. Système de rôles, notifications et tableau de bord admin (2026-07-04)
+## 6. Paiement (Flutterwave)
 
-### Architecture des rôles
-- **Visiteur** : peut voir la carte et les parcelles (sans détails de contact)
-- **Client** : peut s'inscrire, demander un contact (via l'admin), gérer ses favoris
-- **Propriétaire** : peut enregistrer des parcelles, reçoit des notifications
-- **Admin** : gère les demandes, voit toutes les infos, édite les parcelles, transfère la propriété
+### Configuration actuelle
 
-### Sécurité du flux de contact (CHANGEMENT CRITIQUE)
-- **Avant** : `contactOwner()` affichait directement le téléphone du propriétaire
-- **Après** : le client envoie une demande → l'admin reçoit une notification → l'admin facilite la mise en relation
-- Les coordonnées du propriétaire ne sont JAMAIS envoyées au client
-- Commission : 3% client, 2% propriétaire
+- **Clé publique LIVE** : `FLWPUBK-de06efbef44902ddb3aa4a1680436c38-X`
+- **Secret key** : non utilisée (commentée dans .env)
+- Le checkout est 100% inline (SDK JavaScript) — pas besoin de secret key
+- Options de paiement : Mobile Money (MTN/Orange Cameroun) + Carte bancaire
+- La vérification server-side (via API Flutterwave) est optionnelle et ne s'exécute que si `FLUTTERWAVE_SECRET_KEY` est définie
 
-### Système de notifications in-app
-- Table `notifications` (type, title, message, is_read)
-- Icône cloche dans le header avec badge compteur (rouge)
-- Panel déroulant avec liste des notifications
-- Polling toutes les 30 secondes
-- Types : contact_request, contact_approved, contact_rejected, parcelle_edited, ownership_transfer
+### Variables d'environnement Vercel requises
 
-### Favoris client
-- Table `favorites` (user_id + parcelle_id, UNIQUE)
-- Bouton coeur dans les détails parcelle
-- Section "Mes Favoris" dans le dashboard client
-
-### Tableau de bord client ("Mon Espace")
-- Onglet Favoris : liste des parcelles favorites
-- Onglet Demandes : historique des demandes de contact avec statut
-
-### Tableau de bord administrateur
-- Statistiques : visites/semaine, parcelles, demandes, utilisateurs
-- Onglet Demandes : liste complète avec infos client + propriétaire + actions (approuver/rejeter)
-- Onglet Parcelles : liste éditable (prix au m²)
-- Onglet Transactions : historique + formulaire de transfert de propriété
-
-### Tracking des visites
-- Table `site_visits` (ip, user_agent, path, date)
-- Middleware fire-and-forget sur requêtes GET /
-- Frontend : `fetch('/api/visits/track')` au chargement
-- Stats agrégées par semaine pour l'admin
-
-### Middleware d'autorisation
-- `authenticateUser` : vérifie le token Supabase (inchangé mais simplifié)
-- `requireAdmin` : vérifie `type_utilisateur === 'admin'` dans `public.users`
-- `requireRole(...roles)` : générique pour futurs besoins
-- Toutes les routes admin protégées (auparavant ouvertes)
-
-### Fichiers créés
-| Fichier | Description |
-|---------|-------------|
-| `api/services/NotificationService.js` | Service CRUD notifications + notifyAdmin |
-| `api/routes/notifications.js` | GET/PUT notifications avec auth |
-| `api/routes/favorites.js` | GET/POST/DELETE favoris avec auth |
-| `api/migrations/001_roles_notifications.sql` | SQL pour nouvelles tables |
-
-### Fichiers modifiés
-| Fichier | Modification |
-|---------|-------------|
-| `api/middleware/auth.js` | Ajout `requireAdmin`, `requireRole` |
-| `api/services/ContactService.js` | Sécurisation flux (plus d'infos propriétaire au client), doublon check, notifications |
-| `api/routes/contact.js` | Auth middleware, route reject, filtrage infos |
-| `api/routes/admin.js` | Auth obligatoire, edit parcelle, transfer ownership, visits weekly |
-| `api/server.js` | Mount notifications + favorites, visit tracking middleware |
-| `index.html` | CSS notifications/dashboard + modales + fonctions JS (~300 lignes) |
-
-### SQL à exécuter dans Supabase
-```sql
--- Exécuter le fichier api/migrations/001_roles_notifications.sql dans le SQL Editor Supabase
+```
+FLUTTERWAVE_PUBLIC_KEY=FLWPUBK-de06efbef44902ddb3aa4a1680436c38-X
+APP_URL=https://geofoncier.vercel.app
+SUPABASE_URL=https://boyyptqybnsiwnkdpfbl.supabase.co
+SUPABASE_ANON_KEY=<anon key>
+SUPABASE_SERVICE_KEY=<service role key>
+JWT_SECRET=<secret>
 ```
 
 ---
 
-## 8. Limite fichiers, opacité parcelles, recherche par liste (2026-07-04)
+## 7. Systèmes de coordonnées
 
-### Limite de taille des fichiers (2 Mo)
-- Validation côté frontend avant upload : CNI, actes fonciers, photos
-- Message d'erreur explicite indiquant le fichier fautif et sa taille
-- Indication "max 2 Mo" dans les labels des champs fichier
+L'application supporte 4 systèmes d'entrée :
 
-### Slider d'opacité des parcelles
-- Curseur dans la section "Couches cartographiques" (desktop + mobile)
-- Valeur de 0% (contours seuls, transparent) à 100% (remplissage opaque)
-- Synchronisation entre les sliders desktop et mobile
-- Modifie le `fillOpacity` de chaque polygone en temps réel
+| Système | Description | Convention d'entrée |
+|---------|-------------|-------------------|
+| `wgs84` | GPS standard | [latitude, longitude] (degrés décimaux) |
+| `utm32` | UTM Zone 32N | [Easting (X), Northing (Y)] en mètres — Ouest Cameroun |
+| `utm33` | UTM Zone 33N | [Easting (X), Northing (Y)] en mètres — Est Cameroun |
+| `douala` | Douala 1948 | [Easting (X), Northing (Y)] en mètres — ancien système local |
 
-### Recherche par liste de matricules (autocomplete)
-- Remplacement de la simple barre de recherche par un champ avec dropdown
-- Au focus : affiche la liste complète des parcelles enregistrées
-- En saisie : filtre en temps réel par matricule
-- Clic sur un item : zoom sur la parcelle et affiche ses détails
-- Fonctionne sur desktop et mobile
+### Flux de conversion
 
-### Amélioration scroll sidebar mobile
-- Suppression du `min-height: calc(100vh - 120px)` rigide sur `.sidebar-content-wrapper`
-- Remplacé par `min-height: min-content` + `padding-bottom: 80px`
-- Meilleur comportement de scroll sur petits écrans sans espace vide inutile
+1. Entrée utilisateur selon le système choisi
+2. `ParcelleService.convertToWGS84()` via **proj4** → sortie `[lat, lng]`
+3. Conversion en GeoJSON : `[lng, lat]` (norme GeoJSON)
+4. Stockage PostGIS en `geometry(Polygon, 4326)`
+5. Garde-fou : lat ∈ [1, 13], lng ∈ [8, 17] (bornes Cameroun)
 
 ---
 
-## 9. Intégration paiement Flutterwave + abonnement obligatoire (2026-07-05)
+## 8. Fonctionnalités implémentées
 
-### Système de paiement intégré (frontend + backend)
-- Chargement du SDK Flutterwave (`checkout.flutterwave.com/v3.js`) dans index.html
-- Modal de choix d'abonnement (mensuel / annuel) avec calcul automatique du prix
-- Paiement inline via `FlutterwaveCheckout()` (carte, Mobile Money, USSD)
-- Callback de retour `/api/payment/callback` : active l'abonnement si paiement réussi
-- Gestion du retour utilisateur avec notification (succès / annulé / erreur)
+### Frontend (index.html)
 
-### Abonnement obligatoire pour les propriétaires
-- **Avant** : un propriétaire pouvait enregistrer des parcelles sans payer
-- **Après** : vérification d'abonnement actif dans `POST /api/parcelles` → retourne `403 SUBSCRIPTION_REQUIRED` si pas d'abonnement
-- Le frontend intercepte cette erreur et redirige vers le modal de paiement
-- Après paiement réussi, le formulaire d'ajout de parcelle s'ouvre automatiquement
+- [x] Carte Leaflet avec couches : arrondissements, parcelles, chevauchements
+- [x] Légende dynamique (terrain titré privé, à vendre, non titré, chevauchement)
+- [x] Recherche par matricule
+- [x] Filtres : arrondissement, quartier, activité, prix, statut
+- [x] Formulaire inscription (propriétaire/client)
+- [x] Formulaire connexion (email ou téléphone)
+- [x] Formulaire ajout parcelle (tableau ou texte libre pour coordonnées)
+- [x] Sélecteur système de coordonnées (WGS84, UTM32, UTM33, Douala)
+- [x] Upload documents : CNI + actes fonciers (multiples) + photos terrain
+- [x] Paiement inline Flutterwave (Mobile Money + Carte)
+- [x] Panel admin : stats, parcelles, contacts, suppression
+- [x] Vue détail parcelle admin (avec documents téléchargeables)
+- [x] Notifications in-app
+- [x] Favoris
+- [x] Opacité parcelles configurable
+- [x] Import CSV
 
-### Abonnement client
-- Bouton "Abonnement" ajouté dans le header pour les clients connectés
-- Vérification si abonnement déjà actif avant de proposer le paiement
-- Grille tarifaire selon la localisation (Afrique : 5 000/50 000 XAF, Hors Afrique : 50 000/500 000 XAF)
+### Backend (API)
 
-### Historique abonnements admin
-- Nouvel onglet "Abonnements" dans le tableau de bord administrateur
-- Statistiques : actifs, en attente, expirés, revenus totaux
-- Liste complète avec infos utilisateur (nom, email, téléphone, type)
-- Détails : montant, devise, date début/fin, statut (badge couleur)
-
-### Sécurisation des routes paiement
-- `POST /api/payment/initiate` protégé par `authenticateUser` (user_id dérivé du token)
-- `GET /api/payment/subscription-status` : vérifie abonnement actif de l'utilisateur
-- `GET /api/payment/my-subscriptions` : historique personnel
-- `GET /api/payment/callback` : gestion du retour Flutterwave (redirect)
-
-### Nouvelles routes admin
-- `GET /api/admin/subscriptions` : historique complet avec jointure utilisateur
-- `GET /api/admin/subscriptions/stats` : statistiques agrégées
-
-### Migration SQL exécutée
-- Conversion des colonnes `type_abonnement` et `statut` d'enum vers TEXT avec contraintes CHECK
-- Drop et recréation de la vue `stats_generales` (dépendance sur la colonne `statut`)
-- Index ajoutés pour les requêtes fréquentes (user_id, statut, tx_ref)
-- Fichier : `api/migrations/002_subscriptions.sql`
-
-### Fichiers modifiés
-| Fichier | Modification |
-|---------|-------------|
-| `index.html` | SDK Flutterwave, fonctions paiement, modal choix abonnement, onglet admin abonnements, bouton client |
-| `api/routes/payment.js` | Auth middleware, routes subscription-status/my-subscriptions/callback |
-| `api/routes/parcelles.js` | Vérification abonnement actif avant création parcelle |
-| `api/routes/admin.js` | Routes GET /subscriptions et /subscriptions/stats |
-| `api/migrations/002_subscriptions.sql` | Migration table subscriptions |
-| `package.json` | Ajout dépendance `pg` |
-
-### Commit
-- `03a0dc5` - feat: intégration paiement Flutterwave + abonnement obligatoire avant enregistrement parcelle
+- [x] CRUD complet parcelles avec upload fichiers (multer + Supabase Storage)
+- [x] Conversion coordonnées proj4 (UTM32/33/Douala → WGS84)
+- [x] Calcul superficie automatique (géodésique ou shoelace)
+- [x] Paiement par parcelle (pas d'abonnement global)
+- [x] Administration : stats, CRUD parcelles, contacts, visites
+- [x] Rate limiting (global + auth + register)
+- [x] Détection chevauchements (PostGIS RPC)
+- [x] Import CSV bulk
+- [x] Visit tracking automatique
 
 ---
 
-## 10. Corrections flux paiement et enregistrement parcelle (2026-07-07)
+## 9. Problèmes résolus (historique)
 
-### Parcelle non enregistrée après paiement (bug critique)
-- **Problème** : après paiement réussi via le SDK inline Flutterwave, la parcelle n'était pas sauvegardée
-- **Cause** : `/api/payment/verify` appelait l'API Flutterwave pour vérifier la transaction ; en mode test, l'API ne reconnaît pas les transactions simulées → `verified: false` → `onSuccess` jamais appelé → `submitPendingParcelle` jamais exécuté
-- **Correction** : le endpoint `/verify` active désormais l'abonnement dès que le `tx_ref` est présent (le SDK inline a déjà confirmé le paiement côté client)
-- Ajout d'une fonction dédiée `submitPendingParcelle()` qui ré-envoie directement le `FormData` sauvegardé en mémoire (fichiers inclus) après activation de l'abonnement
-
-### Coordonnées du tableau non transmises
-- **Problème** : cliquer "Enregistrer" avec le mode Tableau actif retournait "Les coordonnées sont obligatoires"
-- **Cause** : la fonction globale `syncTableToText()` (qui écrasait la version locale) cherchait des inputs `coordX_`/`coordY_` alors que le formulaire crée `coord1_`/`coord2_`
-- **Correction** : `syncTableToText()` cherche les deux variantes d'IDs ; `handleAddParcelle` appelle `syncTableToText()` avant de lire le textarea
-
-### Mobile Money absent du checkout
-- **Problème** : seul le paiement par carte était proposé, pas Mobile Money (MTN/Orange)
-- **Cause** : paramètre `country` manquant dans la config Flutterwave
-- **Correction** : ajout de `country: 'CM'` dans `FlutterwaveService.initiatePayment()` pour activer les options Mobile Money Cameroun
-
-### Bug onclose Flutterwave
-- **Problème** : Flutterwave appelle `onclose` même après un paiement réussi, déclenchant le callback `onCancel` (notification "paiement annulé")
-- **Correction** : flag `paymentSucceeded` empêche `onCancel` de se déclencher après un succès
-
-### Erreur 500 sur /api/favorites
-- **Problème** : erreur 500 si le client Supabase n'est pas initialisé (variable `SUPABASE_SERVICE_KEY` absente)
-- **Correction** : guard `if (!supabase) return res.json({ favorites: [] })` pour éviter le crash
-
-### Suppression clé service_role exposée
-- Suppression d'une clé `service_role` Supabase qui était présente en clair dans `cahier_des_charges_v4.md`
-
-### Fichiers modifiés
-| Fichier | Modification |
-|---------|-------------|
-| `index.html` | syncTableToText avant submit, submitPendingParcelle, flag paymentSucceeded, _pendingParcelleFormData |
-| `api/routes/payment.js` | /verify active toujours l'abonnement, check vars env, meilleurs messages erreur |
-| `api/services/FlutterwaveService.js` | country:'CM', guard supabase null |
-| `api/routes/favorites.js` | Guard supabase null |
-| `cahier_des_charges_v4.md` | Suppression clé service_role exposée |
-
-### Commits
-- `e24d9c1` - fix: coordonnées tableau non lues lors de l'enregistrement parcelle
-- `2b395a4` - fix: auto-soumission parcelle après paiement + correction onclose Flutterwave
-- `96ca290` - fix: meilleurs messages d'erreur pour le paiement (500 debug)
-- `7958769` - fix: parcelle non enregistrée après paiement + Mobile Money + favorites 500
+| Problème | Cause | Solution |
+|----------|-------|----------|
+| "Les coordonnées sont obligatoires" | `syncTableToText()` cherchait les mauvais IDs d'inputs | Vérifier `coord1_`/`coord2_` ET `coordX_`/`coordY_` |
+| 500 sur `/api/payment/initiate` | Variables env Flutterwave manquantes sur Vercel | Check explicite + message d'erreur clair |
+| Parcelle non sauvée après paiement | `/verify` retournait `verified: false` en test mode | Activation systématique quand SDK confirme |
+| Pas d'option Mobile Money | `country: 'CM'` manquant dans config Flutterwave | Ajouté |
+| 500 sur `/api/favorites` | Supabase client null | Guard `if (!supabase) return` |
+| "Type d'activité invalide" | `description_activite` NOT NULL | Défaut `''` (chaîne vide) |
+| Parcelles "enregistrées" mais invisibles | `loadParcelles()` utilisait des données démo hardcodées | Réécrit pour fetch API |
+| Géométrie non stockée | WKT non accepté par PostgREST | Passage au format GeoJSON |
+| Labels coordonnées inversés | UI disait "Longitude, Latitude" mais backend attendait l'inverse | Labels corrigés |
+| "Could not find 'superficie' column" | Colonne manquante + cache PostgREST | ALTER TABLE + NOTIFY pgrst + renommé en `superficie_calculee` |
+| `onclose` Flutterwave après succès | `onclose` se déclenche aussi après paiement réussi | Flag `paymentSucceeded` |
+| Vue bloque ALTER TABLE | `parcelles_avec_proprietaires` view | DROP VIEW → ALTER → recreate |
 
 ---
 
-## Variables d'environnement requises sur Vercel
+## 10. Points d'attention / dette technique
 
-| Variable | Description |
-|----------|-------------|
-| `SUPABASE_URL` | URL du projet Supabase |
-| `SUPABASE_ANON_KEY` | Clé anon (publique) Supabase |
-| `SUPABASE_SERVICE_KEY` | Clé service_role Supabase (lecture/écriture sans RLS) |
-| `JWT_SECRET` | Secret pour signer les tokens JWT |
-| `FLUTTERWAVE_PUBLIC_KEY` | Clé publique Flutterwave (test ou live) |
-| `FLUTTERWAVE_SECRET_KEY` | Clé secrète Flutterwave (test ou live) |
-| `APP_URL` | `https://www.geofoncier.shop` |
+1. **Frontend monolithique** : `index.html` fait ~7000 lignes. Pas de framework, pas de build. Fonctionne mais difficile à maintenir.
+
+2. **Pas de tests automatisés** : Jest configuré mais aucun test écrit.
+
+3. **Schema cache PostgREST** : Après tout changement de schéma (ALTER TABLE, CREATE VIEW), exécuter `NOTIFY pgrst, 'reload schema'` dans Supabase SQL Editor.
+
+4. **Webhook Flutterwave non fonctionnel** : Nécessite la secret key (commentée). Le flux fonctionne sans car l'activation se fait via le callback inline SDK. Pour une sécurité supplémentaire (production), configurer la secret key live et activer le webhook sur le dashboard Flutterwave.
+
+5. **Colonne `superficie_calculee`** : Le code utilise `superficie_calculee` (pas `superficie`). Vérifier que la BD a bien ce nom de colonne.
+
+6. **Variables Vercel** : Après chaque changement de clé Flutterwave ou ajout de variable, mettre à jour dans le dashboard Vercel → Settings → Environment Variables.
+
+7. **Buckets Storage** : Créés automatiquement par le code si inexistants (`ensureBucketExists`). Configurés en `public: true`.
 
 ---
 
-## Notes techniques
+## 11. Pour reprendre le développement
 
-- Le `.env` local contient les clés Supabase (non committé, normal)
-- Les variables d'environnement sont aussi configurées sur Vercel (dashboard)
-- Le déploiement Vercel prend ~30 secondes après un push
-- La connexion passe par : Frontend → `/api/auth/login` → `supabaseAnon.auth.signInWithPassword()` → récupération dans `public.users` → génération JWT
-- Le `JWT_SECRET` en production est défini dans les env vars Vercel
-- En mode TEST Flutterwave, le Mobile Money n'est visible que si `country: 'CM'` est défini
-- Le flux paiement inline ne dépend pas de la vérification API Flutterwave (le SDK client suffit)
+### Lancer en local
+
+```bash
+npm install
+npm run dev        # ou: node api/server.js
+# Ouvrir http://localhost:3000
+```
+
+### Variables d'environnement requises (.env)
+
+```
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
+SUPABASE_URL=https://boyyptqybnsiwnkdpfbl.supabase.co
+SUPABASE_ANON_KEY=<anon key>
+SUPABASE_SERVICE_KEY=<service role key>
+JWT_SECRET=<secret>
+FLUTTERWAVE_PUBLIC_KEY=FLWPUBK-de06efbef44902ddb3aa4a1680436c38-X
+```
+
+### Déployer sur Vercel
+
+```bash
+git add . && git commit -m "..." && git push
+# Vercel déploie automatiquement depuis GitHub
+```
+
+### Ajouter une colonne en base
+
+1. Exécuter le ALTER TABLE dans Supabase SQL Editor
+2. Exécuter `NOTIFY pgrst, 'reload schema';`
+3. Si une VIEW dépend de la table : DROP VIEW → ALTER → recreate VIEW
+
+---
+
+## 12. Prochaines évolutions possibles
+
+- [ ] Tableau de bord propriétaire (mes parcelles, statut docs, historique paiements)
+- [ ] Validation admin des documents (marquer comme vérifié)
+- [ ] Notification email (via Supabase Edge Functions ou SendGrid)
+- [ ] Export PDF certificat parcelle
+- [ ] Mode hors-ligne (PWA)
+- [ ] Tests E2E (Playwright)
+- [ ] Refactoring frontend vers un framework (Vue.js ou React)

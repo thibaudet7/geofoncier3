@@ -8,8 +8,8 @@ const { supabase } = require('../supabase-config')
 // POST /api/payment/initiate (authentifié)
 router.post('/initiate', authenticateUser, async (req, res) => {
     try {
-        if (!process.env.FLUTTERWAVE_PUBLIC_KEY || !process.env.FLUTTERWAVE_SECRET_KEY) {
-            console.error('❌ Variables FLUTTERWAVE_PUBLIC_KEY / FLUTTERWAVE_SECRET_KEY manquantes')
+        if (!process.env.FLUTTERWAVE_PUBLIC_KEY) {
+            console.error('❌ Variable FLUTTERWAVE_PUBLIC_KEY manquante')
             return res.status(500).json({ error: 'Configuration paiement manquante sur le serveur' })
         }
 
@@ -83,9 +83,13 @@ router.get('/my-subscriptions', authenticateUser, async (req, res) => {
 // POST /api/payment/webhook
 router.post('/webhook', async (req, res) => {
     try {
+        if (!process.env.FLUTTERWAVE_SECRET_KEY) {
+            return res.status(503).json({ error: 'Webhook non configuré (secret key absente)' })
+        }
+
         const signature = req.headers['verif-hash']
         const payload = req.body
-        
+
         // Vérifier la signature webhook Flutterwave
         if (!FlutterwaveService.verifyWebhookSignature(payload, signature)) {
             return res.status(401).json({
@@ -94,7 +98,7 @@ router.post('/webhook', async (req, res) => {
         }
 
         const result = await FlutterwaveService.handlePaymentCallback(payload)
-        
+
         res.json({ message: 'Webhook traité', result })
     } catch (error) {
         console.error('Erreur webhook paiement:', error)
@@ -108,9 +112,13 @@ router.get('/verify/:transactionId', authenticateUser, async (req, res) => {
         const { transactionId } = req.params
         const txRef = req.query.tx_ref || null
 
-        const result = await FlutterwaveService.verifyPayment(transactionId)
+        // Vérification server-side optionnelle (nécessite FLUTTERWAVE_SECRET_KEY)
+        let result = { success: false, data: null }
+        if (process.env.FLUTTERWAVE_SECRET_KEY) {
+            result = await FlutterwaveService.verifyPayment(transactionId)
+        }
 
-        // Activer l'abonnement si le tx_ref est présent (le SDK inline a confirmé le paiement)
+        // Activer l'abonnement : le SDK inline a déjà confirmé le paiement côté client
         const ref = txRef || (result.data && result.data.tx_ref)
         if (ref && supabase) {
             const { error: updErr } = await supabase

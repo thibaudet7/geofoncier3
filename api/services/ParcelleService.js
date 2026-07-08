@@ -1,5 +1,19 @@
 // api/services/ParcelleService.js - VERSION CORRIGÉE
 const { supabase } = require('../supabase-config')
+const proj4 = require('proj4')
+
+// Définitions des systèmes de coordonnées sources (vers WGS84).
+// Convention d'ENTRÉE pour ces systèmes projetés : [X (Easting), Y (Northing)].
+const PROJ_DEFS = {
+    wgs84: '+proj=longlat +datum=WGS84 +no_defs',
+    // UTM WGS84 zones 32N / 33N (Cameroun)
+    utm32: '+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs',
+    utm33: '+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs',
+    // Douala 1948 (ellipsoïde Clarke 1880 IGN + décalage de datum vers WGS84), projeté UTM 32N.
+    // Paramètres towgs84 issus de la définition EPSG de Douala 1948.
+    douala: '+proj=utm +zone=32 +a=6378249.2 +b=6356515 +towgs84=-206,172,-6,0,0,0,0 +units=m +no_defs'
+};
+const WGS84_DEF = '+proj=longlat +datum=WGS84 +no_defs';
 
 // Mapping des valeurs d'activité utilisateur vers les valeurs de l'enum Supabase
 const ACTIVITE_MAPPING = {
@@ -36,51 +50,15 @@ class ParcelleService {
             let finalCoordinates = parcelleData.coordinates;
             let coordinatesTransformed = false;
             
-            // Conversion automatique des coordonnées si nécessaire
+            // Conversion automatique des coordonnées via proj4 (déterministe, sans dépendance externe)
             const sourceSystem = parcelleData.coordinate_system || 'wgs84';
             console.log('🗺️ Système source détecté:', sourceSystem);
             
             if (sourceSystem !== 'wgs84') {
-                console.log('🔄 Conversion requise vers WGS84...');
-                
-                try {
-                    const { SpatialService } = require('../services/SpatialService');
-                    
-                    const sridMapping = {
-                        'utm32': 32632,
-                        'utm33': 32633,
-                        'douala': 'douala'
-                    };
-                    
-                    const fromSRID = sridMapping[sourceSystem];
-                    if (!fromSRID) {
-                        throw new Error(`Système de coordonnées non supporté: ${sourceSystem}`);
-                    }
-                    
-                    const transformResult = await SpatialService.transformCoordinates(
-                        parcelleData.coordinates, 
-                        fromSRID, 
-                        4326
-                    );
-                    
-                    if (transformResult.success) {
-                        finalCoordinates = transformResult.transformedCoordinates;
-                        coordinatesTransformed = true;
-                        console.log('✅ Coordonnées transformées avec succès');
-                    } else {
-                        if (sourceSystem === 'utm32' || sourceSystem === 'utm33') {
-                            console.log('⚠️ Transformation échouée, tentative conversion UTM simplifiée...');
-                            finalCoordinates = this.simpleUTMToWGS84(parcelleData.coordinates, sourceSystem);
-                            coordinatesTransformed = true;
-                        } else {
-                            throw new Error(`Échec transformation: ${transformResult.error}`);
-                        }
-                    }
-                    
-                } catch (transformError) {
-                    console.error('❌ Erreur transformation:', transformError);
-                    console.log('⚠️ Utilisation des coordonnées originales sans transformation');
-                }
+                console.log('🔄 Conversion requise vers WGS84 (proj4)...');
+                finalCoordinates = this.convertToWGS84(parcelleData.coordinates, sourceSystem);
+                coordinatesTransformed = true;
+                console.log('✅ Coordonnées transformées:', finalCoordinates[0]);
             }
 
             // Validation des coordonnées finales
@@ -354,49 +332,36 @@ class ParcelleService {
         return { valid: true };
     }
 
-    static simpleUTMToWGS84(coordinates, utmZone) {
-        const transformedCoords = [];
-        
-        for (const coord of coordinates) {
-            const [northing, easting] = coord;
-            
-            if (easting < 100000 || easting > 900000 || northing < 100000 || northing > 9000000) {
-                console.warn(`⚠️ Valeurs UTM douteuses: E=${easting}, N=${northing}`);
-            }
-            
-            let lat, lng;
-            
-            if (utmZone === 'utm32') {
-                lat = (northing - 1000000) / 111000 + 9;
-                lng = (easting - 500000) / 111000 + 9;
-            } else if (utmZone === 'utm33') {
-                lat = (northing - 1000000) / 111000 + 9;
-                lng = (easting - 500000) / 111000 + 15;
-            } else {
-                lat = northing;
-                lng = easting;
-            }
-            
-            if (lat >= 1 && lat <= 13 && lng >= 8 && lng <= 17) {
-                transformedCoords.push([lat, lng]);
-            } else {
-                console.warn(`⚠️ Coordonnées transformées hors du Cameroun: ${lat}, ${lng}`);
-                if (easting >= 1 && easting <= 13 && northing >= 8 && northing <= 17) {
-                    transformedCoords.push([easting, northing]);
-                } else {
-                    const latAdj = northing / 100000;
-                    const lngAdj = easting / 100000;
-                    if (latAdj >= 1 && latAdj <= 13 && lngAdj >= 8 && lngAdj <= 17) {
-                        transformedCoords.push([latAdj, lngAdj]);
-                    } else {
-                        transformedCoords.push([northing, easting]);
-                    }
-                }
-            }
+    // Conversion précise vers WGS84 avec proj4.
+    // Entrée pour systèmes projetés (utm32/utm33/douala) : chaque coord = [X (Easting), Y (Northing)].
+    // Sortie : [lat, lng] (WGS84), l'ordre attendu par le reste du code.
+    static convertToWGS84(coordinates, sourceSystem) {
+        const def = PROJ_DEFS[sourceSystem];
+        if (!def) {
+            throw new Error(`Système de coordonnées non supporté: ${sourceSystem}`);
         }
-        
-        return transformedCoords;
+        if (sourceSystem === 'wgs84') {
+            return coordinates; // déjà [lat, lng]
+        }
+
+        return coordinates.map(coord => {
+            const easting = parseFloat(coord[0]);   // X
+            const northing = parseFloat(coord[1]);   // Y
+            // proj4 attend [x, y] = [easting, northing] et renvoie [lng, lat]
+            const [lng, lat] = proj4(def, WGS84_DEF, [easting, northing]);
+
+            if (!isFinite(lat) || !isFinite(lng)) {
+                throw new Error(`Conversion impossible pour la coordonnée [${coord}]`);
+            }
+            // Garde-fou : le Cameroun est approximativement lat 1..13, lng 8..17
+            if (lat < 1 || lat > 13 || lng < 8 || lng > 17) {
+                console.warn(`⚠️ Coordonnée convertie hors Cameroun: lat=${lat.toFixed(5)}, lng=${lng.toFixed(5)} (vérifiez l'ordre X/Y et la zone)`);
+            }
+            return [lat, lng];
+        });
     }
+
+    // (Ancienne conversion approximative supprimée au profit de proj4)
 
     // Upload documents avec client contextualisé
     static async ensureBucketExists(client, bucketName) {

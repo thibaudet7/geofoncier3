@@ -97,27 +97,36 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
             parcelleData.coordinate_system || 'wgs84'
         )
 
-        // Vérifier que le propriétaire a un abonnement actif
-        const { data: activeSub, error: subError } = await supabase
-            .from('subscriptions')
-            .select('id, date_fin')
-            .eq('user_id', req.user.id)
-            .eq('statut', 'active')
-            .gte('date_fin', new Date().toISOString().split('T')[0])
-            .limit(1)
+        // MODÈLE : paiement par parcelle. Chaque enregistrement exige un paiement
+        // « actif » non encore consommé. On le consomme après création de la parcelle.
+        let paymentRecord = null
+        try {
+            const { data, error: subError } = await supabase
+                .from('subscriptions')
+                .select('id')
+                .eq('user_id', req.user.id)
+                .eq('statut', 'active')
+                .order('created_at', { ascending: false })
+                .limit(1)
+            if (subError) {
+                console.error('⚠️ Erreur requête paiement (traité comme non payé):', subError.message || subError)
+            } else if (data && data.length > 0) {
+                paymentRecord = data[0]
+            }
+        } catch (subCatch) {
+            console.error('⚠️ Exception requête paiement (traité comme non payé):', subCatch.message)
+        }
 
-        if (subError) throw subError
-
-        if (!activeSub || activeSub.length === 0) {
+        if (!paymentRecord) {
             const price = FlutterwaveService.calculateProprietairePrice(superficie)
             return res.status(403).json({
                 success: false,
-                error: 'Abonnement requis',
+                error: 'Paiement requis',
                 code: 'SUBSCRIPTION_REQUIRED',
                 superficie: Math.round(superficie),
                 amount: price.annual,
                 currency: price.currency,
-                message: `Superficie calculée : ${Math.round(superficie).toLocaleString('fr-FR')} m². Abonnement annuel requis : ${price.annual.toLocaleString('fr-FR')} ${price.currency}.`
+                message: `Superficie calculée : ${Math.round(superficie).toLocaleString('fr-FR')} m². Paiement requis pour cette parcelle : ${price.annual.toLocaleString('fr-FR')} ${price.currency}.`
             })
         }
         // Stocker la superficie calculée pour l'insertion en DB
@@ -140,6 +149,15 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
 
         const result = await ParcelleService.createParcelle(parcelleData, files, req.user.id)
         if (result.success) {
+            // Consommer le paiement : il ne pourra plus servir pour une autre parcelle.
+            try {
+                await supabase
+                    .from('subscriptions')
+                    .update({ statut: 'completed', updated_at: new Date().toISOString() })
+                    .eq('id', paymentRecord.id)
+            } catch (consumeErr) {
+                console.error('⚠️ Impossible de marquer le paiement comme consommé:', consumeErr.message)
+            }
             res.status(201).json({ success: true, parcelle: result.parcelle })
         } else {
             res.status(400).json({ success: false, error: result.error })

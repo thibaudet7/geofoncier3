@@ -2441,22 +2441,22 @@
                     placeholder.placeholder = '4.0511,9.7679\n4.0515,9.7679\n4.0515,9.7685\n4.0511,9.7685';
                     break;
                 case 'utm32':
-                    help.textContent = 'Format UTM32: Northing, Easting en mètres. Minimum 3 points.';
-                    headerCoord1.textContent = 'Northing (Y)';
-                    headerCoord2.textContent = 'Easting (X)';
-                    placeholder.placeholder = '445123,567890\n445133,567890\n445133,567900\n445123,567900';
+                    help.textContent = 'Format UTM zone 32N : X (Easting), Y (Northing) en mètres. Minimum 3 points. Ex. région de Yaoundé.';
+                    headerCoord1.textContent = 'X (Easting)';
+                    headerCoord2.textContent = 'Y (Northing)';
+                    placeholder.placeholder = '777841,425733\n777851,425733\n777851,425743\n777841,425743';
                     break;
                 case 'utm33':
-                    help.textContent = 'Format UTM33: Northing, Easting en mètres. Minimum 3 points.';
-                    headerCoord1.textContent = 'Northing (Y)';
-                    headerCoord2.textContent = 'Easting (X)';
-                    placeholder.placeholder = '445123,234567\n445133,234567\n445133,234577\n445123,234577';
+                    help.textContent = 'Format UTM zone 33N : X (Easting), Y (Northing) en mètres. Minimum 3 points. Ex. Est-Cameroun.';
+                    headerCoord1.textContent = 'X (Easting)';
+                    headerCoord2.textContent = 'Y (Northing)';
+                    placeholder.placeholder = '500000,552664\n500010,552664\n500010,552674\n500000,552674';
                     break;
                 case 'douala':
-                    help.textContent = 'Format Douala 1948: Y (Northing), X (Easting). Minimum 3 points.';
-                    headerCoord1.textContent = 'Y';
-                    headerCoord2.textContent = 'X';
-                    placeholder.placeholder = '456789,123456\n456799,123456\n456799,123466\n456789,123466';
+                    help.textContent = 'Format Douala 1948 (UTM 32N) : X (Easting), Y (Northing) en mètres. Minimum 3 points. Ex. région de Douala.';
+                    headerCoord1.textContent = 'X (Easting)';
+                    headerCoord2.textContent = 'Y (Northing)';
+                    placeholder.placeholder = '585036,447818\n585046,447818\n585046,447828\n585036,447828';
                     break;
             }
         }
@@ -2579,16 +2579,16 @@
                         <code style="font-size: 0.75rem;">4.0511,9.7679<br>4.0515,9.7679<br>4.0515,9.7685<br>4.0511,9.7685</code>
                     `,
                     'utm32': `
-                        <div><strong>UTM32 (mètres) :</strong></div>
-                        <code style="font-size: 0.75rem;">445123,567890<br>445133,567890<br>445133,567900<br>445123,567900</code>
+                        <div><strong>UTM zone 32N — X (Easting), Y (Northing) — région de Yaoundé :</strong></div>
+                        <code style="font-size: 0.75rem;">777841,425733<br>777851,425733<br>777851,425743<br>777841,425743</code>
                     `,
                     'utm33': `
-                        <div><strong>UTM33 (mètres) :</strong></div>
-                        <code style="font-size: 0.75rem;">445123,234567<br>445133,234567<br>445133,234577<br>445123,234577</code>
+                        <div><strong>UTM zone 33N — X (Easting), Y (Northing) — Est-Cameroun :</strong></div>
+                        <code style="font-size: 0.75rem;">500000,552664<br>500010,552664<br>500010,552674<br>500000,552674</code>
                     `,
                     'douala': `
-                        <div><strong>Douala 1948 (système local) :</strong></div>
-                        <code style="font-size: 0.75rem;">456789,123456<br>456799,123456<br>456799,123466<br>456789,123466</code>
+                        <div><strong>Douala 1948 (UTM 32N) — X (Easting), Y (Northing) — région de Douala :</strong></div>
+                        <code style="font-size: 0.75rem;">585036,447818<br>585046,447818<br>585046,447828<br>585036,447828</code>
                     `
                 };
                 
@@ -3639,7 +3639,7 @@
                         proprietaire: p.nom_proprietaire || (p.users && p.users.nom_complet) || '',
                         proprietaire_id: p.proprietaire_id,
                         telephone: p.telephone_proprietaire || (p.users && p.users.telephone) || '',
-                        superficie: p.superficie || 0,
+                        superficie: p.superficie_calculee || p.superficie || 0,
                         prix_m2: p.prix_m2 || 0,
                         description: p.description_activite || '',
                         created_at: p.created_at
@@ -4721,9 +4721,9 @@
                     <h3 style="margin-bottom:1rem;"><i class="fas fa-file-signature"></i> Enregistrement de la parcelle</h3>
                     <p style="margin-bottom:0.4rem;color:#666;">Superficie calculée du terrain :</p>
                     <p style="font-size:1.3rem;font-weight:700;color:#2c3e50;margin-bottom:1rem;">${superficieTxt} m²</p>
-                    <p style="margin-bottom:0.4rem;color:#666;">Abonnement annuel à régler :</p>
+                    <p style="margin-bottom:0.4rem;color:#666;">Montant à régler pour cette parcelle :</p>
                     <p style="font-size:1.5rem;font-weight:700;color:#27ae60;margin-bottom:1.2rem;">${amountTxt} ${currency}</p>
-                    <p style="font-size:0.78rem;color:#999;margin-bottom:1.2rem;">Le tarif est déterminé automatiquement selon la superficie (barème officiel). Après paiement, la parcelle sera enregistrée automatiquement.</p>
+                    <p style="font-size:0.78rem;color:#999;margin-bottom:1.2rem;">Le tarif est déterminé automatiquement selon la superficie (barème officiel). Le paiement s'applique à cette parcelle uniquement ; chaque nouvelle parcelle nécessite un nouveau paiement. Après paiement, la parcelle sera enregistrée automatiquement.</p>
                     <div style="display:flex;gap:0.5rem;justify-content:center;">
                         <button class="btn btn-secondary" onclick="cancelParcellePayment()">Annuler</button>
                         <button class="btn btn-success" onclick="proceedParcellePayment(${amount})"><i class="fas fa-credit-card"></i> Payer et enregistrer</button>
@@ -5626,6 +5626,113 @@
             document.getElementById('loginForm').style.display = 'block';
         }
 
+        // ===== Réinitialisation du mot de passe (retour du lien e-mail) =====
+        // Renvoie true si un lien de récupération est détecté (et affiche le formulaire).
+        function detectPasswordRecovery() {
+            const hash = window.location.hash ? window.location.hash.substring(1) : '';
+            const hashParams = new URLSearchParams(hash);
+            const queryParams = new URLSearchParams(window.location.search);
+
+            const isRecoveryPath = window.location.pathname === '/reset-password';
+            const type = hashParams.get('type') || queryParams.get('type');
+            const accessToken = hashParams.get('access_token');
+            const tokenHash = queryParams.get('token_hash') || queryParams.get('token');
+            const errorDesc = hashParams.get('error_description') || queryParams.get('error_description');
+
+            if (errorDesc) {
+                showResetPasswordForm({ error: decodeURIComponent(errorDesc) });
+                return true;
+            }
+            // On considère qu'on est en réinitialisation si l'URL le dit ET qu'on a un jeton
+            if ((isRecoveryPath || type === 'recovery') && (accessToken || tokenHash)) {
+                showResetPasswordForm({ accessToken, tokenHash });
+                return true;
+            }
+            return false;
+        }
+
+        function showResetPasswordForm(opts) {
+            const { accessToken, tokenHash, error } = opts || {};
+            window._resetAccessToken = accessToken || null;
+            window._resetTokenHash = tokenHash || null;
+
+            let modal = document.getElementById('resetPasswordModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'resetPasswordModal';
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+            }
+            const inner = error
+                ? `<p style="color:#e74c3c;text-align:center;">${error}</p>
+                   <div style="text-align:center;margin-top:1rem;">
+                     <button class="btn btn-primary" onclick="goHome()">Retour à l'accueil</button>
+                   </div>`
+                : `
+                    <p style="color:#666;margin-bottom:1rem;font-size:0.9rem;">Choisissez un nouveau mot de passe pour votre compte.</p>
+                    <div style="margin-bottom:0.8rem;">
+                        <label style="font-size:0.85rem;">Nouveau mot de passe</label>
+                        <input type="password" id="resetNewPassword" class="form-input" style="width:100%;" placeholder="Minimum 6 caractères">
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-size:0.85rem;">Confirmer le mot de passe</label>
+                        <input type="password" id="resetConfirmPassword" class="form-input" style="width:100%;">
+                    </div>
+                    <div style="text-align:center;">
+                        <button class="btn btn-primary" id="resetSubmitBtn" onclick="handleResetPassword()" style="width:100%;">
+                            <i class="fas fa-key"></i> Réinitialiser le mot de passe
+                        </button>
+                    </div>`;
+            modal.innerHTML = `<div class="modal-content" style="max-width:420px;">
+                <h3 style="margin-bottom:0.8rem;"><i class="fas fa-lock"></i> Réinitialisation du mot de passe</h3>
+                ${inner}
+            </div>`;
+            modal.style.display = 'flex';
+        }
+
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        async function handleResetPassword() {
+            const pwd = document.getElementById('resetNewPassword').value;
+            const confirm = document.getElementById('resetConfirmPassword').value;
+            if (!pwd || pwd.length < 6) {
+                showNotification('Le mot de passe doit contenir au moins 6 caractères', 'error');
+                return;
+            }
+            if (pwd !== confirm) {
+                showNotification('Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+            const btn = document.getElementById('resetSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Traitement...'; }
+
+            try {
+                const body = { password: pwd };
+                if (window._resetAccessToken) body.access_token = window._resetAccessToken;
+                if (window._resetTokenHash) body.token = window._resetTokenHash;
+
+                const res = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showNotification(data.message || 'Mot de passe réinitialisé avec succès', 'success');
+                    // Nettoyer l'URL et revenir à l'accueil pour se reconnecter
+                    setTimeout(() => { window.location.href = '/'; }, 1500);
+                } else {
+                    showNotification(data.error || 'Échec de la réinitialisation', 'error');
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-key"></i> Réinitialiser le mot de passe'; }
+                }
+            } catch (e) {
+                showNotification('Erreur réseau', 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-key"></i> Réinitialiser le mot de passe'; }
+            }
+        }
+
         async function handleForgotPassword(event) {
             event.preventDefault();
             const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
@@ -6252,7 +6359,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <small>${p.nom_proprietaire || ''} | ${p.quartier_village || ''} | ${p.superficie || 0} m² | ${p.activite || ''}</small>
+                            <small>${p.nom_proprietaire || ''} | ${p.quartier_village || ''} | ${(p.superficie_calculee || 0).toLocaleString('fr-FR')} m² | ${p.activite || ''}</small>
                         </div>
                     `).join('')}
                     </div>
@@ -6315,9 +6422,10 @@
                             <h4 style="font-size:0.85rem;margin-bottom:0.4rem;"><i class="fas fa-info-circle"></i> Informations parcelle</h4>
                             <div style="font-size:0.8rem;">
                                 <p style="margin:0.15rem 0;"><strong>Quartier :</strong> ${p.quartier_village || 'N/A'}</p>
-                                <p style="margin:0.15rem 0;"><strong>Superficie :</strong> ${p.superficie || 0} m²</p>
+                                <p style="margin:0.15rem 0;"><strong>Superficie :</strong> ${(p.superficie_calculee || 0).toLocaleString('fr-FR')} m²</p>
                                 <p style="margin:0.15rem 0;"><strong>Activité :</strong> ${p.activite || 'N/A'}</p>
-                                <p style="margin:0.15rem 0;"><strong>Prix/m² :</strong> ${p.prix_m2 ? p.prix_m2.toLocaleString() + ' XAF' : 'Non défini'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Prix/m² :</strong> ${p.prix_m2 ? Number(p.prix_m2).toLocaleString('fr-FR') + ' XAF' : 'Non défini'}</p>
+                                <p style="margin:0.15rem 0;"><strong>Prix total :</strong> ${(p.prix_m2 && p.superficie_calculee) ? (Number(p.prix_m2) * Number(p.superficie_calculee)).toLocaleString('fr-FR') + ' XAF' : 'Non défini'}</p>
                                 <p style="margin:0.15rem 0;"><strong>Statut :</strong> ${p.is_terrain_titre ? 'Terrain titré' : 'Non titré'}</p>
                                 <p style="margin:0.15rem 0;"><strong>Date mise en valeur :</strong> ${p.date_mise_en_valeur || 'N/A'}</p>
                                 <p style="margin:0.15rem 0;"><strong>Enregistré le :</strong> ${p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : 'N/A'}</p>
@@ -6503,8 +6611,8 @@
                 } else {
                     html += '<div style="max-height:350px;overflow-y:auto;">';
                     html += subscriptions.map(s => {
-                        const statusColor = s.statut === 'active' ? '#27ae60' : s.statut === 'pending' ? '#f39c12' : s.statut === 'expired' ? '#e74c3c' : '#95a5a6';
-                        const statusLabel = s.statut === 'active' ? 'Actif' : s.statut === 'pending' ? 'En attente' : s.statut === 'expired' ? 'Expiré' : 'Annulé';
+                        const statusColor = s.statut === 'active' ? '#27ae60' : s.statut === 'completed' ? '#2e7d32' : s.statut === 'pending' ? '#f39c12' : s.statut === 'expired' ? '#e74c3c' : '#95a5a6';
+                        const statusLabel = s.statut === 'active' ? 'Actif' : s.statut === 'completed' ? 'Payé (parcelle enregistrée)' : s.statut === 'pending' ? 'En attente' : s.statut === 'expired' ? 'Expiré' : 'Annulé';
                         const typeLabel = s.type_abonnement === 'proprietaire' ? 'Propriétaire' : 'Client';
                         return `
                             <div class="contact-card" style="border-left:3px solid ${statusColor};">
@@ -6515,6 +6623,9 @@
                                 <p style="margin:0.3rem 0;font-size:0.85rem;"><strong>${s.user?.nom_complet || '-'}</strong> (${typeLabel})</p>
                                 <p style="margin:0.1rem 0;font-size:0.8rem;color:#555;">${s.user?.email || ''} | ${s.user?.telephone || ''}</p>
                                 <p style="margin:0.1rem 0;font-size:0.8rem;"><strong>${(s.montant || 0).toLocaleString()} ${s.devise || 'XAF'}</strong> | ${s.date_debut || '-'} → ${s.date_fin || '-'}</p>
+                                <div style="text-align:right;margin-top:0.3rem;">
+                                    <button class="btn btn-danger" style="font-size:0.72rem;padding:0.2rem 0.5rem;" onclick="deleteSubscription('${s.id}')"><i class="fas fa-trash"></i> Supprimer</button>
+                                </div>
                             </div>
                         `;
                     }).join('');
@@ -6524,6 +6635,26 @@
                 container.innerHTML = html;
             } catch (e) {
                 container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        async function deleteSubscription(id) {
+            if (!confirm('Supprimer définitivement cet abonnement/paiement ?')) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/admin/subscriptions/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showNotification('Abonnement supprimé', 'success');
+                    loadAdminSubscriptions();
+                } else {
+                    showNotification(data.error || 'Suppression impossible', 'error');
+                }
+            } catch (e) {
+                showNotification('Erreur réseau', 'error');
             }
         }
 
@@ -6693,6 +6824,13 @@
         // =====================================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Initialisation de GéoFoncier - Version Corrigée Scroll Mobile');
+
+            // Détecter un lien de réinitialisation de mot de passe (avant tout le reste).
+            // Supabase peut renvoyer le jeton dans le hash (#access_token=...&type=recovery)
+            // ou en query (?token_hash=...&type=recovery).
+            if (detectPasswordRecovery()) {
+                return; // On affiche le formulaire de réinitialisation et on stoppe l'init normale
+            }
 
             // Gérer le retour de paiement Flutterwave
             const urlParams = new URLSearchParams(window.location.search);
