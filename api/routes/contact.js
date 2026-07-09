@@ -12,6 +12,20 @@ router.post('/initiate', authenticateUser, async (req, res) => {
             return res.status(400).json({ error: 'parcelle_id requis' })
         }
 
+        // Un propriétaire ne peut pas contacter un autre propriétaire
+        const { supabase } = require('../supabase-config')
+        const { data: userData } = await supabase
+            .from('users')
+            .select('type_utilisateur')
+            .eq('id', req.user.id)
+            .single()
+
+        if (userData && userData.type_utilisateur === 'proprietaire') {
+            return res.status(403).json({
+                error: 'En tant que propriétaire, vous ne pouvez pas contacter un autre propriétaire. Inscrivez-vous en tant que client pour cette fonctionnalité.'
+            })
+        }
+
         const result = await ContactService.initiateContact({
             client_id: req.user.id,
             parcelle_id

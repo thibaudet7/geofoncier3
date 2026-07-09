@@ -1,7 +1,7 @@
 # GéoFoncier — Résumé des travaux & État de l'application
 
 > Document destiné à être partagé avec un assistant IA (Claude) pour reprendre le développement sans perte de contexte.
-> Dernière mise à jour : 2026-07-08
+> Dernière mise à jour : 2026-07-09
 
 ---
 
@@ -26,9 +26,16 @@
 
 | Ressource | URL |
 |-----------|-----|
-| Production | https://geofoncier.vercel.app |
-| GitHub | https://github.com/Thibaut-Music/geofoncier |
+| Production | https://geofoncier.shop |
+| GitHub | https://github.com/thibaudet7/geofoncier3 |
 | Supabase | https://boyyptqybnsiwnkdpfbl.supabase.co |
+
+### Contacts du site
+
+| Canal | Coordonnée |
+|-------|-----------|
+| Email | monvillage.cm@gmail.com |
+| Téléphone | +237 621 703 945 |
 
 ---
 
@@ -106,7 +113,7 @@ geofoncier/
 | Rôle | Droits |
 |------|--------|
 | `admin` | Tout : CRUD parcelles, voir docs/infos propriétaires, supprimer, stats |
-| `proprietaire` | Enregistrer ses parcelles (après paiement), voir ses parcelles |
+| `proprietaire` | Enregistrer ses parcelles (après paiement), voir ses parcelles. **Ne peut PAS contacter un autre propriétaire** (doit s'inscrire comme client) |
 | `client` | Consulter parcelles, rechercher, contacter propriétaires (abonnement requis) |
 
 ### Comptes existants
@@ -222,6 +229,12 @@ L'application supporte 4 systèmes d'entrée :
 - [x] Favoris
 - [x] Opacité parcelles configurable
 - [x] Import CSV
+- [x] Footer avec contacts du site (email + téléphone)
+- [x] Responsive complet : 768px, 480px, 360px, 280px (ultra-petit)
+- [x] Scroll tactile modales : body bloqué à l'ouverture, scroll sur `.modal` au lieu de `.modal-content`
+- [x] Sidebar mobile : scroll interne correctement isolé (`overflow: hidden` sur parent, `flex: 1` + `overflow-y: auto` sur contenu)
+- [x] Contrôles carte (mesure/basemap) repositionnés dynamiquement sous les boutons d'outils via `getBoundingClientRect`
+- [x] Restriction : propriétaire ne peut pas contacter un autre propriétaire
 
 ### Backend (API)
 
@@ -253,6 +266,10 @@ L'application supporte 4 systèmes d'entrée :
 | "Could not find 'superficie' column" | Colonne manquante + cache PostgREST | ALTER TABLE + NOTIFY pgrst + renommé en `superficie_calculee` |
 | `onclose` Flutterwave après succès | `onclose` se déclenche aussi après paiement réussi | Flag `paymentSucceeded` |
 | Vue bloque ALTER TABLE | `parcelles_avec_proprietaires` view | DROP VIEW → ALTER → recreate |
+| Propriétaire peut contacter un autre proprio | Pas de vérification de rôle | Guard frontend + backend (403 si type_utilisateur=proprietaire) |
+| UI déborde sur écrans < 320px | Pas de breakpoint ultra-petit | Ajout media query 280px + masquage légende + labels icônes-only |
+| Scroll bloqué sur formulaires mobile | `modal-content` avec `max-height: 90vh` + `overflow-y: auto` empêche le scroll natif | Scroll sur `.modal`, body verrouillé, modal-content en `overflow: visible` |
+| Boutons mesure/basemap cachés par le header | Position fixe `top` ne s'adapte pas | `adjustControlPositions()` calcule dynamiquement la position du layer control |
 
 ---
 
