@@ -53,6 +53,11 @@ if (!process.env.VERCEL) {
     app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 }
 
+// Politique de confidentialité (page statique pour Play Store)
+app.get('/politique-confidentialite', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/politique-confidentialite.html'))
+})
+
 // Visit tracking (fire-and-forget on page load)
 app.use((req, res, next) => {
     if (req.method === 'GET' && (req.path === '/' || req.path === '/index.html')) {
