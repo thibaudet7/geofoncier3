@@ -12,8 +12,8 @@ const PORT = process.env.PORT || 3000
 const allowedOrigins = [
     process.env.APP_URL,
     process.env.CORS_ORIGIN,
-    'https://www.geofoncier.shop',
-    'https://geofoncier.shop',
+    'https://www.geofoncier.store',
+    'https://geofoncier.store',
     'https://geofoncier.vercel.app'
 ].filter(Boolean)
 

@@ -201,7 +201,7 @@ router.post('/forgot-password', [
 
         const { supabaseAnon } = require('../supabase-config')
         const redirectUrl = process.env.VERCEL
-            ? 'https://www.geofoncier.shop/reset-password'
+            ? 'https://www.geofoncier.store/reset-password'
             : `http://localhost:${process.env.PORT || 3000}/reset-password`
 
         const { error } = await supabaseAnon.auth.resetPasswordForEmail(email, {
