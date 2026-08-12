@@ -2248,10 +2248,10 @@
             </div>
             
             <div class="form-group" style="margin-top: 1rem;">
-                <label style="display: flex; align-items: center; font-size: 0.9rem;">
-                    <input type="checkbox" id="acceptConditions" required style="margin-right: 0.5rem;">
-                    J'accepte les <a href="#" style="color: #3498db;">conditions d'utilisation</a> 
-                    et la <a href="#" style="color: #3498db;">politique de confidentialité</a>
+                <label style="display: flex; align-items: flex-start; font-size: 0.9rem;">
+                    <input type="checkbox" id="acceptConditions" required style="margin-right: 0.5rem; margin-top: 0.2rem;">
+                    <span>J'accepte les <a href="#" onclick="event.preventDefault(); openModal('conditionsModal')" style="color: #3498db; text-decoration: underline;">conditions d'utilisation</a>
+                    et la <a href="#" onclick="event.preventDefault(); openModal('politiqueModal')" style="color: #3498db; text-decoration: underline;">politique de confidentialité</a></span>
                 </label>
             </div>
             
@@ -2264,6 +2264,79 @@
             <div id="registerSuccess" style="color: #27ae60; margin-top: 10px; display: none;
                  background: #f2fdf2; padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;"></div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Conditions d'utilisation -->
+<div id="conditionsModal" class="modal">
+    <div class="modal-content" style="max-width:600px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header">
+            <div class="modal-title">Conditions d'utilisation</div>
+            <span class="close" onclick="closeModal('conditionsModal')">&times;</span>
+        </div>
+        <div style="padding:1rem;font-size:0.85rem;line-height:1.6;">
+            <h3>1. Objet</h3>
+            <p>Les présentes conditions régissent l'utilisation de la plateforme GéoFoncier, application de gestion des parcelles foncières au Cameroun.</p>
+
+            <h3>2. Inscription et compte</h3>
+            <p>L'inscription nécessite le paiement d'un abonnement selon le type d'utilisateur (client ou propriétaire). Les informations fournies doivent être exactes et à jour. Tout compte créé avec de fausses informations pourra être suspendu.</p>
+
+            <h3>3. Abonnements et paiements</h3>
+            <p><strong>Client :</strong> Abonnement mensuel ou annuel requis pour accéder aux coordonnées des propriétaires. Tarifs : 5 000 XAF/mois ou 50 000 XAF/an (Afrique) ; 50 000 XAF/mois ou 500 000 XAF/an (Hors Afrique).</p>
+            <p><strong>Propriétaire :</strong> Paiement par parcelle enregistrée, calculé selon la superficie (à partir de 5 000 XAF).</p>
+            <p>Les paiements sont traités par Flutterwave. Aucun remboursement n'est effectué après activation de l'abonnement.</p>
+
+            <h3>4. Responsabilités</h3>
+            <p>GéoFoncier facilite la mise en relation entre acheteurs et vendeurs mais ne garantit pas la validité juridique des titres fonciers. L'utilisateur est responsable de la vérification des documents auprès des autorités compétentes.</p>
+
+            <h3>5. Données et propriété intellectuelle</h3>
+            <p>Les données cartographiques et les informations saisies par les utilisateurs restent leur propriété. GéoFoncier dispose d'un droit d'utilisation pour le fonctionnement de la plateforme.</p>
+
+            <h3>6. Résiliation</h3>
+            <p>L'utilisateur peut supprimer son compte à tout moment en contactant l'administrateur. GéoFoncier se réserve le droit de suspendre un compte en cas de violation des présentes conditions.</p>
+
+            <h3>7. Modification</h3>
+            <p>GéoFoncier se réserve le droit de modifier ces conditions. Les utilisateurs seront informés par notification.</p>
+
+            <p style="margin-top:1rem;color:#666;"><em>Dernière mise à jour : Août 2026</em></p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Politique de confidentialité -->
+<div id="politiqueModal" class="modal">
+    <div class="modal-content" style="max-width:600px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header">
+            <div class="modal-title">Politique de confidentialité</div>
+            <span class="close" onclick="closeModal('politiqueModal')">&times;</span>
+        </div>
+        <div style="padding:1rem;font-size:0.85rem;line-height:1.6;">
+            <h3>1. Collecte des données</h3>
+            <p>Nous collectons les données suivantes lors de l'inscription : nom complet, email, téléphone, type et numéro de pièce d'identité, localisation. Ces données sont nécessaires au fonctionnement du service.</p>
+
+            <h3>2. Utilisation des données</h3>
+            <p>Vos données sont utilisées pour :</p>
+            <ul>
+                <li>Gérer votre compte et authentification</li>
+                <li>Permettre la mise en relation acheteur-vendeur (après approbation admin)</li>
+                <li>Traiter les paiements via Flutterwave</li>
+                <li>Vous envoyer des notifications relatives à votre compte</li>
+            </ul>
+
+            <h3>3. Partage des données</h3>
+            <p>Vos coordonnées ne sont transmises à un tiers qu'après votre consentement explicite (demande de contact approuvée par l'administrateur). Nous ne vendons jamais vos données personnelles.</p>
+
+            <h3>4. Stockage et sécurité</h3>
+            <p>Les données sont stockées sur des serveurs sécurisés (Supabase). Les mots de passe sont chiffrés. L'accès aux données est protégé par authentification JWT.</p>
+
+            <h3>5. Vos droits</h3>
+            <p>Conformément à la réglementation, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Contactez-nous à geospatial.estate@gmail.com pour exercer ces droits.</p>
+
+            <h3>6. Cookies</h3>
+            <p>L'application utilise le stockage local (localStorage) pour maintenir votre session de connexion. Aucun cookie tiers n'est utilisé à des fins publicitaires.</p>
+
+            <p style="margin-top:1rem;color:#666;"><em>Dernière mise à jour : Août 2026</em></p>
+        </div>
     </div>
 </div>
 
@@ -5962,23 +6035,17 @@
 
     async function handleRegister(event) {
         event.preventDefault();
-        
+
         const registerError = document.getElementById('registerError');
         const registerSuccess = document.getElementById('registerSuccess');
         const registerBtn = document.getElementById('registerBtn');
-        
-        // Masquer les messages précédents
+
         registerError.style.display = 'none';
         registerSuccess.style.display = 'none';
-        
-        // Désactiver le bouton pendant le traitement
         registerBtn.disabled = true;
-        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inscription...';
-        
-        console.log('🚀 Début de l\'inscription...');
-        
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validation...';
+
         try {
-            // Récupérer les données du formulaire
             const userData = {
                 type_utilisateur: document.getElementById('typeUtilisateur').value,
                 nom_complet: document.getElementById('nomComplet').value.trim(),
@@ -5989,130 +6056,210 @@
                 localisation: document.getElementById('localisation').value,
                 password: document.getElementById('passwordRegister').value
             };
-            
-            console.log('📝 Données collectées du formulaire:', {
-                ...userData,
-                password: '[MASQUÉ - longueur: ' + userData.password.length + ']'
-            });
-            
+
             const confirmPassword = document.getElementById('confirmPassword').value;
             const acceptConditions = document.getElementById('acceptConditions').checked;
-            
-            // Validations côté client
-            console.log('🔍 Validation des données...');
-            
+
             if (!acceptConditions) {
                 throw new Error('Vous devez accepter les conditions d\'utilisation');
             }
-            
             if (userData.password !== confirmPassword) {
                 throw new Error('Les mots de passe ne correspondent pas');
             }
-            
             if (userData.password.length < 6) {
                 throw new Error('Le mot de passe doit contenir au moins 6 caractères');
             }
-            
-            // Validation du téléphone (format basique)
             if (!/^[\+]?[\d\s\-\(\)]{8,15}$/.test(userData.telephone)) {
                 throw new Error('Format de téléphone invalide');
             }
-            
-            // Validation de l'email
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
                 throw new Error('Format d\'email invalide');
             }
-            
-            console.log('✅ Validations passées, envoi au serveur...');
-            
-            // Test de connexion au serveur d'abord
-            console.log('🔗 Test de connexion au serveur...');
-            
-            try {
-                const healthResponse = await fetch('/api/health');
-                console.log('🏥 Réponse health check:', healthResponse.status);
-                
-                if (!healthResponse.ok) {
-                    throw new Error('Serveur non accessible. Statut: ' + healthResponse.status);
+
+            // Test serveur
+            const healthResponse = await fetch('/api/health');
+            if (!healthResponse.ok) {
+                throw new Error('Serveur non accessible');
+            }
+
+            // Propriétaires : inscription gratuite (paiement par parcelle plus tard)
+            if (userData.type_utilisateur === 'proprietaire') {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    registerSuccess.innerHTML = `<i class="fas fa-check-circle"></i> Inscription réussie ! Vous pouvez maintenant vous connecter.`;
+                    registerSuccess.style.display = 'block';
+                    document.getElementById('registerForm').reset();
+                    setTimeout(() => { closeModal('registerModal'); showNotification('Inscription réussie !', 'success'); }, 3000);
+                } else {
+                    throw new Error(result.error || 'Erreur lors de l\'inscription');
                 }
-                
-                const healthData = await healthResponse.json();
-                console.log('✅ Serveur accessible:', healthData);
-                
-            } catch (healthError) {
-                console.error('❌ Erreur health check:', healthError);
-                throw new Error('Impossible de contacter le serveur. Vérifiez que le serveur Node.js est démarré sur le port 3000.');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
+                return;
             }
-            
-            // Envoi de la requête d'inscription
-            console.log('📤 Envoi de la requête d\'inscription...');
-            
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData)
-            });
-            
-            console.log('📡 Réponse serveur inscription:', {
-                status: response.status,
-                statusText: response.statusText,
-                ok: response.ok,
-                headers: Object.fromEntries(response.headers)
-            });
-            
-            let result;
-            try {
-                result = await response.json();
-                console.log('📋 Données de réponse:', result);
-            } catch (parseError) {
-                console.error('❌ Erreur parsing JSON:', parseError);
-                const responseText = await response.text();
-                console.log('📄 Réponse brute:', responseText);
-                throw new Error('Réponse serveur invalide: ' + responseText.substring(0, 100));
-            }
-            
-            if (response.ok) {
-                registerSuccess.innerHTML = `
-                    <i class="fas fa-check-circle"></i> 
-                    ${result.message || 'Inscription réussie !'}
-                    <br><small>Vous pouvez maintenant vous connecter.</small>
-                `;
-                registerSuccess.style.display = 'block';
-                
-                console.log('✅ Inscription réussie !');
-                
-                // Réinitialiser le formulaire
-                document.getElementById('registerForm').reset();
-                
-                // Fermer le modal après 3 secondes
-                setTimeout(() => {
-                    closeModal('registerModal');
-                    showNotification('Inscription réussie ! Vous pouvez maintenant vous connecter.', 'success');
-                }, 3000);
-                
-            } else {
-                console.error('❌ Échec inscription serveur:', result);
-                throw new Error(result.error || 'Erreur lors de l\'inscription - ' + response.status);
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur inscription complète:', error);
-            console.error('❌ Stack trace:', error.stack);
-            
-            registerError.innerHTML = `
-                <i class="fas fa-exclamation-triangle"></i> 
-                <strong>Erreur:</strong> ${error.message}
-                <br><small>Vérifiez la console (F12) pour plus de détails.</small>
-            `;
-            registerError.style.display = 'block';
-        } finally {
-            // Réactiver le bouton
+
+            // Clients : paiement obligatoire avant création du compte
+            const pricing = getSubscriptionPricing('client', userData.localisation);
+
+            closeModal('registerModal');
             registerBtn.disabled = false;
             registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
-            console.log('🔄 Processus d\'inscription terminé');
+
+            showRegistrationPaymentChoice(userData, pricing);
+
+        } catch (error) {
+            registerError.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Erreur:</strong> ${error.message}
+            `;
+            registerError.style.display = 'block';
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
         }
+    }
+
+    // Modal choix abonnement client à l'inscription
+    function showRegistrationPaymentChoice(userData, pricing) {
+        const loc = userData.localisation === 'Hors_Afrique' ? 'Hors Afrique' : 'Afrique';
+        const html = `
+            <div style="text-align:center;padding:1rem;">
+                <h3 style="margin-bottom:0.8rem;"><i class="fas fa-credit-card"></i> Paiement requis pour l'inscription</h3>
+                <p style="margin-bottom:0.5rem;color:#666;">Localisation : <strong>${loc}</strong></p>
+                <p style="margin-bottom:1rem;font-size:0.82rem;color:#888;">Choisissez votre formule d'abonnement pour finaliser votre inscription :</p>
+                <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+                    <button class="btn btn-success" onclick="launchRegistrationPayment(window._pendingRegisterData, ${pricing.mensuel}, 'mensuel')" style="flex:1;min-width:130px;">
+                        <i class="fas fa-calendar"></i> Mensuel<br><strong>${pricing.mensuel.toLocaleString()} XAF</strong>
+                    </button>
+                    <button class="btn btn-primary" onclick="launchRegistrationPayment(window._pendingRegisterData, ${pricing.annuel}, 'annuel')" style="flex:1;min-width:130px;">
+                        <i class="fas fa-calendar-alt"></i> Annuel<br><strong>${pricing.annuel.toLocaleString()} XAF</strong>
+                    </button>
+                </div>
+                <button class="btn btn-secondary" onclick="closeModal('registerPaymentModal'); openModal('registerModal')" style="margin-top:1rem;">Retour</button>
+            </div>
+        `;
+
+        window._pendingRegisterData = userData;
+
+        let modal = document.getElementById('registerPaymentModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'registerPaymentModal';
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content" style="max-width:420px;">${html}</div>`;
+            document.body.appendChild(modal);
+        } else {
+            modal.querySelector('.modal-content').innerHTML = html;
+        }
+        modal.style.display = 'flex';
+    }
+
+    // Lancer le paiement Flutterwave puis créer le compte
+    function launchRegistrationPayment(userData, amount, period) {
+        closeModal('registerPaymentModal');
+
+        const tx_ref = `geofoncier_reg_${Date.now()}`;
+        const endDate = new Date();
+        if (period === 'annuel') {
+            endDate.setFullYear(endDate.getFullYear() + 1);
+        } else {
+            endDate.setMonth(endDate.getMonth() + 1);
+        }
+
+        const publicKey = document.querySelector('meta[name="flutterwave-key"]')?.content
+            || window.__FLW_PUBLIC_KEY
+            || null;
+
+        // Initier via le backend pour récupérer la clé publique
+        fetch('/api/payment/register-initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: amount,
+                currency: 'XAF',
+                subscription_type: userData.type_utilisateur,
+                period: period,
+                end_date: endDate.toISOString().split('T')[0],
+                customer: {
+                    email: userData.email,
+                    phone: userData.telephone,
+                    name: userData.nom_complet
+                }
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.payment_config) {
+                showNotification(data.error || 'Erreur de configuration paiement', 'error');
+                openModal('registerModal');
+                return;
+            }
+
+            FlutterwaveCheckout({
+                public_key: data.payment_config.public_key,
+                tx_ref: data.payment_config.tx_ref,
+                amount: data.payment_config.amount,
+                currency: data.payment_config.currency,
+                payment_options: 'card,mobilemoney,ussd',
+                customer: data.payment_config.customer,
+                customizations: {
+                    title: 'GéoFoncier - Inscription',
+                    description: `Abonnement ${userData.type_utilisateur} - ${period}`,
+                },
+                callback: function(response) {
+                    if (response.status === 'successful') {
+                        showNotification('Paiement réussi ! Création de votre compte...', 'success');
+                        completeRegistration(userData, response.transaction_id, data.payment_config.tx_ref);
+                    } else {
+                        showNotification('Paiement échoué. Inscription annulée.', 'error');
+                        openModal('registerModal');
+                    }
+                },
+                onclose: function() {
+                    // Si pas de paiement réussi, revenir au formulaire
+                    if (!document.querySelector('#registerSuccess')?.style.display === 'block') {
+                        openModal('registerModal');
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            showNotification('Erreur de connexion au serveur de paiement', 'error');
+            openModal('registerModal');
+        });
+    }
+
+    // Après paiement réussi : créer le compte
+    async function completeRegistration(userData, transactionId, txRef) {
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...userData,
+                    payment_transaction_id: transactionId,
+                    payment_tx_ref: txRef
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showNotification('Inscription réussie ! Vous pouvez maintenant vous connecter.', 'success');
+                document.getElementById('registerForm').reset();
+            } else {
+                showNotification(result.error || 'Erreur lors de la création du compte. Contactez le support avec votre reçu de paiement.', 'error');
+                openModal('registerModal');
+            }
+        } catch (error) {
+            showNotification('Erreur serveur. Votre paiement a été enregistré — contactez le support pour finaliser votre inscription.', 'error');
+        }
+        window._pendingRegisterData = null;
+    }
     }
 
         function updateAuthUI() {

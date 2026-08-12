@@ -58,8 +58,36 @@ class AuthService {
 
             console.log('✅ Utilisateur créé avec succès')
 
-            return { 
-                success: true, 
+            // 3. Créer l'abonnement si paiement effectué à l'inscription
+            if (userData.payment_transaction_id && userData.payment_tx_ref) {
+                const now = new Date()
+                const endDate = new Date(now)
+                // Déterminer la durée selon le montant/période
+                endDate.setMonth(endDate.getMonth() + 1) // Par défaut mensuel
+
+                const subscriptionRecord = {
+                    user_id: authData.user.id,
+                    type: userData.type_utilisateur,
+                    statut: 'active',
+                    date_debut: now.toISOString().split('T')[0],
+                    date_fin: endDate.toISOString().split('T')[0],
+                    flutterwave_transaction_id: String(userData.payment_transaction_id),
+                    montant: userData.amount || 0
+                }
+
+                const { error: subError } = await supabase
+                    .from('subscriptions')
+                    .insert([subscriptionRecord])
+
+                if (subError) {
+                    console.error('⚠️ Erreur création abonnement (compte créé quand même):', subError.message)
+                } else {
+                    console.log('✅ Abonnement créé pour', authData.user.id)
+                }
+            }
+
+            return {
+                success: true,
                 user: authData.user,
                 userData: insertData[0],
                 message: 'Inscription réussie'

@@ -5,6 +5,44 @@ const { FlutterwaveService } = require('../services/FlutterwaveService')
 const { authenticateUser } = require('../middleware/auth')
 const { supabase } = require('../supabase-config')
 
+// POST /api/payment/register-initiate (pré-inscription, PAS d'auth requise)
+router.post('/register-initiate', async (req, res) => {
+    try {
+        if (!process.env.FLUTTERWAVE_PUBLIC_KEY) {
+            return res.status(500).json({ error: 'Configuration paiement manquante sur le serveur' })
+        }
+
+        const { amount, currency, subscription_type, period, end_date, customer } = req.body
+
+        if (!amount || !customer || !customer.email) {
+            return res.status(400).json({ error: 'Données de paiement incomplètes' })
+        }
+
+        if (!['client', 'proprietaire'].includes(subscription_type)) {
+            return res.status(400).json({ error: 'Type utilisateur invalide' })
+        }
+
+        const tx_ref = `geofoncier_reg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+        res.json({
+            payment_config: {
+                public_key: process.env.FLUTTERWAVE_PUBLIC_KEY,
+                tx_ref,
+                amount,
+                currency: currency || 'XAF',
+                customer: {
+                    email: customer.email,
+                    phone_number: customer.phone || '',
+                    name: customer.name || ''
+                }
+            }
+        })
+    } catch (error) {
+        console.error('Erreur register-initiate:', error.message)
+        res.status(500).json({ error: 'Erreur serveur' })
+    }
+})
+
 // POST /api/payment/initiate (authentifié)
 router.post('/initiate', authenticateUser, async (req, res) => {
     try {
