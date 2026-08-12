@@ -4405,7 +4405,7 @@
         //  FONCTIONS UTILITAIRES ET INTERACTIONS
         // =====================================================
 
-        // Contacter le propriétaire - envoie une demande à l'admin
+        // Contacter le propriétaire - vérifie abonnement puis envoie une demande à l'admin
         async function contactOwner(parcelleId) {
             if (!currentUser) {
                 showNotification('Veuillez vous connecter pour contacter le propriétaire', 'error');
@@ -4424,6 +4424,18 @@
                 return;
             }
 
+            // Vérifier que le client a un abonnement actif
+            const subStatus = await checkSubscriptionStatus();
+            if (!subStatus.has_active_subscription) {
+                showNotification('Abonnement requis pour contacter un propriétaire. Souscrivez un abonnement.', 'info');
+                const localisation = currentUser.localisation || 'Afrique';
+                showSubscriptionChoiceModal('client', localisation, function() {
+                    showNotification('Abonnement activé ! Vous pouvez maintenant contacter les propriétaires.', 'success');
+                    contactOwner(parcelleId);
+                });
+                return;
+            }
+
             try {
                 const token = localStorage.getItem('authToken');
                 const response = await fetch('/api/contact/initiate', {
@@ -4439,6 +4451,12 @@
 
                 if (response.ok) {
                     showNotification(result.message || 'Demande envoyée ! L\'administrateur vous recontactera.', 'success');
+                } else if (result.code === 'SUBSCRIPTION_REQUIRED') {
+                    const localisation = currentUser.localisation || 'Afrique';
+                    showSubscriptionChoiceModal('client', localisation, function() {
+                        showNotification('Abonnement activé !', 'success');
+                        contactOwner(parcelleId);
+                    });
                 } else {
                     showNotification(result.error || 'Erreur lors de l\'envoi de la demande', 'error');
                 }

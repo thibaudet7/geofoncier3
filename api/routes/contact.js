@@ -3,7 +3,7 @@ const router = express.Router()
 const { ContactService } = require('../services/ContactService')
 const { authenticateUser, requireAdmin } = require('../middleware/auth')
 
-// POST /api/contact/initiate - Client demande contact
+// POST /api/contact/initiate - Client demande contact (abonnement actif requis)
 router.post('/initiate', authenticateUser, async (req, res) => {
     try {
         const { parcelle_id } = req.body
@@ -12,17 +12,33 @@ router.post('/initiate', authenticateUser, async (req, res) => {
             return res.status(400).json({ error: 'parcelle_id requis' })
         }
 
-        // Un propriétaire ne peut pas contacter un autre propriétaire
         const { supabase } = require('../supabase-config')
         const { data: userData } = await supabase
             .from('users')
-            .select('type_utilisateur')
+            .select('type_utilisateur, localisation')
             .eq('id', req.user.id)
             .single()
 
         if (userData && userData.type_utilisateur === 'proprietaire') {
             return res.status(403).json({
                 error: 'En tant que propriétaire, vous ne pouvez pas contacter un autre propriétaire. Inscrivez-vous en tant que client pour cette fonctionnalité.'
+            })
+        }
+
+        // Vérifier que le client a un abonnement actif
+        const { data: activeSub } = await supabase
+            .from('subscriptions')
+            .select('id, date_fin')
+            .eq('user_id', req.user.id)
+            .eq('statut', 'active')
+            .gte('date_fin', new Date().toISOString().split('T')[0])
+            .limit(1)
+
+        if (!activeSub || activeSub.length === 0) {
+            return res.status(403).json({
+                error: 'Abonnement requis',
+                code: 'SUBSCRIPTION_REQUIRED',
+                message: 'Vous devez souscrire à un abonnement pour contacter les propriétaires.'
             })
         }
 
