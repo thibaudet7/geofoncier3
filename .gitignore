@@ -2,5 +2,9 @@ node_modules/
 uploads/
 .env
 .env.local
+.env.production
 ~$*
 *.docx~
+*.log
+.DS_Store
+Thumbs.db

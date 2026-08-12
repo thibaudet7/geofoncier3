@@ -168,9 +168,23 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
     }
 })
 
-// PUT /api/parcelles/:id - Modifier une parcelle (authentifié)
+// PUT /api/parcelles/:id - Modifier une parcelle (authentifié, propriétaire uniquement)
 router.put('/:id', authenticateUser, async (req, res) => {
     try {
+        const { data: parcelle, error: fetchErr } = await supabase
+            .from('parcelles')
+            .select('proprietaire_id')
+            .eq('id', req.params.id)
+            .single()
+
+        if (fetchErr || !parcelle) {
+            return res.status(404).json({ success: false, error: 'Parcelle non trouvée' })
+        }
+
+        if (parcelle.proprietaire_id !== req.user.id) {
+            return res.status(403).json({ success: false, error: 'Vous ne pouvez modifier que vos propres parcelles' })
+        }
+
         const result = await ParcelleService.updateParcelle(req.params.id, req.body)
         if (result.success) {
             res.json({ success: true, parcelle: result.parcelle })
@@ -183,9 +197,23 @@ router.put('/:id', authenticateUser, async (req, res) => {
     }
 })
 
-// DELETE /api/parcelles/:id - Supprimer une parcelle (authentifié)
+// DELETE /api/parcelles/:id - Supprimer une parcelle (authentifié, propriétaire uniquement)
 router.delete('/:id', authenticateUser, async (req, res) => {
     try {
+        const { data: parcelle, error: fetchErr } = await supabase
+            .from('parcelles')
+            .select('proprietaire_id')
+            .eq('id', req.params.id)
+            .single()
+
+        if (fetchErr || !parcelle) {
+            return res.status(404).json({ success: false, error: 'Parcelle non trouvée' })
+        }
+
+        if (parcelle.proprietaire_id !== req.user.id) {
+            return res.status(403).json({ success: false, error: 'Vous ne pouvez supprimer que vos propres parcelles' })
+        }
+
         const result = await ParcelleService.deleteParcelle(req.params.id)
         if (result.success) {
             res.json({ success: true, message: 'Parcelle supprimée' })

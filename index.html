@@ -2324,15 +2324,19 @@
                 <div class="stat-card blue"><div class="stat-number" id="statUsers">-</div><div class="stat-label">Utilisateurs</div></div>
             </div>
             <div class="dashboard-tabs">
-                <button class="tab-btn active" onclick="showAdminTab('contacts')">Demandes</button>
-                <button class="tab-btn" onclick="showAdminTab('parcelles')">Parcelles</button>
-                <button class="tab-btn" onclick="showAdminTab('transactions')">Transactions</button>
-                <button class="tab-btn" onclick="showAdminTab('subscriptions')">Abonnements</button>
+                <button class="tab-btn active" onclick="showAdminTab('contacts', this)">Demandes</button>
+                <button class="tab-btn" onclick="showAdminTab('parcelles', this)">Parcelles</button>
+                <button class="tab-btn" onclick="showAdminTab('users', this)">Utilisateurs</button>
+                <button class="tab-btn" onclick="showAdminTab('transactions', this)">Transactions</button>
+                <button class="tab-btn" onclick="showAdminTab('subscriptions', this)">Abonnements</button>
             </div>
             <div id="adminContactsTab" class="tab-content active">
                 <p style="text-align:center; color:#999;">Chargement...</p>
             </div>
             <div id="adminParcellesTab" class="tab-content">
+                <p style="text-align:center; color:#999;">Chargement...</p>
+            </div>
+            <div id="adminUsersTab" class="tab-content">
                 <p style="text-align:center; color:#999;">Chargement...</p>
             </div>
             <div id="adminTransactionsTab" class="tab-content">
@@ -6398,19 +6402,20 @@
         // --- Admin Dashboard ---
         async function openAdminDashboard() {
             openModal('adminDashboardModal');
-            showAdminTab('contacts');
+            const firstTab = document.querySelector('#adminDashboardModal .tab-btn');
+            showAdminTab('contacts', firstTab);
             loadAdminStats();
-            loadAdminContacts();
         }
 
-        function showAdminTab(tab) {
+        function showAdminTab(tab, btn) {
             document.querySelectorAll('#adminDashboardModal .tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#adminDashboardModal .tab-content').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
             const tabEl = document.getElementById(`admin${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`);
             if (tabEl) tabEl.classList.add('active');
             if (tab === 'contacts') loadAdminContacts();
             else if (tab === 'parcelles') loadAdminParcelles();
+            else if (tab === 'users') loadAdminUsers();
             else if (tab === 'transactions') loadAdminTransactions();
             else if (tab === 'subscriptions') loadAdminSubscriptions();
         }
@@ -6508,6 +6513,87 @@
                     showNotification(data.error || 'Erreur', 'error');
                 }
             } catch (e) { showNotification('Erreur serveur', 'error'); }
+        }
+
+        async function loadAdminUsers() {
+            const container = document.getElementById('adminUsersTab');
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const users = data.users || [];
+
+                if (users.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#999;">Aucun utilisateur.</p>';
+                    return;
+                }
+
+                const countAdmin = users.filter(u => u.type_utilisateur === 'admin').length;
+                const countProprio = users.filter(u => u.type_utilisateur === 'proprietaire').length;
+                const countClient = users.filter(u => u.type_utilisateur === 'client').length;
+
+                let html = `
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.5rem;margin-bottom:1rem;">
+                        <div style="background:#fce4ec;padding:0.5rem;border-radius:6px;text-align:center;">
+                            <div style="font-size:1.2rem;font-weight:bold;color:#c62828;">${countAdmin}</div>
+                            <div style="font-size:0.7rem;color:#666;">Administrateurs</div>
+                        </div>
+                        <div style="background:#e8f5e9;padding:0.5rem;border-radius:6px;text-align:center;">
+                            <div style="font-size:1.2rem;font-weight:bold;color:#2e7d32;">${countProprio}</div>
+                            <div style="font-size:0.7rem;color:#666;">Propriétaires</div>
+                        </div>
+                        <div style="background:#e3f2fd;padding:0.5rem;border-radius:6px;text-align:center;">
+                            <div style="font-size:1.2rem;font-weight:bold;color:#1565c0;">${countClient}</div>
+                            <div style="font-size:0.7rem;color:#666;">Clients</div>
+                        </div>
+                        <div style="background:#f3e5f5;padding:0.5rem;border-radius:6px;text-align:center;">
+                            <div style="font-size:1.2rem;font-weight:bold;color:#6a1b9a;">${users.length}</div>
+                            <div style="font-size:0.7rem;color:#666;">Total</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:0.8rem;display:flex;gap:0.4rem;flex-wrap:wrap;">
+                        <button class="btn btn-secondary" style="font-size:0.75rem;padding:0.2rem 0.6rem;" onclick="filterAdminUsers('all')">Tous</button>
+                        <button class="btn" style="font-size:0.75rem;padding:0.2rem 0.6rem;background:#c62828;color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="filterAdminUsers('admin')">Admins</button>
+                        <button class="btn" style="font-size:0.75rem;padding:0.2rem 0.6rem;background:#2e7d32;color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="filterAdminUsers('proprietaire')">Propriétaires</button>
+                        <button class="btn" style="font-size:0.75rem;padding:0.2rem 0.6rem;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="filterAdminUsers('client')">Clients</button>
+                    </div>
+                    <div id="adminUsersList" style="max-height:400px;overflow-y:auto;">
+                        ${renderAdminUsersList(users)}
+                    </div>
+                `;
+
+                container.innerHTML = html;
+                container._allUsers = users;
+            } catch (e) {
+                container.innerHTML = '<p style="color:#e74c3c;text-align:center;">Erreur de chargement</p>';
+            }
+        }
+
+        function renderAdminUsersList(users) {
+            return users.map(u => {
+                const roleColor = u.type_utilisateur === 'admin' ? '#c62828' : u.type_utilisateur === 'proprietaire' ? '#2e7d32' : '#1565c0';
+                const roleLabel = u.type_utilisateur === 'admin' ? 'Administrateur' : u.type_utilisateur === 'proprietaire' ? 'Propriétaire' : 'Client';
+                const verifiedIcon = u.is_verified ? '<i class="fas fa-check-circle" style="color:#27ae60;" title="Vérifié"></i>' : '<i class="fas fa-times-circle" style="color:#e74c3c;" title="Non vérifié"></i>';
+                return `
+                    <div class="contact-card" style="border-left:3px solid ${roleColor};">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="background:${roleColor};color:white;padding:0.1rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:500;">${roleLabel}</span>
+                            <small>${u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '-'}</small>
+                        </div>
+                        <p style="margin:0.3rem 0 0.1rem;font-size:0.88rem;font-weight:600;">${verifiedIcon} ${u.nom_complet || '-'}</p>
+                        <p style="margin:0.1rem 0;font-size:0.8rem;color:#555;"><i class="fas fa-envelope" style="width:14px;"></i> ${u.email || '-'}</p>
+                        <p style="margin:0.1rem 0;font-size:0.8rem;color:#555;"><i class="fas fa-phone" style="width:14px;"></i> ${u.telephone || '-'}</p>
+                        <p style="margin:0.1rem 0;font-size:0.8rem;color:#555;"><i class="fas fa-map-marker-alt" style="width:14px;"></i> ${u.localisation || '-'} | <i class="fas fa-id-card"></i> ${u.type_piece_identite || '-'}: ${u.numero_piece_identite || '-'}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterAdminUsers(type) {
+            const container = document.getElementById('adminUsersTab');
+            const users = container._allUsers || [];
+            const filtered = type === 'all' ? users : users.filter(u => u.type_utilisateur === type);
+            document.getElementById('adminUsersList').innerHTML = renderAdminUsersList(filtered);
         }
 
         async function loadAdminParcelles() {

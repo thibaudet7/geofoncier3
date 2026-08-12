@@ -5,18 +5,13 @@ const { body, validationResult } = require('express-validator')
 const router = express.Router()
 const { AuthService } = require('../services/AuthService')
 
-console.log('🔧 Initialisation des routes auth...')
-
-// Middleware de logging pour debug
-router.use((req, res, next) => {
-    console.log(`📡 AUTH: ${req.method} ${req.path}`)
-    if (req.body && req.method === 'POST') {
-        const logBody = { ...req.body }
-        if (logBody.password) logBody.password = '[MASQUÉ]'
-        console.log('📋 Body:', logBody)
-    }
-    next()
-})
+// Logging auth en dev uniquement
+if (process.env.NODE_ENV === 'development') {
+    router.use((req, res, next) => {
+        console.log(`📡 AUTH: ${req.method} ${req.path}`)
+        next()
+    })
+}
 
 // GET /api/auth/health - Test de santé spécifique à auth
 router.get('/health', (req, res) => {
@@ -39,13 +34,9 @@ router.post('/register', [
     body('localisation').isIn(['Cameroun', 'Afrique', 'Hors_Afrique']).withMessage('Localisation invalide')
 ], async (req, res) => {
     try {
-        console.log('📝 === DÉBUT INSCRIPTION ===')
-
-        // Vérifier les erreurs de validation
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(e => e.msg)
-            console.log('❌ Erreurs de validation:', errorMessages)
             return res.status(400).json({
                 success: false,
                 error: errorMessages.join('. ')
@@ -53,20 +44,10 @@ router.post('/register', [
         }
 
         const userData = req.body
-        console.log('Email:', userData.email)
-        console.log('✅ Validation OK, appel AuthService...')
         
-        // UTILISER AuthService au lieu de Supabase directement
         const result = await AuthService.registerUser(userData)
-        
-        console.log('📋 Résultat AuthService:', { 
-            success: result.success, 
-            hasUser: !!result.user,
-            error: result.error 
-        })
-        
+
         if (result.success) {
-            console.log('🎉 Inscription réussie !')
             
             res.status(201).json({
                 success: true,
@@ -77,8 +58,6 @@ router.post('/register', [
                 }
             })
         } else {
-            console.log('❌ Échec inscription:', result.error)
-            
             // Gestion des erreurs spécifiques
             let statusCode = 400
             let errorMessage = result.error
@@ -95,14 +74,10 @@ router.post('/register', [
         }
         
     } catch (error) {
-        console.error('❌ === ERREUR INSCRIPTION GLOBALE ===')
-        console.error('Message:', error.message)
-        console.error('Stack:', error.stack)
-        
+        console.error('Erreur inscription:', error.message)
         res.status(500).json({
             success: false,
-            error: 'Erreur serveur lors de l\'inscription',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: 'Erreur serveur lors de l\'inscription'
         })
     }
 })
@@ -113,8 +88,6 @@ router.post('/login', [
     body('password').notEmpty().trim().withMessage('Mot de passe requis')
 ], async (req, res) => {
     try {
-        console.log('🔐 === DÉBUT CONNEXION ===')
-
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(e => e.msg)
@@ -125,10 +98,7 @@ router.post('/login', [
         }
 
         let { identifier, password, email } = req.body
-        // Compatibilité : si le frontend envoie "email" au lieu de "identifier"
         if (!identifier && email) identifier = email
-
-        console.log('Identifiant de connexion:', identifier)
 
         // Déterminer si c'est un email ou un téléphone
         let loginEmail = identifier
@@ -162,14 +132,11 @@ router.post('/login', [
             } else {
                 loginEmail = userData.email
             }
-            console.log('Téléphone résolu vers email:', loginEmail)
         }
 
         const result = await AuthService.loginUser(loginEmail, password)
 
         if (result.success) {
-            console.log('🎉 Connexion réussie pour:', result.userData?.nom_complet)
-
             const jwtPayload = {
                 userId: result.user.id,
                 email: result.user.email,
@@ -212,8 +179,7 @@ router.post('/login', [
         }
 
     } catch (error) {
-        console.error('❌ === ERREUR CONNEXION GLOBALE ===')
-        console.error('Message:', error.message)
+        console.error('Erreur connexion:', error.message)
         res.status(500).json({
             success: false,
             error: 'Erreur serveur lors de la connexion'
@@ -232,7 +198,6 @@ router.post('/forgot-password', [
         }
 
         const { email } = req.body
-        console.log('🔑 Demande reset password pour:', email)
 
         const { supabaseAnon } = require('../supabase-config')
         const redirectUrl = process.env.VERCEL
@@ -273,7 +238,6 @@ router.post('/reset-password', [
         if (!token && !access_token) {
             return res.status(400).json({ success: false, error: 'Token de récupération manquant' })
         }
-        console.log('🔑 Réinitialisation mot de passe...')
 
         const { supabaseAnon, supabase } = require('../supabase-config')
         let userId = null
@@ -321,8 +285,6 @@ router.post('/reset-password', [
 // GET /api/auth/verify - VÉRIFICATION TOKEN
 router.get('/verify', async (req, res) => {
     try {
-        console.log('🔍 Vérification de token demandée')
-        
         const authHeader = req.headers.authorization
         
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -335,9 +297,7 @@ router.get('/verify', async (req, res) => {
         const token = authHeader.substring(7)
         
         try {
-            // Vérifier avec JWT d'abord
             const decoded = jwt.verify(token, process.env.JWT_SECRET)
-            console.log('🔑 Token JWT vérifié pour:', decoded.userId)
             
             // Récupérer les données utilisateur mises à jour
             const userResult = await AuthService.getUserById(decoded.userId)
@@ -356,8 +316,6 @@ router.get('/verify', async (req, res) => {
             })
             
         } catch (jwtError) {
-            console.log('⚠️ Token JWT invalide, test avec Supabase...')
-            
             // Fallback: vérifier avec Supabase
             const { supabaseAnon } = require('../supabase-config')
             const { data: { user }, error } = await supabaseAnon.auth.getUser(token)
@@ -368,8 +326,6 @@ router.get('/verify', async (req, res) => {
                     error: 'Token invalide'
                 })
             }
-            
-            console.log('✅ Token Supabase valide pour:', user.id)
             
             const userResult = await AuthService.getUserById(user.id)
             if (!userResult.success) {
@@ -398,11 +354,6 @@ router.get('/verify', async (req, res) => {
 // POST /api/auth/logout - DÉCONNEXION
 router.post('/logout', async (req, res) => {
     try {
-        console.log('🚪 Demande de déconnexion')
-        
-        // Pas besoin de faire grand chose côté serveur pour JWT
-        // La déconnexion se fait principalement côté client
-        
         res.json({
             success: true,
             message: 'Déconnexion réussie'
@@ -416,7 +367,5 @@ router.post('/logout', async (req, res) => {
         })
     }
 })
-
-console.log('✅ Routes auth initialisées')
 
 module.exports = router

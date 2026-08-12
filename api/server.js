@@ -8,9 +8,23 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') })
 const app = express()
 const PORT = process.env.PORT || 3000
 
-// CORS
+// CORS - restreint aux origines autorisées
+const allowedOrigins = [
+    process.env.APP_URL,
+    process.env.CORS_ORIGIN,
+    'https://www.geofoncier.shop',
+    'https://geofoncier.shop',
+    'https://geofoncier.vercel.app'
+].filter(Boolean)
+
 app.use(cors({
-    origin: true,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true)
+        } else {
+            callback(null, false)
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -38,6 +52,21 @@ const registerLimiter = rateLimit({
     max: 5,
     message: { success: false, error: 'Trop de créations de compte. Réessayez dans une heure.' }
 })
+
+// Headers de sécurité
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('X-Frame-Options', 'DENY')
+    res.setHeader('X-XSS-Protection', '1; mode=block')
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+    res.removeHeader('X-Powered-By')
+    next()
+})
+
+// Appliquer rate limiting auth
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', registerLimiter)
+app.use('/api/auth/forgot-password', authLimiter)
 
 // Parsing
 app.use(express.json({ limit: '10mb' }))
@@ -82,22 +111,13 @@ app.post('/api/visits/track', (req, res) => {
     res.json({ success: true })
 })
 
-// Route de diagnostic - doit TOUJOURS fonctionner
+// Route de diagnostic
 app.get('/api/health', (req, res) => {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
     res.json({
         success: true,
         status: 'OK',
         timestamp: new Date().toISOString(),
-        version: '1.0.2',
-        env: {
-            SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
-            SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
-            SUPABASE_SERVICE_KEY: serviceKey ? 'SET' : 'MISSING',
-            JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
-            VERCEL: process.env.VERCEL ? 'YES' : 'NO',
-            NODE_VERSION: process.version
-        }
+        version: '1.0.2'
     })
 })
 
@@ -140,16 +160,16 @@ catch (e) { routeErrors.push(`notifications: ${e.message}`); console.error('❌ 
 try { mountRoute(require('./routes/favorites'), '/api/favorites', 'favorites') }
 catch (e) { routeErrors.push(`favorites: ${e.message}`); console.error('❌ favorites:', e.message) }
 
-// Route de debug pour voir les erreurs de chargement
-app.get('/api/debug', (req, res) => {
-    res.json({
-        routeErrors,
-        routesLoaded: routeErrors.length === 0 ? 'ALL OK' : `${7 - routeErrors.length}/7`,
-        loadedAt: new Date().toISOString(),
-        cwd: process.cwd(),
-        dirname: __dirname
+// Route de debug (dev uniquement)
+if (process.env.NODE_ENV === 'development') {
+    app.get('/api/debug', (req, res) => {
+        res.json({
+            routeErrors,
+            routesLoaded: routeErrors.length === 0 ? 'ALL OK' : `${9 - routeErrors.length}/9`,
+            loadedAt: new Date().toISOString()
+        })
     })
-})
+}
 
 // 404 API
 app.use('/api/*', (req, res) => {
