@@ -351,6 +351,117 @@ router.get('/verify', async (req, res) => {
     }
 })
 
+// POST /api/auth/resolve-phone - Résoudre un numéro de téléphone en email (pour app mobile)
+router.post('/resolve-phone', [
+    body('telephone').notEmpty().trim().withMessage('Téléphone requis')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, error: 'Numéro de téléphone requis' })
+        }
+
+        const { telephone } = req.body
+        const { supabase } = require('../supabase-config')
+        const phone = telephone.replace(/[\s\-()]/g, '')
+
+        // Recherche exacte
+        let { data: userData, error } = await supabase
+            .from('users')
+            .select('email')
+            .eq('telephone', phone)
+            .maybeSingle()
+
+        // Fallback: recherche par les 9 derniers chiffres
+        if (!userData && !error) {
+            const { data: userData2 } = await supabase
+                .from('users')
+                .select('email')
+                .ilike('telephone', `%${phone.slice(-9)}%`)
+                .maybeSingle()
+            userData = userData2
+        }
+
+        if (!userData) {
+            return res.status(404).json({ success: false, error: 'Numéro non trouvé' })
+        }
+
+        res.json({ success: true, email: userData.email })
+    } catch (error) {
+        console.error('❌ Erreur resolve-phone:', error.message)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
+    }
+})
+
+// GET /api/auth/profile - Récupérer le profil utilisateur (pour app mobile, bypass RLS)
+router.get('/profile', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'Token manquant' })
+        }
+
+        const token = authHeader.substring(7)
+        const { supabaseAnon, supabase } = require('../supabase-config')
+
+        // Vérifier le token Supabase pour obtenir l'ID utilisateur
+        const { data: { user }, error: authError } = await supabaseAnon.auth.getUser(token)
+
+        if (authError || !user) {
+            // Fallback: essayer avec JWT custom
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET)
+                const userResult = await AuthService.getUserById(decoded.userId)
+                if (userResult.success) {
+                    return res.json({ success: true, user: userResult.user })
+                }
+            } catch (_) {}
+            return res.status(401).json({ success: false, error: 'Token invalide' })
+        }
+
+        // Récupérer le profil depuis public.users (service role bypasse RLS)
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+        if (userError || !userData) {
+            // Créer le profil s'il n'existe pas
+            const metadata = user.user_metadata || {}
+            const fallbackData = {
+                id: user.id,
+                email: user.email,
+                nom_complet: metadata.nom_complet || metadata.full_name || 'Utilisateur',
+                telephone: metadata.telephone || user.phone || '',
+                type_utilisateur: metadata.type_utilisateur || 'client',
+                type_piece_identite: metadata.type_piece_identite || 'CNI',
+                numero_piece_identite: metadata.numero_piece_identite || '',
+                localisation: metadata.localisation || 'Cameroun',
+                is_verified: false
+            }
+
+            const { data: newUser, error: createError } = await supabase
+                .from('users')
+                .insert([fallbackData])
+                .select()
+                .single()
+
+            if (createError) {
+                // Si insert échoue (ex: duplicate), retourner les metadata
+                return res.json({ success: true, user: fallbackData })
+            }
+
+            return res.json({ success: true, user: newUser })
+        }
+
+        res.json({ success: true, user: userData })
+    } catch (error) {
+        console.error('❌ Erreur profile:', error.message)
+        res.status(500).json({ success: false, error: 'Erreur serveur' })
+    }
+})
+
 // POST /api/auth/logout - DÉCONNEXION
 router.post('/logout', async (req, res) => {
     try {
