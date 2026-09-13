@@ -97,37 +97,51 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
             parcelleData.coordinate_system || 'wgs84'
         )
 
+        // Vérifier si l'utilisateur est admin (exempté de paiement)
+        let isAdmin = false
+        try {
+            const { data: userData } = await supabase
+                .from('users')
+                .select('type_utilisateur')
+                .eq('id', req.user.id)
+                .single()
+            isAdmin = userData?.type_utilisateur === 'admin'
+        } catch (e) {}
+
         // MODÈLE : paiement par parcelle. Chaque enregistrement exige un paiement
         // « actif » non encore consommé. On le consomme après création de la parcelle.
+        // Les admins sont exemptés.
         let paymentRecord = null
-        try {
-            const { data, error: subError } = await supabase
-                .from('subscriptions')
-                .select('id')
-                .eq('user_id', req.user.id)
-                .eq('statut', 'active')
-                .order('created_at', { ascending: false })
-                .limit(1)
-            if (subError) {
-                console.error('⚠️ Erreur requête paiement (traité comme non payé):', subError.message || subError)
-            } else if (data && data.length > 0) {
-                paymentRecord = data[0]
+        if (!isAdmin) {
+            try {
+                const { data, error: subError } = await supabase
+                    .from('subscriptions')
+                    .select('id')
+                    .eq('user_id', req.user.id)
+                    .eq('statut', 'active')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                if (subError) {
+                    console.error('⚠️ Erreur requête paiement (traité comme non payé):', subError.message || subError)
+                } else if (data && data.length > 0) {
+                    paymentRecord = data[0]
+                }
+            } catch (subCatch) {
+                console.error('⚠️ Exception requête paiement (traité comme non payé):', subCatch.message)
             }
-        } catch (subCatch) {
-            console.error('⚠️ Exception requête paiement (traité comme non payé):', subCatch.message)
-        }
 
-        if (!paymentRecord) {
-            const price = FlutterwaveService.calculateProprietairePrice(superficie)
-            return res.status(403).json({
-                success: false,
-                error: 'Paiement requis',
-                code: 'SUBSCRIPTION_REQUIRED',
-                superficie: Math.round(superficie),
-                amount: price.annual,
-                currency: price.currency,
-                message: `Superficie calculée : ${Math.round(superficie).toLocaleString('fr-FR')} m². Paiement requis pour cette parcelle : ${price.annual.toLocaleString('fr-FR')} ${price.currency}.`
-            })
+            if (!paymentRecord) {
+                const price = FlutterwaveService.calculateProprietairePrice(superficie)
+                return res.status(403).json({
+                    success: false,
+                    error: 'Paiement requis',
+                    code: 'SUBSCRIPTION_REQUIRED',
+                    superficie: Math.round(superficie),
+                    amount: price.annual,
+                    currency: price.currency,
+                    message: `Superficie calculée : ${Math.round(superficie).toLocaleString('fr-FR')} m². Paiement requis pour cette parcelle : ${price.annual.toLocaleString('fr-FR')} ${price.currency}.`
+                })
+            }
         }
         // Stocker la superficie calculée pour l'insertion en DB
         parcelleData.superficie = Math.round(superficie)
@@ -149,14 +163,15 @@ router.post('/', authenticateUser, parcelleUpload, async (req, res) => {
 
         const result = await ParcelleService.createParcelle(parcelleData, files, req.user.id)
         if (result.success) {
-            // Consommer le paiement : il ne pourra plus servir pour une autre parcelle.
-            try {
-                await supabase
-                    .from('subscriptions')
-                    .update({ statut: 'completed', updated_at: new Date().toISOString() })
-                    .eq('id', paymentRecord.id)
-            } catch (consumeErr) {
-                console.error('⚠️ Impossible de marquer le paiement comme consommé:', consumeErr.message)
+            if (paymentRecord) {
+                try {
+                    await supabase
+                        .from('subscriptions')
+                        .update({ statut: 'completed', updated_at: new Date().toISOString() })
+                        .eq('id', paymentRecord.id)
+                } catch (consumeErr) {
+                    console.error('⚠️ Impossible de marquer le paiement comme consommé:', consumeErr.message)
+                }
             }
             res.status(201).json({ success: true, parcelle: result.parcelle })
         } else {
