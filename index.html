@@ -5307,8 +5307,9 @@
         // =====================================================
 
         async function addParcelle() {
-            if (!currentUser || currentUser.type_utilisateur !== 'proprietaire') {
-                showNotification('Connectez-vous en tant que propriétaire pour ajouter une parcelle', 'error');
+            const userType = currentUser?.type_utilisateur || currentUser?.type;
+            if (!currentUser || (userType !== 'proprietaire' && userType !== 'admin')) {
+                showNotification('Connectez-vous en tant que propriétaire ou administrateur pour ajouter une parcelle', 'error');
                 return;
             }
 
@@ -5473,8 +5474,9 @@
                 
                 console.log('✅ Utilisateur connecté:', currentUser);
                 
-                if (currentUser.type_utilisateur !== 'proprietaire' && currentUser.type !== 'proprietaire') {
-                    throw new Error('Seuls les propriétaires peuvent ajouter des parcelles');
+                const userType = currentUser.type_utilisateur || currentUser.type;
+                if (userType !== 'proprietaire' && userType !== 'admin') {
+                    throw new Error('Seuls les propriétaires et administrateurs peuvent ajouter des parcelles');
                 }
                 
                 // Test de connexion au serveur

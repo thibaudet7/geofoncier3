@@ -1,7 +1,7 @@
 # GéoFoncier — Résumé des travaux & État de l'application
 
 > Document destiné à être partagé avec un assistant IA (Claude) pour reprendre le développement sans perte de contexte.
-> Dernière mise à jour : 2026-07-09
+> Dernière mise à jour : 2026-09-14
 
 ---
 
@@ -112,7 +112,7 @@ geofoncier/
 
 | Rôle | Droits |
 |------|--------|
-| `admin` | Tout : CRUD parcelles, voir docs/infos propriétaires, supprimer, stats |
+| `admin` | Tout : CRUD parcelles, **enregistrer des parcelles sans paiement**, voir docs/infos propriétaires, supprimer, stats |
 | `proprietaire` | Enregistrer ses parcelles (après paiement), voir ses parcelles. **Ne peut PAS contacter un autre propriétaire** (doit s'inscrire comme client) |
 | `client` | Consulter parcelles, rechercher, contacter propriétaires (abonnement requis) |
 
@@ -136,21 +136,22 @@ geofoncier/
 ## 5. Flux d'enregistrement d'une parcelle (propriétaire)
 
 ```
-1. Propriétaire connecté clique "+" sur la carte
+1. Propriétaire ou Admin connecté clique "+" sur la carte
 2. Remplit formulaire : statut, matricule, coordonnées, activité, documents
 3. Clique "Enregistrer la parcelle"
 4. Frontend envoie FormData à POST /api/parcelles
-5. Backend calcule superficie → vérifie abonnement actif
-6. Si pas d'abonnement actif → retourne 403 + montant requis
-7. Frontend affiche montant, ouvre FlutterwaveCheckout (inline SDK)
-8. Après paiement réussi (callback SDK status=successful) :
+5. Backend calcule superficie → vérifie si l'utilisateur est admin
+6. Si admin → exempté de paiement, création directe (étape 8d)
+7. Si propriétaire sans abonnement actif → retourne 403 + montant requis
+8. Frontend affiche montant, ouvre FlutterwaveCheckout (inline SDK)
+9. Après paiement réussi (callback SDK status=successful) :
    a. Frontend appelle GET /api/payment/verify/:transactionId?tx_ref=...
    b. Backend active l'abonnement (statut→active)
    c. Frontend ré-envoie le FormData à POST /api/parcelles
    d. Backend trouve maintenant un abonnement actif → crée la parcelle
    e. Backend upload les documents dans Supabase Storage
-   f. Backend consomme l'abonnement (statut→expired)
-9. Parcelle apparaît sur la carte
+   f. Backend consomme l'abonnement (statut→completed)
+10. Parcelle apparaît sur la carte
 ```
 
 ### Tarification propriétaire (par parcelle)
@@ -235,6 +236,7 @@ L'application supporte 4 systèmes d'entrée :
 - [x] Sidebar mobile : scroll interne correctement isolé (`overflow: hidden` sur parent, `flex: 1` + `overflow-y: auto` sur contenu)
 - [x] Contrôles carte (mesure/basemap) repositionnés dynamiquement sous les boutons d'outils via `getBoundingClientRect`
 - [x] Restriction : propriétaire ne peut pas contacter un autre propriétaire
+- [x] Admin peut ajouter une parcelle sans payer (bouton "+" accessible + exemption backend)
 
 ### Backend (API)
 
@@ -270,6 +272,7 @@ L'application supporte 4 systèmes d'entrée :
 | UI déborde sur écrans < 320px | Pas de breakpoint ultra-petit | Ajout media query 280px + masquage légende + labels icônes-only |
 | Scroll bloqué sur formulaires mobile | `modal-content` avec `max-height: 90vh` + `overflow-y: auto` empêche le scroll natif | Scroll sur `.modal`, body verrouillé, modal-content en `overflow: visible` |
 | Boutons mesure/basemap cachés par le header | Position fixe `top` ne s'adapte pas | `adjustControlPositions()` calcule dynamiquement la position du layer control |
+| Admin ne peut pas ajouter de parcelle | `addParcelle()` et `handleAddParcelle()` vérifiaient `type_utilisateur !== 'proprietaire'` uniquement | Ajouté `admin` comme type autorisé dans les deux fonctions. Le backend exemptait déjà l'admin du paiement. |
 
 ---
 
