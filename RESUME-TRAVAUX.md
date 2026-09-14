@@ -26,7 +26,7 @@
 
 | Ressource | URL |
 |-----------|-----|
-| Production | https://geofoncier.shop |
+| Production | https://geofoncier.store |
 | GitHub | https://github.com/thibaudet7/geofoncier3 |
 | Supabase | https://boyyptqybnsiwnkdpfbl.supabase.co |
 

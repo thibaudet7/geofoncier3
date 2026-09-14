@@ -19,3 +19,34 @@
    Un acte de succession ou un jugement d'hérédité si le terrain est issu d'un héritage.
    
    À noter : Pour les terrains non titrés, la vente se fait généralement via une simple lettre d'attribution ou un certificat d'abandon de droits coutumiers, mais cela présente des risques de litiges.
+
+
+
+ https://geofoncier.store/politique-confidentialite
+
+  ---
+  Récapitulatif complet pour le Play Store
+
+  ┌──────────────────────────────┬───────────────────────────────────────────────────┐
+  │           Élément            │                   Fichier / URL                   │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ App Bundle                   │ build\app\outputs\bundle\release\app-release.aab  │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Icône 512x512                │ assets\images\ic_launcher_512.png                 │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Bannière 1024x500            │ store\feature_graphic_1024x500.png                │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Screenshots                  │ store\screenshot_1.png à screenshot_5.png         │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Description                  │ store\description_play_store.txt                  │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Politique de confidentialité │ https://geofoncier.store/politique-confidentialite │
+  ├──────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Logo (vérifié)               │ Ton SVG geofoncier-logo.svg converti ✓            │
+  └──────────────────────────────┴───────────────────────────────────────────────────┘
+
+  Tu as tout pour remplir la fiche Play Console et publier. Il te suffit de :
+  1. Uploader l'AAB dans Production → Créer une release
+  2. Remplir la fiche avec les textes du fichier description_play_store.txt
+  3. Coller l'URL https://geofoncier.store/politique-confidentialite dans le champ Politique de confidentialité
+  4. Uploader les screenshots et la bannière  
